@@ -46,3 +46,8 @@ Thumbs.db
 
 # Docker volumes
 docker/data/
+
+# Deployment packages
+*.tar.gz
+backend/deploy/*.tar.gz
+frontend/deploy/*.tar.gz
