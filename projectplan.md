@@ -1,182 +1,113 @@
-# Git 仓库整合计划
+# 生产环境优化修复计划
 
-## 目标
+## 问题描述
 
-将前后端代码整合到一个统一的 Git 仓库，并推送到远程仓库：
-- 远程仓库地址：https://github.com/JojoShine/owl.git
-- 前后端作为一个整体项目管理
+### 问题1: WebSocket连接失败
+正式环境报错：`WebSocket connection to 'wss://tbtparent.me/socket.io/?EIO=4&transport=websocket' failed`
 
-## 现状分析
+**原因**: 后端 Socket.io CORS 配置未包含生产环境域名 `https://tbtparent.me`
 
-**当前状态**:
-- ✅ 前端目录 (`frontend/`) 有独立的 `.git` 仓库
-- ❌ 后端目录 (`backend/`) 没有 git 管理
-- ❌ 根目录没有 git 仓库
-- ✅ 根目录有 `.gitignore` 文件
+### 问题2: 监控概览显示错误的数据库地址
+监控概览显示数据库地址为 `localhost`，但实际数据库在 `121.196.245.95`
 
-**目录结构**:
-```
-common_managerment_platform/
-├── frontend/          # 有 .git（需要删除）
-├── backend/           # 无 git
-├── shared/            # 共享代码
-├── .gitignore         # 已存在
-├── README.md          # 项目说明
-├── requirement.md     # 需求文档
-└── projectplan*.md    # 计划文档
-```
+**原因**: `.env` 文件中 `DB_HOST=localhost` 未更新
 
-## 实施方案
+## 待办事项
 
-### 方案选择：在根目录创建新的 Git 仓库
+- [ ] 1. 更新 `.env` 文件，将 `DB_HOST` 改为 `121.196.245.95`
+- [ ] 2. 添加 `SOCKET_CORS_ORIGIN` 配置到 `.env` 文件，设置为生产域名
+- [ ] 3. 测试监控概览数据正确性
+- [ ] 4. 测试生产环境 WebSocket 连接
 
-**原因**:
-1. 前后端作为一个整体更易于管理
-2. 方便统一版本控制
-3. 便于协同开发和部署
-4. 共享文档和配置文件
+## 解决方案
 
-### 实施步骤
+### 1. 更新数据库地址
 
-#### Todo 列表
+**文件**: `backend/.env`
 
-- [ ] 1. 检查并完善根目录 `.gitignore` 文件
-- [ ] 2. 删除前端目录的 `.git` 仓库
-- [ ] 3. 在根目录初始化 Git 仓库
-- [ ] 4. 添加远程仓库地址
-- [ ] 5. 添加所有文件到暂存区
-- [ ] 6. 创建初始提交
-- [ ] 7. 推送到远程仓库
-
-## 详细步骤
-
-### 步骤 1：检查 `.gitignore` 文件
-
-确保以下内容被忽略：
-
-**前端**:
-- `frontend/node_modules/`
-- `frontend/.next/`
-- `frontend/out/`
-- `frontend/dist/`
-- `frontend/.env*.local`
-
-**后端**:
-- `backend/node_modules/`
-- `backend/dist/`
-- `backend/.env`
-- `backend/logs/`
-
-**通用**:
-- `.DS_Store`
-- `*.log`
-- `.idea/`
-- `*.swp`
-
-### 步骤 2：删除前端的 `.git` 目录
-
-```bash
-rm -rf frontend/.git
+修改:
+```env
+DB_HOST=121.196.245.95  # 从 localhost 改为实际地址
 ```
 
-### 步骤 3：初始化根目录 Git 仓库
+### 2. 添加 WebSocket CORS 配置
 
-```bash
-git init
+**文件**: `backend/.env`
+
+添加:
+```env
+SOCKET_CORS_ORIGIN=https://tbtparent.me
 ```
 
-### 步骤 4：添加远程仓库
-
-```bash
-git remote add origin https://github.com/JojoShine/owl.git
-```
-
-### 步骤 5：添加文件到暂存区
-
-```bash
-git add .
-```
-
-### 步骤 6：创建初始提交
-
-```bash
-git commit -m "Initial commit: Common Management Platform
-
-- Frontend: Next.js + React management system
-- Backend: Node.js + Express API server
-- Features: User management, role management, permission system, file management, etc.
-"
-```
-
-### 步骤 7：推送到远程仓库
-
-```bash
-# 检查远程仓库是否为空，如果不为空可能需要 force push
-git push -u origin main
-# 或者如果远程有内容且需要强制推送
-# git push -u origin main --force
-```
-
-## 注意事项
-
-### 1. 远程仓库检查
-
-- ⚠️ 如果远程仓库已有内容，需要先确认是否可以覆盖
-- ⚠️ 如果远程有重要内容，建议先拉取合并再推送
-
-### 2. 敏感信息检查
-
-在提交前确认以下文件**不要**被提交：
-- ❌ `.env` 文件
-- ❌ 数据库配置中的密码
-- ❌ API 密钥
-- ❌ `node_modules/` 目录
-- ❌ 编译产物目录
-
-### 3. 大文件检查
-
-确认是否有大文件（>100MB）：
-- 如果有，考虑使用 Git LFS
-- 或者将其添加到 `.gitignore`
-
-### 4. Git 分支策略
-
-建议的分支结构：
-- `main` - 主分支（生产环境）
-- `develop` - 开发分支
-- `feature/*` - 功能分支
-- `hotfix/*` - 紧急修复分支
-
-## 执行前确认清单
-
-- [ ] 远程仓库地址正确：https://github.com/JojoShine/owl.git
-- [ ] 已检查 `.gitignore` 文件完整性
-- [ ] 已确认没有敏感信息会被提交
-- [ ] 已了解远程仓库当前状态（是否为空）
-- [ ] 已备份重要代码（如有需要）
-
-## 后续工作
-
-推送成功后：
-- [ ] 配置 GitHub Actions（可选）
-- [ ] 设置分支保护规则（可选）
-- [ ] 添加 README.md 徽章（可选）
-- [ ] 配置 CI/CD 流程（可选）
+这样后端 Socket.io 就会允许来自生产域名的连接。
 
 ---
 
-**创建时间**: 2025-10-23
-**预计工期**: 30 分钟
-**优先级**: 高
-**复杂度**: 简单
+## 实施步骤
+
+### 已完成的修改
+
+1. **前端 Socket.io 配置** - `frontend/contexts/SocketContext.jsx`
+   - 修复了 Socket URL 计算逻辑
+   - 添加了 `path` 配置，使用 `NEXT_PUBLIC_BASE_PATH` + `/socket.io/`
+   - 生产环境会连接 `/owl/socket.io/`
+
+2. **Nginx 配置** - `frontend/deploy/nginx.conf`
+   - 添加了 `/owl/socket.io/` 的 WebSocket 代理规则
+   - 配置了正确的 WebSocket 头和长连接超时
+
+3. **后端环境变量** - `backend/.env`
+   - 需要添加 `SOCKET_CORS_ORIGIN=https://tbtparent.me`
+   - 需要更新 `DB_HOST=121.196.245.95`（如果还未修改）
+
+### 下一步操作
+
+1. **更新后端 .env 文件**
+   ```bash
+   # 在服务器上编辑 backend/.env
+   DB_HOST=121.196.245.95
+   SOCKET_CORS_ORIGIN=https://tbtparent.me
+
+   # 重启后端服务
+   pm2 restart owl-backend
+   ```
+
+2. **重新构建并部署前端**
+   ```bash
+   # 本地构建
+   cd frontend
+   npm run build
+   cd deploy
+   ./deploy.sh
+
+   # 上传到服务器
+   scp frontend-deploy.tar.gz root@121.196.245.95:/tmp/
+   scp nginx.conf root@121.196.245.95:/tmp/owl.conf
+   ```
+
+3. **服务器部署**
+   ```bash
+   ssh root@121.196.245.95
+
+   # 更新 Nginx 配置
+   mv /tmp/owl.conf /etc/nginx/conf.d/owl.conf
+   nginx -t
+   systemctl reload nginx
+
+   # 部署前端
+   pm2 stop owl-frontend
+   cd /opt/frontend/owl-frontend
+   tar -xzf /tmp/frontend-deploy.tar.gz
+   pm2 restart owl-frontend
+   ```
+
+4. **验证**
+   - 浏览器打开 `https://tbtparent.me/owl`
+   - 打开开发者工具查看 WebSocket 连接状态
+   - 应该能看到 `WebSocket connection to 'wss://tbtparent.me/owl/socket.io/...' succeeded`
 
 ---
 
-## 等待用户确认
+## Review
 
-请确认以下问题：
-1. ✅ 远程仓库 `https://github.com/JojoShine/owl.git` 是否为空？
-2. ✅ 如果远程仓库已有内容，是否可以强制推送覆盖？
-3. ✅ 是否需要保留前端原有的 git 历史记录？
-
-确认后我将开始执行上述步骤。
+*待测试完成后填写*

@@ -43,11 +43,16 @@ export const SocketProvider = ({ children }) => {
       socket.disconnect();
     }
 
-    const socketUrl = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:3001';
+    // 生产环境使用域名根路径，开发环境使用完整URL
+    const socketUrl = process.env.NODE_ENV === 'production' ? '/' : 'http://localhost:3001';
+    // 提取路径前缀（如 /owl）
+    const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
+    const socketPath = basePath ? `${basePath}/socket.io/` : '/socket.io/';
 
-    console.log('Connecting to WebSocket server:', socketUrl);
+    console.log('Connecting to WebSocket server:', socketUrl, 'with path:', socketPath);
 
     const newSocket = io(socketUrl, {
+      path: socketPath,
       auth: {
         token: token,
       },
