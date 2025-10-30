@@ -1,4 +1,5 @@
 import axios from 'axios';
+import Router from 'next/router';
 
 const axiosInstance = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api',
@@ -45,11 +46,16 @@ axiosInstance.interceptors.response.use(
           // 未授权，只在非登录页面时跳转
           if (typeof window !== 'undefined') {
             const currentPath = window.location.pathname;
-            // 如果当前不在登录页，才清除token并跳转
-            if (currentPath !== '/login' && currentPath !== '/register') {
+            const basePath = process.env.NODE_ENV === 'production' ? '/owl' : '';
+            const loginPath = `${basePath}/login`;
+            const registerPath = `${basePath}/register`;
+
+            // 如果当前不在登录页或注册页，才清除token并跳转
+            if (currentPath !== loginPath && currentPath !== registerPath) {
               localStorage.removeItem('token');
               localStorage.removeItem('user');
-              window.location.href = '/login';
+              // 使用 Router.push 实现客户端导航，自动处理 basePath
+              Router.push('/login');
             }
           }
           break;

@@ -22,7 +22,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { userApi, departmentApi } from '@/lib/api';
+import { Checkbox } from '@/components/ui/checkbox';
+import { userApi, departmentApi, roleApi } from '@/lib/api';
 import { toast } from 'sonner';
 
 // 表单验证规则
@@ -34,11 +35,13 @@ const userSchema = z.object({
   phone: z.string().optional(),
   department_id: z.string().optional(),
   status: z.enum(['active', 'inactive', 'banned']),
+  role_ids: z.array(z.string()).optional(),
 });
 
 export default function UserFormDialog({ open, onOpenChange, user, onSuccess }) {
   const isEdit = !!user;
   const [departments, setDepartments] = useState([]);
+  const [roles, setRoles] = useState([]);
 
   const {
     register,
@@ -57,10 +60,11 @@ export default function UserFormDialog({ open, onOpenChange, user, onSuccess }) 
       phone: '',
       department_id: '',
       status: 'active',
+      role_ids: [],
     },
   });
 
-  // 获取部门列表
+  // 获取部门列表和角色列表
   useEffect(() => {
     const fetchDepartments = async () => {
       try {
@@ -73,14 +77,31 @@ export default function UserFormDialog({ open, onOpenChange, user, onSuccess }) 
         setDepartments([]);
       }
     };
+
+    const fetchRoles = async () => {
+      try {
+        const response = await roleApi.getRoles({ limit: 100 });
+        // 处理多种可能的返回格式
+        const roleData = response.data?.items || response.data || [];
+        setRoles(Array.isArray(roleData) ? roleData : []);
+      } catch (error) {
+        console.error('获取角色列表失败:', error);
+        setRoles([]);
+      }
+    };
+
     if (open) {
       fetchDepartments();
+      fetchRoles();
     }
   }, [open]);
 
   // 当user变化时，更新表单
   useEffect(() => {
     if (user) {
+      // 提取用户的角色ID列表
+      const userRoleIds = user.roles?.map(role => role.id.toString()) || [];
+
       reset({
         username: user.username || '',
         email: user.email || '',
@@ -89,6 +110,7 @@ export default function UserFormDialog({ open, onOpenChange, user, onSuccess }) 
         phone: user.phone || '',
         department_id: user.department_id || '',
         status: user.status || 'active',
+        role_ids: userRoleIds,
       });
     } else {
       reset({
@@ -99,6 +121,7 @@ export default function UserFormDialog({ open, onOpenChange, user, onSuccess }) 
         phone: '',
         department_id: '',
         status: 'active',
+        role_ids: [],
       });
     }
   }, [user, reset]);
@@ -126,6 +149,12 @@ export default function UserFormDialog({ open, onOpenChange, user, onSuccess }) 
       if (submitData.department_id === '') {
         submitData.department_id = null;
       }
+      // 将 role_ids 转换为数字数组
+      if (submitData.role_ids && submitData.role_ids.length > 0) {
+        submitData.role_ids = submitData.role_ids.map(id => parseInt(id));
+      } else {
+        submitData.role_ids = [];
+      }
 
       if (isEdit) {
         await userApi.updateUser(user.id, submitData);
@@ -146,6 +175,7 @@ export default function UserFormDialog({ open, onOpenChange, user, onSuccess }) 
 
   const statusValue = watch('status');
   const departmentIdValue = watch('department_id');
+  const roleIdsValue = watch('role_ids') || [];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -246,6 +276,42 @@ export default function UserFormDialog({ open, onOpenChange, user, onSuccess }) 
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          {/* 角色分配 */}
+          <div className="space-y-2">
+            <Label>角色分配</Label>
+            <div className="border rounded-md p-3 space-y-2 max-h-40 overflow-y-auto">
+              {roles.length === 0 ? (
+                <p className="text-sm text-muted-foreground">暂无可用角色</p>
+              ) : (
+                roles.map((role) => (
+                  <div key={role.id} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`role-${role.id}`}
+                      checked={roleIdsValue.includes(role.id.toString())}
+                      onCheckedChange={(checked) => {
+                        const newRoleIds = checked
+                          ? [...roleIdsValue, role.id.toString()]
+                          : roleIdsValue.filter((id) => id !== role.id.toString());
+                        setValue('role_ids', newRoleIds);
+                      }}
+                    />
+                    <label
+                      htmlFor={`role-${role.id}`}
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                    >
+                      {role.name}
+                      {role.description && (
+                        <span className="text-muted-foreground ml-2">
+                          ({role.description})
+                        </span>
+                      )}
+                    </label>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
 
           {/* 状态 */}

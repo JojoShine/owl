@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, forwardRef } from 'react';
+import { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { RefreshCw } from 'lucide-react';
 import { Input } from './input';
 import { Button } from './button';
@@ -48,6 +48,11 @@ export const CaptchaInput = forwardRef(({ onCaptchaChange, error, disabled, ...p
       setIsLoading(false);
     }
   };
+
+  // 暴露 refresh 方法给父组件
+  useImperativeHandle(ref, () => ({
+    refresh: fetchCaptcha,
+  }));
 
   // 组件挂载时获取验证码
   useEffect(() => {

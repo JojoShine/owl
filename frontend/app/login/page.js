@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useState, Suspense, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -35,6 +35,7 @@ function LoginForm() {
   const [error, setError] = useState('');
   const [captchaId, setCaptchaId] = useState('');
   const [captchaCode, setCaptchaCode] = useState('');
+  const captchaInputRef = useRef(null);
 
   const {
     register,
@@ -81,11 +82,15 @@ function LoginForm() {
       } else {
         setError(result.error || '登录失败，请重试');
         setIsLoading(false);
+        // 登录失败后刷新验证码
+        captchaInputRef.current?.refresh();
       }
     } catch (err) {
       console.error('登录错误:', err);
       setError(err.response?.data?.message || '登录失败，请检查用户名和密码');
       setIsLoading(false);
+      // 登录失败后刷新验证码
+      captchaInputRef.current?.refresh();
     }
   };
 
@@ -155,6 +160,7 @@ function LoginForm() {
             </div>
 
             <CaptchaInput
+              ref={captchaInputRef}
               onCaptchaChange={handleCaptchaChange}
               error={errors.captchaCode?.message}
               disabled={isLoading}
