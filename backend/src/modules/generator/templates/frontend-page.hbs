@@ -1,0 +1,344 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { {{modulePath}}Api } from '@/lib/api';
+import { Button } from '@/components/ui/button';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Plus, Edit, Trash2 } from 'lucide-react';
+import { {{moduleName}}Filters } from './components/{{moduleName}}Filters';
+import { {{moduleName}}FormDialog } from './components/{{moduleName}}FormDialog';
+import { Pagination } from '@/components/ui/pagination';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { toast } from 'sonner';
+
+export default function {{moduleName}}Page() {
+  const [items, setItems] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [filters, setFilters] = useState({});
+  const [formOpen, setFormOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState(null);
+  const [pagination, setPagination] = useState({ page: 1, pageSize: 10, total: 0 });
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
+  {{#if enableBatchDelete}}
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [batchDeleteOpen, setBatchDeleteOpen] = useState(false);
+  {{/if}}
+
+  // 获取列表
+  const fetchItems = async () => {
+    try {
+      setIsLoading(true);
+      const response = await {{modulePath}}Api.get{{moduleName}}s({
+        ...filters,
+        page: pagination.page,
+        limit: pagination.pageSize
+      });
+
+      const itemsData = response.data?.items || response.data || [];
+      setItems(Array.isArray(itemsData) ? itemsData : []);
+
+      if (response.data?.pagination) {
+        setPagination(prev => ({
+          ...prev,
+          total: response.data.pagination.total || 0
+        }));
+      }
+    } catch (error) {
+      console.error('获取列表失败:', error);
+      setItems([]);
+      toast.error('加载失败');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchItems();
+  }, [pagination.page, filters]);
+
+  // 分页变化
+  const handlePageChange = (newPage) => {
+    setPagination(prev => ({ ...prev, page: newPage }));
+  };
+
+  {{#if enableCreate}}
+  // 新增
+  const handleAdd = () => {
+    setEditingItem(null);
+    setFormOpen(true);
+  };
+  {{/if}}
+
+  {{#if enableUpdate}}
+  // 编辑
+  const handleEdit = (item) => {
+    setEditingItem(item);
+    setFormOpen(true);
+  };
+  {{/if}}
+
+  {{#if enableDelete}}
+  // 删除
+  const handleDelete = (item) => {
+    setItemToDelete(item);
+    setDeleteDialogOpen(true);
+  };
+
+  // 确认删除
+  const handleConfirmDelete = async () => {
+    if (!itemToDelete) return;
+
+    try {
+      await {{modulePath}}Api.delete{{moduleName}}(itemToDelete.id);
+      toast.success('删除成功');
+      fetchItems();
+    } catch (error) {
+      console.error('删除失败:', error);
+      const errorMessage = error.response?.data?.message || error.message || '删除失败';
+      toast.error(errorMessage);
+    } finally {
+      setItemToDelete(null);
+    }
+  };
+  {{/if}}
+
+  {{#if enableBatchDelete}}
+  // 批量删除
+  const handleBatchDelete = async () => {
+    if (selectedIds.length === 0) return;
+
+    try {
+      await {{modulePath}}Api.batchDelete{{moduleName}}s(selectedIds);
+      toast.success(`成功删除 ${selectedIds.length} 条记录`);
+      setSelectedIds([]);
+      setBatchDeleteOpen(false);
+      fetchItems();
+    } catch (error) {
+      console.error('批量删除失败:', error);
+      toast.error('批量删除失败');
+    }
+  };
+
+  // 切换选中状态
+  const toggleSelection = (id) => {
+    setSelectedIds(prev =>
+      prev.includes(id)
+        ? prev.filter(itemId => itemId !== id)
+        : [...prev, id]
+    );
+  };
+
+  // 全选/取消全选
+  const toggleSelectAll = () => {
+    if (selectedIds.length === items.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(items.map(item => item.id));
+    }
+  };
+  {{/if}}
+
+  return (
+    <div className="space-y-6">
+      {/* 页面标题 */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">{{description}}管理</h1>
+          <p className="text-muted-foreground mt-2">管理{{description}}信息</p>
+        </div>
+        {{#if enableCreate}}
+        <Button onClick={handleAdd}>
+          <Plus className="h-4 w-4 mr-2" />
+          新建{{description}}
+        </Button>
+        {{/if}}
+      </div>
+
+      {/* 筛选器 */}
+      <{{moduleName}}Filters filters={filters} onFilterChange={setFilters} />
+
+      {/* 批量操作 */}
+      {{#if enableBatchDelete}}
+      {selectedIds.length > 0 && (
+        <div className="flex items-center gap-2">
+          <Button
+            variant="destructive"
+            onClick={() => setBatchDeleteOpen(true)}
+          >
+            批量删除 ({selectedIds.length})
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => setSelectedIds([])}
+          >
+            取消选择
+          </Button>
+        </div>
+      )}
+      {{/if}}
+
+      {/* 数据表格 */}
+      <div className="space-y-4">
+        <div className="border rounded-lg">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                {{#if enableBatchDelete}}
+                <TableHead className="w-12">
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.length === items.length && items.length > 0}
+                    onChange={toggleSelectAll}
+                    className="cursor-pointer"
+                  />
+                </TableHead>
+                {{/if}}
+                {{#each listFields}}
+                <TableHead>{{this.comment}}</TableHead>
+                {{/each}}
+                {{#if (or enableUpdate enableDelete)}}
+                <TableHead className="text-right">操作</TableHead>
+                {{/if}}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                <TableRow>
+                  {{#if enableBatchDelete}}
+                  <TableCell colSpan={{{add listFields.length 2}}} className="text-center py-8">
+                  {{else}}
+                  <TableCell colSpan={{{add listFields.length 1}}} className="text-center py-8">
+                  {{/if}}
+                    加载中...
+                  </TableCell>
+                </TableRow>
+              ) : items.length === 0 ? (
+                <TableRow>
+                  {{#if enableBatchDelete}}
+                  <TableCell colSpan={{{add listFields.length 2}}} className="text-center py-8 text-muted-foreground">
+                  {{else}}
+                  <TableCell colSpan={{{add listFields.length 1}}} className="text-center py-8 text-muted-foreground">
+                  {{/if}}
+                    暂无数据
+                  </TableCell>
+                </TableRow>
+              ) : (
+                items.map((item) => (
+                  <TableRow key={item.id}>
+                    {{#if enableBatchDelete}}
+                    <TableCell>
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.includes(item.id)}
+                        onChange={() => toggleSelection(item.id)}
+                        className="cursor-pointer"
+                      />
+                    </TableCell>
+                    {{/if}}
+                    {{#each listFields}}
+                    <TableCell>
+                      {{#if (eq this.formatType 'date')}}
+                      {item['{{this.name}}'] ? new Date(item['{{this.name}}']).toLocaleDateString('zh-CN') : '-'}
+                      {{else if (eq this.formatType 'datetime')}}
+                      {item['{{this.name}}'] ? new Date(item['{{this.name}}']).toLocaleString('zh-CN') : '-'}
+                      {{else if (eq this.formatType 'currency')}}
+                      {item['{{this.name}}'] ? new Intl.NumberFormat('zh-CN', { style: 'currency', currency: 'CNY' }).format(item['{{this.name}}']) : '-'}
+                      {{else if (eq this.formatType 'percentage')}}
+                      {item['{{this.name}}'] ? `${item['{{this.name}}']}%` : '-'}
+                      {{else}}
+                      {item['{{this.name}}'] || '-'}
+                      {{/if}}
+                    </TableCell>
+                    {{/each}}
+                    {{#if (or enableUpdate enableDelete)}}
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        {{#if enableUpdate}}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEdit(item)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        {{/if}}
+                        {{#if enableDelete}}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDelete(item)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                        {{/if}}
+                      </div>
+                    </TableCell>
+                    {{/if}}
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+
+        {/* 分页组件 */}
+        <Pagination
+          page={pagination.page}
+          total={pagination.total}
+          pageSize={pagination.pageSize}
+          onPageChange={handlePageChange}
+        />
+      </div>
+
+      {/* 表单弹窗 */}
+      {{#if (or enableCreate enableUpdate)}}
+      <{{moduleName}}FormDialog
+        open={formOpen}
+        onOpenChange={setFormOpen}
+        item={editingItem}
+        onSuccess={fetchItems}
+      />
+      {{/if}}
+
+      {/* 删除确认对话框 */}
+      {{#if enableDelete}}
+      <ConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={handleConfirmDelete}
+        title="确认删除"
+        description={
+          itemToDelete
+            ? `确定要删除此记录吗？此操作无法撤销。`
+            : ''
+        }
+        confirmText="删除"
+        cancelText="取消"
+        variant="destructive"
+      />
+      {{/if}}
+
+      {/* 批量删除确认对话框 */}
+      {{#if enableBatchDelete}}
+      <ConfirmDialog
+        open={batchDeleteOpen}
+        onOpenChange={setBatchDeleteOpen}
+        onConfirm={handleBatchDelete}
+        title="确认批量删除"
+        description={`确定要删除选中的 ${selectedIds.length} 条记录吗？此操作无法撤销。`}
+        confirmText="删除"
+        cancelText="取消"
+        variant="destructive"
+      />
+      {{/if}}
+    </div>
+  );
+}

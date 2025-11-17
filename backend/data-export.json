@@ -1,0 +1,1533 @@
+{
+  "permissions": [
+    {
+      "code": "monitor:manage",
+      "name": "管理监控",
+      "resource": "monitor",
+      "action": "update",
+      "category": "monitor",
+      "description": "管理监控配置和告警规则"
+    },
+    {
+      "code": "monitor:read",
+      "name": "查看监控",
+      "resource": "monitor",
+      "action": "read",
+      "category": "monitor",
+      "description": "查看系统监控数据"
+    },
+    {
+      "code": "generator:create",
+      "name": "创建代码",
+      "resource": "generator",
+      "action": "create",
+      "category": "代码生成",
+      "description": "初始化配置和生成代码"
+    },
+    {
+      "code": "generator:delete",
+      "name": "删除配置",
+      "resource": "generator",
+      "action": "delete",
+      "category": "代码生成",
+      "description": "删除模块配置和生成的代码"
+    },
+    {
+      "code": "generator:read",
+      "name": "查看代码生成器",
+      "resource": "generator",
+      "action": "read",
+      "category": "代码生成",
+      "description": "查看代码生成器配置和历史"
+    },
+    {
+      "code": "generator:update",
+      "name": "更新配置",
+      "resource": "generator",
+      "action": "update",
+      "category": "代码生成",
+      "description": "更新模块配置"
+    },
+    {
+      "code": "file-share:delete",
+      "name": "删除分享",
+      "resource": "file-share",
+      "action": "delete",
+      "category": "文件管理",
+      "description": "删除文件分享"
+    },
+    {
+      "code": "file-share:read",
+      "name": "查看分享",
+      "resource": "file-share",
+      "action": "read",
+      "category": "文件管理",
+      "description": "查看文件分享列表"
+    },
+    {
+      "code": "file:copy",
+      "name": "复制文件",
+      "resource": "file",
+      "action": "create",
+      "category": "文件管理",
+      "description": "复制文件"
+    },
+    {
+      "code": "file:delete",
+      "name": "删除文件",
+      "resource": "file",
+      "action": "delete",
+      "category": "文件管理",
+      "description": "删除文件"
+    },
+    {
+      "code": "file:download",
+      "name": "下载文件",
+      "resource": "file",
+      "action": "read",
+      "category": "文件管理",
+      "description": "下载文件"
+    },
+    {
+      "code": "file:move",
+      "name": "移动文件",
+      "resource": "file",
+      "action": "update",
+      "category": "文件管理",
+      "description": "移动文件到其他文件夹"
+    },
+    {
+      "code": "file:preview",
+      "name": "预览文件",
+      "resource": "file",
+      "action": "read",
+      "category": "文件管理",
+      "description": "预览文件"
+    },
+    {
+      "code": "file:read",
+      "name": "查看文件",
+      "resource": "file",
+      "action": "read",
+      "category": "文件管理",
+      "description": "查看文件列表和详情"
+    },
+    {
+      "code": "file:share",
+      "name": "分享文件",
+      "resource": "file-share",
+      "action": "create",
+      "category": "文件管理",
+      "description": "创建文件分享链接"
+    },
+    {
+      "code": "file:update",
+      "name": "更新文件",
+      "resource": "file",
+      "action": "update",
+      "category": "文件管理",
+      "description": "更新文件信息（重命名）"
+    },
+    {
+      "code": "file:upload",
+      "name": "上传文件",
+      "resource": "file",
+      "action": "create",
+      "category": "文件管理",
+      "description": "上传文件"
+    },
+    {
+      "code": "folder:create",
+      "name": "创建文件夹",
+      "resource": "folder",
+      "action": "create",
+      "category": "文件管理",
+      "description": "创建新文件夹"
+    },
+    {
+      "code": "folder:delete",
+      "name": "删除文件夹",
+      "resource": "folder",
+      "action": "delete",
+      "category": "文件管理",
+      "description": "删除文件夹"
+    },
+    {
+      "code": "folder:read",
+      "name": "查看文件夹",
+      "resource": "folder",
+      "action": "read",
+      "category": "文件管理",
+      "description": "查看文件夹列表和详情"
+    },
+    {
+      "code": "folder:update",
+      "name": "更新文件夹",
+      "resource": "folder",
+      "action": "update",
+      "category": "文件管理",
+      "description": "更新文件夹信息"
+    },
+    {
+      "code": "log:backup",
+      "name": "备份日志",
+      "resource": "log",
+      "action": "create",
+      "category": "日志管理",
+      "description": "备份日志到对象存储"
+    },
+    {
+      "code": "log:config",
+      "name": "配置日志",
+      "resource": "log",
+      "action": "update",
+      "category": "日志管理",
+      "description": "配置日志系统"
+    },
+    {
+      "code": "log:export",
+      "name": "导出日志",
+      "resource": "log",
+      "action": "read",
+      "category": "日志管理",
+      "description": "导出日志文件"
+    },
+    {
+      "code": "log:read",
+      "name": "查看日志",
+      "resource": "log",
+      "action": "read",
+      "category": "日志管理",
+      "description": "查看系统日志"
+    },
+    {
+      "code": "permission:create",
+      "name": "创建权限",
+      "resource": "permission",
+      "action": "create",
+      "category": "权限管理",
+      "description": "创建新权限"
+    },
+    {
+      "code": "permission:delete",
+      "name": "删除权限",
+      "resource": "permission",
+      "action": "delete",
+      "category": "权限管理",
+      "description": "删除权限"
+    },
+    {
+      "code": "permission:read",
+      "name": "查看权限",
+      "resource": "permission",
+      "action": "read",
+      "category": "权限管理",
+      "description": "查看权限列表和详情"
+    },
+    {
+      "code": "permission:update",
+      "name": "更新权限",
+      "resource": "permission",
+      "action": "update",
+      "category": "权限管理",
+      "description": "更新权限信息"
+    },
+    {
+      "code": "user:create",
+      "name": "创建用户",
+      "resource": "user",
+      "action": "create",
+      "category": "用户管理",
+      "description": "创建新用户"
+    },
+    {
+      "code": "user:delete",
+      "name": "删除用户",
+      "resource": "user",
+      "action": "delete",
+      "category": "用户管理",
+      "description": "删除用户"
+    },
+    {
+      "code": "user:read",
+      "name": "查看用户",
+      "resource": "user",
+      "action": "read",
+      "category": "用户管理",
+      "description": "查看用户列表和详情"
+    },
+    {
+      "code": "user:update",
+      "name": "更新用户",
+      "resource": "user",
+      "action": "update",
+      "category": "用户管理",
+      "description": "更新用户信息"
+    },
+    {
+      "code": "menu:create",
+      "name": "创建菜单",
+      "resource": "menu",
+      "action": "create",
+      "category": "菜单管理",
+      "description": "创建新菜单"
+    },
+    {
+      "code": "menu:delete",
+      "name": "删除菜单",
+      "resource": "menu",
+      "action": "delete",
+      "category": "菜单管理",
+      "description": "删除菜单"
+    },
+    {
+      "code": "menu:read",
+      "name": "查看菜单",
+      "resource": "menu",
+      "action": "read",
+      "category": "菜单管理",
+      "description": "查看菜单列表和详情"
+    },
+    {
+      "code": "menu:update",
+      "name": "更新菜单",
+      "resource": "menu",
+      "action": "update",
+      "category": "菜单管理",
+      "description": "更新菜单信息"
+    },
+    {
+      "code": "role:create",
+      "name": "创建角色",
+      "resource": "role",
+      "action": "create",
+      "category": "角色管理",
+      "description": "创建新角色"
+    },
+    {
+      "code": "role:delete",
+      "name": "删除角色",
+      "resource": "role",
+      "action": "delete",
+      "category": "角色管理",
+      "description": "删除角色"
+    },
+    {
+      "code": "role:read",
+      "name": "查看角色",
+      "resource": "role",
+      "action": "read",
+      "category": "角色管理",
+      "description": "查看角色列表和详情"
+    },
+    {
+      "code": "role:update",
+      "name": "更新角色",
+      "resource": "role",
+      "action": "update",
+      "category": "角色管理",
+      "description": "更新角色信息"
+    },
+    {
+      "code": "notification:manage",
+      "name": "管理通知",
+      "resource": "notification",
+      "action": "update",
+      "category": "通知管理",
+      "description": "发送和管理通知"
+    },
+    {
+      "code": "notification:read",
+      "name": "查看通知",
+      "resource": "notification",
+      "action": "read",
+      "category": "通知管理",
+      "description": "查看站内通知"
+    },
+    {
+      "code": "email:send",
+      "name": "发送邮件",
+      "resource": "email",
+      "action": "create",
+      "category": "邮件管理",
+      "description": "发送邮件和查看邮件日志"
+    },
+    {
+      "code": "email_template:create",
+      "name": "创建邮件模板",
+      "resource": "email_template",
+      "action": "create",
+      "category": "邮件管理",
+      "description": "创建新邮件模板"
+    },
+    {
+      "code": "email_template:delete",
+      "name": "删除邮件模板",
+      "resource": "email_template",
+      "action": "delete",
+      "category": "邮件管理",
+      "description": "删除邮件模板"
+    },
+    {
+      "code": "email_template:read",
+      "name": "查看邮件模板",
+      "resource": "email_template",
+      "action": "read",
+      "category": "邮件管理",
+      "description": "查看邮件模板列表和详情"
+    },
+    {
+      "code": "email_template:update",
+      "name": "更新邮件模板",
+      "resource": "email_template",
+      "action": "update",
+      "category": "邮件管理",
+      "description": "更新邮件模板信息"
+    },
+    {
+      "code": "department:create",
+      "name": "创建部门",
+      "resource": "department",
+      "action": "create",
+      "category": "部门管理",
+      "description": "创建新部门"
+    },
+    {
+      "code": "department:delete",
+      "name": "删除部门",
+      "resource": "department",
+      "action": "delete",
+      "category": "部门管理",
+      "description": "删除部门"
+    },
+    {
+      "code": "department:read",
+      "name": "查看部门",
+      "resource": "department",
+      "action": "read",
+      "category": "部门管理",
+      "description": "查看部门列表和详情"
+    },
+    {
+      "code": "department:update",
+      "name": "更新部门",
+      "resource": "department",
+      "action": "update",
+      "category": "部门管理",
+      "description": "更新部门信息"
+    }
+  ],
+  "menus": [
+    {
+      "id": "3dbb8153-d274-4213-b944-c34dc2f8e5eb",
+      "parent_id": null,
+      "name": "概览",
+      "path": "/dashboard",
+      "component": null,
+      "icon": "LayoutDashboard",
+      "type": "menu",
+      "visible": true,
+      "sort": 0,
+      "status": "active",
+      "permission_code": null
+    },
+    {
+      "id": "930b5496-b433-417f-996e-33f92e766c78",
+      "parent_id": "8cbb509e-7c46-4aeb-9be2-42a6c81ab522",
+      "name": "用户管理",
+      "path": "/setting/users",
+      "component": "UsersPage",
+      "icon": "Users",
+      "type": "menu",
+      "visible": true,
+      "sort": 1,
+      "status": "active",
+      "permission_code": "user:read"
+    },
+    {
+      "id": "cccccccc-dddd-eeee-ffff-000000000001",
+      "parent_id": "bbbbbbbb-cccc-dddd-eeee-ffffffffffff",
+      "name": "监控概览",
+      "path": "/monitor",
+      "component": null,
+      "icon": "BarChart3",
+      "type": "menu",
+      "visible": true,
+      "sort": 1,
+      "status": "active",
+      "permission_code": "monitor:read"
+    },
+    {
+      "id": "cccccccc-dddd-eeee-ffff-000000000002",
+      "parent_id": "bbbbbbbb-cccc-dddd-eeee-ffffffffffff",
+      "name": "接口监控",
+      "path": "/monitor/apis",
+      "component": null,
+      "icon": "Network",
+      "type": "menu",
+      "visible": true,
+      "sort": 2,
+      "status": "active",
+      "permission_code": "monitor:manage"
+    },
+    {
+      "id": "f21a78e2-24ee-49ee-bc3e-f81b82819c49",
+      "parent_id": null,
+      "name": "文件管理",
+      "path": "/files",
+      "component": null,
+      "icon": "FolderOpen",
+      "type": "menu",
+      "visible": true,
+      "sort": 2,
+      "status": "active",
+      "permission_code": "file:read"
+    },
+    {
+      "id": "7e9c856f-7a3b-4e32-b9a6-23dbf192031b",
+      "parent_id": "8cbb509e-7c46-4aeb-9be2-42a6c81ab522",
+      "name": "角色管理",
+      "path": "/setting/roles",
+      "component": "RolesPage",
+      "icon": "Shield",
+      "type": "menu",
+      "visible": true,
+      "sort": 2,
+      "status": "active",
+      "permission_code": "role:read"
+    },
+    {
+      "id": "cccccccc-dddd-eeee-ffff-000000000003",
+      "parent_id": "bbbbbbbb-cccc-dddd-eeee-ffffffffffff",
+      "name": "告警管理",
+      "path": "/monitor/alerts",
+      "component": null,
+      "icon": "Bell",
+      "type": "menu",
+      "visible": true,
+      "sort": 3,
+      "status": "active",
+      "permission_code": "monitor:manage"
+    },
+    {
+      "id": "de43bb2e-5968-4034-9989-cc23643e2225",
+      "parent_id": "8cbb509e-7c46-4aeb-9be2-42a6c81ab522",
+      "name": "权限管理",
+      "path": "/setting/permissions",
+      "component": "PermissionsPage",
+      "icon": "Key",
+      "type": "menu",
+      "visible": true,
+      "sort": 3,
+      "status": "active",
+      "permission_code": "permission:read"
+    },
+    {
+      "id": "19b416b7-acf8-45c4-9773-f762adfa2970",
+      "parent_id": "8cbb509e-7c46-4aeb-9be2-42a6c81ab522",
+      "name": "菜单管理",
+      "path": "/setting/menus",
+      "component": "MenusPage",
+      "icon": "MenuIcon",
+      "type": "menu",
+      "visible": true,
+      "sort": 4,
+      "status": "active",
+      "permission_code": "menu:read"
+    },
+    {
+      "id": "aadaea78-8154-4aa8-aabf-a2fde1552594",
+      "parent_id": "8cbb509e-7c46-4aeb-9be2-42a6c81ab522",
+      "name": "部门管理",
+      "path": "/setting/departments",
+      "component": "DepartmentsPage",
+      "icon": "Building2",
+      "type": "menu",
+      "visible": true,
+      "sort": 5,
+      "status": "active",
+      "permission_code": "department:read"
+    },
+    {
+      "id": "c61ba7aa-4e9d-4232-a3d2-240db1f06f58",
+      "parent_id": null,
+      "name": "日志管理",
+      "path": "/logs",
+      "component": null,
+      "icon": "FileText",
+      "type": "menu",
+      "visible": true,
+      "sort": 10,
+      "status": "active",
+      "permission_code": "log:read"
+    },
+    {
+      "id": "bbbbbbbb-cccc-dddd-eeee-ffffffffffff",
+      "parent_id": null,
+      "name": "监控系统",
+      "path": null,
+      "component": null,
+      "icon": "Activity",
+      "type": "menu",
+      "visible": true,
+      "sort": 20,
+      "status": "active",
+      "permission_code": null
+    },
+    {
+      "id": "0e58a5dd-1f8e-4e7f-a672-1529132bbe17",
+      "parent_id": null,
+      "name": "消息中心",
+      "path": "/notifications",
+      "component": null,
+      "icon": "Bell",
+      "type": "menu",
+      "visible": true,
+      "sort": 25,
+      "status": "active",
+      "permission_code": "notification:read"
+    },
+    {
+      "id": "7fe07395-6578-461a-bbea-1eedeb893718",
+      "parent_id": "8cbb509e-7c46-4aeb-9be2-42a6c81ab522",
+      "name": "邮件模板",
+      "path": "/setting/email-templates",
+      "component": null,
+      "icon": "Mail",
+      "type": "menu",
+      "visible": true,
+      "sort": 80,
+      "status": "active",
+      "permission_code": "email_template:read"
+    },
+    {
+      "id": "21836b78-e061-4e96-871d-f255f29f6759",
+      "parent_id": "8cbb509e-7c46-4aeb-9be2-42a6c81ab522",
+      "name": "通知设置",
+      "path": "/setting/notification-settings",
+      "component": null,
+      "icon": "Settings",
+      "type": "menu",
+      "visible": true,
+      "sort": 85,
+      "status": "active",
+      "permission_code": null
+    },
+    {
+      "id": "f66d0f9f-f390-4025-af0b-1a37ea52ccc8",
+      "parent_id": "8cbb509e-7c46-4aeb-9be2-42a6c81ab522",
+      "name": "代码生成器",
+      "path": "/generator",
+      "component": null,
+      "icon": "Code",
+      "type": "menu",
+      "visible": true,
+      "sort": 90,
+      "status": "active",
+      "permission_code": "generator:read"
+    },
+    {
+      "id": "8cbb509e-7c46-4aeb-9be2-42a6c81ab522",
+      "parent_id": null,
+      "name": "系统管理",
+      "path": "",
+      "component": null,
+      "icon": "Settings",
+      "type": "menu",
+      "visible": true,
+      "sort": 99,
+      "status": "active",
+      "permission_code": null
+    }
+  ],
+  "roles": [
+    {
+      "code": "super_admin",
+      "name": "超级管理员",
+      "description": "拥有系统所有权限",
+      "status": "active",
+      "sort": 1
+    },
+    {
+      "code": "admin",
+      "name": "管理员",
+      "description": "拥有大部分管理权限",
+      "status": "active",
+      "sort": 2
+    },
+    {
+      "code": "user",
+      "name": "普通用户",
+      "description": "普通用户角色，只有查看权限",
+      "status": "active",
+      "sort": 3
+    }
+  ],
+  "rolePermissions": [
+    {
+      "role_code": "admin",
+      "permission_code": "department:create"
+    },
+    {
+      "role_code": "admin",
+      "permission_code": "department:delete"
+    },
+    {
+      "role_code": "admin",
+      "permission_code": "department:read"
+    },
+    {
+      "role_code": "admin",
+      "permission_code": "department:update"
+    },
+    {
+      "role_code": "admin",
+      "permission_code": "email:send"
+    },
+    {
+      "role_code": "admin",
+      "permission_code": "email_template:create"
+    },
+    {
+      "role_code": "admin",
+      "permission_code": "email_template:delete"
+    },
+    {
+      "role_code": "admin",
+      "permission_code": "email_template:read"
+    },
+    {
+      "role_code": "admin",
+      "permission_code": "email_template:update"
+    },
+    {
+      "role_code": "admin",
+      "permission_code": "file-share:delete"
+    },
+    {
+      "role_code": "admin",
+      "permission_code": "file-share:read"
+    },
+    {
+      "role_code": "admin",
+      "permission_code": "file:copy"
+    },
+    {
+      "role_code": "admin",
+      "permission_code": "file:delete"
+    },
+    {
+      "role_code": "admin",
+      "permission_code": "file:download"
+    },
+    {
+      "role_code": "admin",
+      "permission_code": "file:move"
+    },
+    {
+      "role_code": "admin",
+      "permission_code": "file:preview"
+    },
+    {
+      "role_code": "admin",
+      "permission_code": "file:read"
+    },
+    {
+      "role_code": "admin",
+      "permission_code": "file:share"
+    },
+    {
+      "role_code": "admin",
+      "permission_code": "file:update"
+    },
+    {
+      "role_code": "admin",
+      "permission_code": "file:upload"
+    },
+    {
+      "role_code": "admin",
+      "permission_code": "folder:create"
+    },
+    {
+      "role_code": "admin",
+      "permission_code": "folder:delete"
+    },
+    {
+      "role_code": "admin",
+      "permission_code": "folder:read"
+    },
+    {
+      "role_code": "admin",
+      "permission_code": "folder:update"
+    },
+    {
+      "role_code": "admin",
+      "permission_code": "generator:create"
+    },
+    {
+      "role_code": "admin",
+      "permission_code": "generator:delete"
+    },
+    {
+      "role_code": "admin",
+      "permission_code": "generator:read"
+    },
+    {
+      "role_code": "admin",
+      "permission_code": "generator:update"
+    },
+    {
+      "role_code": "admin",
+      "permission_code": "log:backup"
+    },
+    {
+      "role_code": "admin",
+      "permission_code": "log:config"
+    },
+    {
+      "role_code": "admin",
+      "permission_code": "log:export"
+    },
+    {
+      "role_code": "admin",
+      "permission_code": "log:read"
+    },
+    {
+      "role_code": "admin",
+      "permission_code": "menu:create"
+    },
+    {
+      "role_code": "admin",
+      "permission_code": "menu:delete"
+    },
+    {
+      "role_code": "admin",
+      "permission_code": "menu:read"
+    },
+    {
+      "role_code": "admin",
+      "permission_code": "menu:update"
+    },
+    {
+      "role_code": "admin",
+      "permission_code": "monitor:manage"
+    },
+    {
+      "role_code": "admin",
+      "permission_code": "monitor:read"
+    },
+    {
+      "role_code": "admin",
+      "permission_code": "notification:manage"
+    },
+    {
+      "role_code": "admin",
+      "permission_code": "notification:read"
+    },
+    {
+      "role_code": "admin",
+      "permission_code": "role:create"
+    },
+    {
+      "role_code": "admin",
+      "permission_code": "role:delete"
+    },
+    {
+      "role_code": "admin",
+      "permission_code": "role:read"
+    },
+    {
+      "role_code": "admin",
+      "permission_code": "role:update"
+    },
+    {
+      "role_code": "admin",
+      "permission_code": "user:create"
+    },
+    {
+      "role_code": "admin",
+      "permission_code": "user:delete"
+    },
+    {
+      "role_code": "admin",
+      "permission_code": "user:read"
+    },
+    {
+      "role_code": "admin",
+      "permission_code": "user:update"
+    },
+    {
+      "role_code": "super_admin",
+      "permission_code": "department:create"
+    },
+    {
+      "role_code": "super_admin",
+      "permission_code": "department:delete"
+    },
+    {
+      "role_code": "super_admin",
+      "permission_code": "department:read"
+    },
+    {
+      "role_code": "super_admin",
+      "permission_code": "department:update"
+    },
+    {
+      "role_code": "super_admin",
+      "permission_code": "email:send"
+    },
+    {
+      "role_code": "super_admin",
+      "permission_code": "email_template:create"
+    },
+    {
+      "role_code": "super_admin",
+      "permission_code": "email_template:delete"
+    },
+    {
+      "role_code": "super_admin",
+      "permission_code": "email_template:read"
+    },
+    {
+      "role_code": "super_admin",
+      "permission_code": "email_template:update"
+    },
+    {
+      "role_code": "super_admin",
+      "permission_code": "file-share:delete"
+    },
+    {
+      "role_code": "super_admin",
+      "permission_code": "file-share:read"
+    },
+    {
+      "role_code": "super_admin",
+      "permission_code": "file:copy"
+    },
+    {
+      "role_code": "super_admin",
+      "permission_code": "file:delete"
+    },
+    {
+      "role_code": "super_admin",
+      "permission_code": "file:download"
+    },
+    {
+      "role_code": "super_admin",
+      "permission_code": "file:move"
+    },
+    {
+      "role_code": "super_admin",
+      "permission_code": "file:preview"
+    },
+    {
+      "role_code": "super_admin",
+      "permission_code": "file:read"
+    },
+    {
+      "role_code": "super_admin",
+      "permission_code": "file:share"
+    },
+    {
+      "role_code": "super_admin",
+      "permission_code": "file:update"
+    },
+    {
+      "role_code": "super_admin",
+      "permission_code": "file:upload"
+    },
+    {
+      "role_code": "super_admin",
+      "permission_code": "folder:create"
+    },
+    {
+      "role_code": "super_admin",
+      "permission_code": "folder:delete"
+    },
+    {
+      "role_code": "super_admin",
+      "permission_code": "folder:read"
+    },
+    {
+      "role_code": "super_admin",
+      "permission_code": "folder:update"
+    },
+    {
+      "role_code": "super_admin",
+      "permission_code": "generator:create"
+    },
+    {
+      "role_code": "super_admin",
+      "permission_code": "generator:delete"
+    },
+    {
+      "role_code": "super_admin",
+      "permission_code": "generator:read"
+    },
+    {
+      "role_code": "super_admin",
+      "permission_code": "generator:update"
+    },
+    {
+      "role_code": "super_admin",
+      "permission_code": "log:backup"
+    },
+    {
+      "role_code": "super_admin",
+      "permission_code": "log:config"
+    },
+    {
+      "role_code": "super_admin",
+      "permission_code": "log:export"
+    },
+    {
+      "role_code": "super_admin",
+      "permission_code": "log:read"
+    },
+    {
+      "role_code": "super_admin",
+      "permission_code": "menu:create"
+    },
+    {
+      "role_code": "super_admin",
+      "permission_code": "menu:delete"
+    },
+    {
+      "role_code": "super_admin",
+      "permission_code": "menu:read"
+    },
+    {
+      "role_code": "super_admin",
+      "permission_code": "menu:update"
+    },
+    {
+      "role_code": "super_admin",
+      "permission_code": "monitor:manage"
+    },
+    {
+      "role_code": "super_admin",
+      "permission_code": "monitor:read"
+    },
+    {
+      "role_code": "super_admin",
+      "permission_code": "notification:manage"
+    },
+    {
+      "role_code": "super_admin",
+      "permission_code": "notification:read"
+    },
+    {
+      "role_code": "super_admin",
+      "permission_code": "permission:create"
+    },
+    {
+      "role_code": "super_admin",
+      "permission_code": "permission:delete"
+    },
+    {
+      "role_code": "super_admin",
+      "permission_code": "permission:read"
+    },
+    {
+      "role_code": "super_admin",
+      "permission_code": "permission:update"
+    },
+    {
+      "role_code": "super_admin",
+      "permission_code": "role:create"
+    },
+    {
+      "role_code": "super_admin",
+      "permission_code": "role:delete"
+    },
+    {
+      "role_code": "super_admin",
+      "permission_code": "role:read"
+    },
+    {
+      "role_code": "super_admin",
+      "permission_code": "role:update"
+    },
+    {
+      "role_code": "super_admin",
+      "permission_code": "user:create"
+    },
+    {
+      "role_code": "super_admin",
+      "permission_code": "user:delete"
+    },
+    {
+      "role_code": "super_admin",
+      "permission_code": "user:read"
+    },
+    {
+      "role_code": "super_admin",
+      "permission_code": "user:update"
+    },
+    {
+      "role_code": "user",
+      "permission_code": "department:read"
+    },
+    {
+      "role_code": "user",
+      "permission_code": "email:send"
+    },
+    {
+      "role_code": "user",
+      "permission_code": "email_template:create"
+    },
+    {
+      "role_code": "user",
+      "permission_code": "email_template:delete"
+    },
+    {
+      "role_code": "user",
+      "permission_code": "email_template:read"
+    },
+    {
+      "role_code": "user",
+      "permission_code": "email_template:update"
+    },
+    {
+      "role_code": "user",
+      "permission_code": "menu:read"
+    },
+    {
+      "role_code": "user",
+      "permission_code": "monitor:manage"
+    },
+    {
+      "role_code": "user",
+      "permission_code": "monitor:read"
+    },
+    {
+      "role_code": "user",
+      "permission_code": "notification:manage"
+    },
+    {
+      "role_code": "user",
+      "permission_code": "notification:read"
+    },
+    {
+      "role_code": "user",
+      "permission_code": "permission:read"
+    },
+    {
+      "role_code": "user",
+      "permission_code": "role:read"
+    },
+    {
+      "role_code": "user",
+      "permission_code": "user:read"
+    }
+  ],
+  "roleMenus": [
+    {
+      "role_code": "admin",
+      "menu_name": "代码生成器"
+    },
+    {
+      "role_code": "admin",
+      "menu_name": "告警管理"
+    },
+    {
+      "role_code": "admin",
+      "menu_name": "接口监控"
+    },
+    {
+      "role_code": "admin",
+      "menu_name": "文件管理"
+    },
+    {
+      "role_code": "admin",
+      "menu_name": "日志管理"
+    },
+    {
+      "role_code": "admin",
+      "menu_name": "权限管理"
+    },
+    {
+      "role_code": "admin",
+      "menu_name": "概览"
+    },
+    {
+      "role_code": "admin",
+      "menu_name": "消息中心"
+    },
+    {
+      "role_code": "admin",
+      "menu_name": "用户管理"
+    },
+    {
+      "role_code": "admin",
+      "menu_name": "监控概览"
+    },
+    {
+      "role_code": "admin",
+      "menu_name": "监控系统"
+    },
+    {
+      "role_code": "admin",
+      "menu_name": "系统管理"
+    },
+    {
+      "role_code": "admin",
+      "menu_name": "菜单管理"
+    },
+    {
+      "role_code": "admin",
+      "menu_name": "角色管理"
+    },
+    {
+      "role_code": "admin",
+      "menu_name": "通知设置"
+    },
+    {
+      "role_code": "admin",
+      "menu_name": "邮件模板"
+    },
+    {
+      "role_code": "admin",
+      "menu_name": "部门管理"
+    },
+    {
+      "role_code": "super_admin",
+      "menu_name": "代码生成器"
+    },
+    {
+      "role_code": "super_admin",
+      "menu_name": "告警管理"
+    },
+    {
+      "role_code": "super_admin",
+      "menu_name": "接口监控"
+    },
+    {
+      "role_code": "super_admin",
+      "menu_name": "文件管理"
+    },
+    {
+      "role_code": "super_admin",
+      "menu_name": "日志管理"
+    },
+    {
+      "role_code": "super_admin",
+      "menu_name": "权限管理"
+    },
+    {
+      "role_code": "super_admin",
+      "menu_name": "概览"
+    },
+    {
+      "role_code": "super_admin",
+      "menu_name": "消息中心"
+    },
+    {
+      "role_code": "super_admin",
+      "menu_name": "用户管理"
+    },
+    {
+      "role_code": "super_admin",
+      "menu_name": "监控概览"
+    },
+    {
+      "role_code": "super_admin",
+      "menu_name": "监控系统"
+    },
+    {
+      "role_code": "super_admin",
+      "menu_name": "系统管理"
+    },
+    {
+      "role_code": "super_admin",
+      "menu_name": "菜单管理"
+    },
+    {
+      "role_code": "super_admin",
+      "menu_name": "角色管理"
+    },
+    {
+      "role_code": "super_admin",
+      "menu_name": "通知设置"
+    },
+    {
+      "role_code": "super_admin",
+      "menu_name": "邮件模板"
+    },
+    {
+      "role_code": "super_admin",
+      "menu_name": "部门管理"
+    },
+    {
+      "role_code": "user",
+      "menu_name": "告警管理"
+    },
+    {
+      "role_code": "user",
+      "menu_name": "接口监控"
+    },
+    {
+      "role_code": "user",
+      "menu_name": "文件管理"
+    },
+    {
+      "role_code": "user",
+      "menu_name": "日志管理"
+    },
+    {
+      "role_code": "user",
+      "menu_name": "权限管理"
+    },
+    {
+      "role_code": "user",
+      "menu_name": "概览"
+    },
+    {
+      "role_code": "user",
+      "menu_name": "消息中心"
+    },
+    {
+      "role_code": "user",
+      "menu_name": "用户管理"
+    },
+    {
+      "role_code": "user",
+      "menu_name": "监控概览"
+    },
+    {
+      "role_code": "user",
+      "menu_name": "监控系统"
+    },
+    {
+      "role_code": "user",
+      "menu_name": "系统管理"
+    },
+    {
+      "role_code": "user",
+      "menu_name": "菜单管理"
+    },
+    {
+      "role_code": "user",
+      "menu_name": "角色管理"
+    },
+    {
+      "role_code": "user",
+      "menu_name": "通知设置"
+    },
+    {
+      "role_code": "user",
+      "menu_name": "邮件模板"
+    },
+    {
+      "role_code": "user",
+      "menu_name": "部门管理"
+    }
+  ],
+  "departments": [
+    {
+      "name": "技术部",
+      "code": "TECH",
+      "description": "负责公司技术研发工作",
+      "sort": 1,
+      "status": "active"
+    },
+    {
+      "name": "市场部",
+      "code": "MARKET",
+      "description": "负责市场推广和销售",
+      "sort": 2,
+      "status": "active"
+    }
+  ],
+  "emailTemplates": [
+    {
+      "name": "接口异常告警模版",
+      "subject": "{{title}}",
+      "content": "<div style=\"font-family: Arial, sans-serif; padding: 20px; background-color: #f5f5f5;\">\n  <div style=\"max-width: 600px; margin: 0 auto; background-color: white; padding: 30px; border-radius: 8px;\">\n    <h2 style=\"color: #dc3545; margin-top: 0;\">🚨 {{title}}</h2>\n\n    {{{content}}}\n\n    <hr style=\"border: none; border-top: 1px solid #eee; margin: 20px 0;\">\n    <p style=\"color: #999; font-size: 12px; text-align: center;\">\n      此邮件由系统自动发送，请勿回复\n    </p>\n  </div>\n</div>",
+      "template_type": "API_MONITOR_ALERT",
+      "variables": null,
+      "variable_schema": [
+        {
+          "name": "apiName",
+          "label": "接口名称",
+          "description": "监控接口的名称",
+          "type": "string",
+          "required": true,
+          "example": "用户登录接口"
+        },
+        {
+          "name": "apiUrl",
+          "label": "接口地址",
+          "description": "接口URL",
+          "type": "string",
+          "required": true,
+          "example": "https://api.example.com/login"
+        },
+        {
+          "name": "method",
+          "label": "请求方法",
+          "description": "HTTP请求方法",
+          "type": "string",
+          "required": true,
+          "example": "POST"
+        },
+        {
+          "name": "errorType",
+          "label": "异常类型",
+          "description": "异常类型（超时/状态码异常/响应内容异常）",
+          "type": "string",
+          "required": true,
+          "example": "超时"
+        },
+        {
+          "name": "errorMessage",
+          "label": "错误信息",
+          "description": "详细错误信息",
+          "type": "string",
+          "required": false,
+          "example": "请求超时"
+        },
+        {
+          "name": "statusCode",
+          "label": "状态码",
+          "description": "HTTP响应状态码",
+          "type": "number",
+          "required": false,
+          "example": "500"
+        },
+        {
+          "name": "responseTime",
+          "label": "响应时间",
+          "description": "接口响应时间（毫秒）",
+          "type": "number",
+          "required": false,
+          "example": "3500"
+        },
+        {
+          "name": "timestamp",
+          "label": "发生时间",
+          "description": "异常发生时间",
+          "type": "string",
+          "required": true,
+          "example": "2025-10-22 14:30:00"
+        }
+      ],
+      "tags": [
+        "api",
+        "alert",
+        "monitor"
+      ],
+      "description": "接口监控异常时的告警邮件模版"
+    },
+    {
+      "name": "CPU使用率告警模版",
+      "subject": "{{title}}",
+      "content": "<div style=\"font-family: Arial, sans-serif; padding: 20px; background-color: #f5f5f5;\">\n  <div style=\"max-width: 600px; margin: 0 auto; background-color: white; padding: 30px; border-radius: 8px;\">\n    <h2 style=\"color: #ff6b6b; margin-top: 0;\">⚠️ {{title}}</h2>\n\n    {{{content}}}\n\n    <hr style=\"border: none; border-top: 1px solid #eee; margin: 20px 0;\">\n    <p style=\"color: #999; font-size: 12px; text-align: center;\">\n      此邮件由系统自动发送，请勿回复\n    </p>\n  </div>\n</div>",
+      "template_type": "SYSTEM_ALERT",
+      "variables": null,
+      "variable_schema": [
+        {
+          "name": "ruleName",
+          "label": "规则名称",
+          "description": "触发告警的规则名称",
+          "type": "string",
+          "required": true,
+          "example": "CPU使用率过高告警"
+        },
+        {
+          "name": "currentValue",
+          "label": "当前值",
+          "description": "当前CPU使用率",
+          "type": "number",
+          "required": true,
+          "example": "85"
+        },
+        {
+          "name": "threshold",
+          "label": "阈值",
+          "description": "告警阈值",
+          "type": "number",
+          "required": true,
+          "example": "80"
+        },
+        {
+          "name": "level",
+          "label": "告警级别",
+          "description": "告警级别（info/warning/error/critical）",
+          "type": "string",
+          "required": true,
+          "example": "warning"
+        },
+        {
+          "name": "timestamp",
+          "label": "告警时间",
+          "description": "告警发生时间",
+          "type": "string",
+          "required": true,
+          "example": "2025-10-22 14:30:00"
+        }
+      ],
+      "tags": [
+        "system",
+        "alert",
+        "cpu"
+      ],
+      "description": "系统CPU使用率超出阈值时的告警邮件模版"
+    },
+    {
+      "name": "内存使用率告警模版",
+      "subject": "{{title}}",
+      "content": "<div style=\"font-family: Arial, sans-serif; padding: 20px; background-color: #f5f5f5;\">\n  <div style=\"max-width: 600px; margin: 0 auto; background-color: white; padding: 30px; border-radius: 8px;\">\n    <h2 style=\"color: #ff6b6b; margin-top: 0;\">⚠️ {{title}}</h2>\n\n    {{{content}}}\n\n    <hr style=\"border: none; border-top: 1px solid #eee; margin: 20px 0;\">\n    <p style=\"color: #999; font-size: 12px; text-align: center;\">\n      此邮件由系统自动发送，请勿回复\n    </p>\n  </div>\n</div>",
+      "template_type": "SYSTEM_ALERT",
+      "variables": null,
+      "variable_schema": [
+        {
+          "name": "ruleName",
+          "label": "规则名称",
+          "description": "触发告警的规则名称",
+          "type": "string",
+          "required": true,
+          "example": "内存使用率过高告警"
+        },
+        {
+          "name": "currentValue",
+          "label": "当前值",
+          "description": "当前内存使用率",
+          "type": "number",
+          "required": true,
+          "example": "90"
+        },
+        {
+          "name": "threshold",
+          "label": "阈值",
+          "description": "告警阈值",
+          "type": "number",
+          "required": true,
+          "example": "85"
+        },
+        {
+          "name": "level",
+          "label": "告警级别",
+          "description": "告警级别（info/warning/error/critical）",
+          "type": "string",
+          "required": true,
+          "example": "error"
+        },
+        {
+          "name": "timestamp",
+          "label": "告警时间",
+          "description": "告警发生时间",
+          "type": "string",
+          "required": true,
+          "example": "2025-10-22 14:30:00"
+        }
+      ],
+      "tags": [
+        "system",
+        "alert",
+        "memory"
+      ],
+      "description": "系统内存使用率超出阈值时的告警邮件模版"
+    }
+  ]
+}
