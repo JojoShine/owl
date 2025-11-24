@@ -7,6 +7,9 @@ const moduleConfigService = require('./module-config.service');
 const { handlebarsHelpers, getJoiType } = require('./template-helpers');
 const { clearCache } = require('../../config/rbac');
 
+// 导入Socket服务用于实时通知
+const socketService = require('../notification/socket.service');
+
 // 注册 Handlebars 辅助函数
 Object.keys(handlebarsHelpers).forEach((helperName) => {
   Handlebars.registerHelper(helperName, handlebarsHelpers[helperName]);
@@ -239,6 +242,14 @@ class CodeGeneratorService {
       // 清除RBAC缓存，确保新权限立即生效
       clearCache();
       logger.info(`RBAC cache cleared for module: ${moduleConfig.module_name}`);
+
+      // 通过WebSocket广播菜单更新事件，通知前端刷新菜单
+      socketService.broadcast('menu:updated', {
+        action: 'create',
+        moduleName: moduleConfig.module_name,
+        menuPath: `/${moduleConfig.module_path}`,
+      });
+      logger.info(`Menu update event broadcasted for module: ${moduleConfig.module_name}`);
     } catch (error) {
       logger.error('Failed to create menu:', error);
       // 不抛出错误，避免影响代码生成
@@ -459,6 +470,14 @@ class CodeGeneratorService {
       // 清除RBAC缓存
       clearCache();
       logger.info(`RBAC cache cleared for module: ${moduleConfig.module_name}`);
+
+      // 通过WebSocket广播菜单更新事件，通知前端刷新菜单
+      socketService.broadcast('menu:updated', {
+        action: 'delete',
+        moduleName: moduleConfig.module_name,
+        menuPath: `/${moduleConfig.module_path}`,
+      });
+      logger.info(`Menu delete event broadcasted for module: ${moduleConfig.module_name}`);
     } catch (error) {
       logger.error('Failed to delete menu:', error);
       // 不抛出错误，避免影响删除流程

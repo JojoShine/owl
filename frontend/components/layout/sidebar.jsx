@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import { getMenuIcon } from '@/lib/menu-icons';
 import api from '@/lib/api';
 import { ChevronDown, ChevronRight } from 'lucide-react';
+import { useSocket } from '@/contexts/SocketContext';
 
 const basePath = process.env.NODE_ENV === 'production' ? '/owl' : '';
 
@@ -16,25 +17,46 @@ export default function Sidebar() {
   const [menuItems, setMenuItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedMenus, setExpandedMenus] = useState(new Set());
+  const { socket, isConnected } = useSocket();
 
-  // 获取用户菜单
-  useEffect(() => {
-    async function fetchUserMenus() {
-      try {
-        const response = await api.menu.getUserMenus();
-        const items = response.data?.items || [];
-        setMenuItems(items);
-
-        // 默认折叠所有菜单（不展开子菜单）
-        setExpandedMenus(new Set());
-      } catch (error) {
-        console.error('获取菜单失败:', error);
-      } finally {
-        setLoading(false);
-      }
+  // 获取用户菜单的函数
+  const fetchUserMenus = useCallback(async () => {
+    try {
+      const response = await api.menu.getUserMenus();
+      const items = response.data?.items || [];
+      setMenuItems(items);
+    } catch (error) {
+      console.error('获取菜单失败:', error);
+    } finally {
+      setLoading(false);
     }
-    fetchUserMenus();
   }, []);
+
+  // 初始加载菜单
+  useEffect(() => {
+    fetchUserMenus();
+    // 默认折叠所有菜单（不展开子菜单）
+    setExpandedMenus(new Set());
+  }, [fetchUserMenus]);
+
+  // 监听WebSocket菜单更新事件
+  useEffect(() => {
+    if (!socket || !isConnected) return;
+
+    // 监听菜单更新事件
+    const handleMenuUpdated = (data) => {
+      console.log('Menu updated event received:', data);
+      // 重新获取菜单
+      fetchUserMenus();
+    };
+
+    socket.on('menu:updated', handleMenuUpdated);
+
+    // 清理监听器
+    return () => {
+      socket.off('menu:updated', handleMenuUpdated);
+    };
+  }, [socket, isConnected, fetchUserMenus]);
 
   // 切换菜单展开/收起状态
   const toggleMenu = (menuId) => {
