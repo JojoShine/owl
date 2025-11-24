@@ -451,7 +451,7 @@ class EmailService {
         logs,
         total,
         page: parseInt(page),
-        limit: parseInt(limit),
+        pageSize: parseInt(limit),
         totalPages: Math.ceil(total / limit),
       };
     } catch (error) {

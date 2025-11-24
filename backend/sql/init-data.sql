@@ -410,6 +410,116 @@ INSERT INTO email_templates (id, name, subject, content, template_type, variable
 </div>', 'SYSTEM_ALERT', NULL, '[{"name":"ruleName","label":"规则名称","description":"触发告警的规则名称","type":"string","required":true,"example":"内存使用率过高告警"},{"name":"currentValue","label":"当前值","description":"当前内存使用率","type":"number","required":true,"example":"90"},{"name":"threshold","label":"阈值","description":"告警阈值","type":"number","required":true,"example":"85"},{"name":"level","label":"告警级别","description":"告警级别（info/warning/error/critical）","type":"string","required":true,"example":"error"},{"name":"timestamp","label":"告警时间","description":"告警发生时间","type":"string","required":true,"example":"2025-10-22 14:30:00"}]', '["system","alert","memory"]', '系统内存使用率超出阈值时的告警邮件模版', '2025-10-28T00:43:06.737Z', '2025-10-28T00:43:06.737Z');
 
 -- ==========================================
+-- 11. 插入低代码平台权限
+-- ==========================================
+
+-- 数据源管理权限
+INSERT INTO permissions (id, code, name, resource, action, category, description, created_at, updated_at) VALUES
+  (gen_random_uuid(), 'datasource:read', '查看数据源', 'datasource', 'read', '低代码平台', '查看数据源列表和详情', NOW(), NOW()),
+  (gen_random_uuid(), 'datasource:create', '创建数据源', 'datasource', 'create', '低代码平台', '创建新的数据源', NOW(), NOW()),
+  (gen_random_uuid(), 'datasource:update', '更新数据源', 'datasource', 'update', '低代码平台', '更新数据源配置', NOW(), NOW()),
+  (gen_random_uuid(), 'datasource:delete', '删除数据源', 'datasource', 'delete', '低代码平台', '删除数据源', NOW(), NOW());
+
+-- API接口管理权限
+INSERT INTO permissions (id, code, name, resource, action, category, description, created_at, updated_at) VALUES
+  (gen_random_uuid(), 'api_interface:read', '查看API接口', 'api_interface', 'read', '低代码平台', '查看API接口列表和详情', NOW(), NOW()),
+  (gen_random_uuid(), 'api_interface:create', '创建API接口', 'api_interface', 'create', '低代码平台', '创建新的API接口', NOW(), NOW()),
+  (gen_random_uuid(), 'api_interface:update', '更新API接口', 'api_interface', 'update', '低代码平台', '更新API接口配置', NOW(), NOW()),
+  (gen_random_uuid(), 'api_interface:delete', '删除API接口', 'api_interface', 'delete', '低代码平台', '删除API接口', NOW(), NOW());
+
+-- 页面管理权限
+INSERT INTO permissions (id, code, name, resource, action, category, description, created_at, updated_at) VALUES
+  (gen_random_uuid(), 'lowcode_page:read', '查看页面', 'lowcode_page', 'read', '低代码平台', '查看低代码页面列表和详情', NOW(), NOW()),
+  (gen_random_uuid(), 'lowcode_page:create', '创建页面', 'lowcode_page', 'create', '低代码平台', '创建新的低代码页面', NOW(), NOW()),
+  (gen_random_uuid(), 'lowcode_page:update', '更新页面', 'lowcode_page', 'update', '低代码平台', '更新页面配置、发布和取消发布', NOW(), NOW()),
+  (gen_random_uuid(), 'lowcode_page:delete', '删除页面', 'lowcode_page', 'delete', '低代码平台', '删除低代码页面', NOW(), NOW());
+
+-- ==========================================
+-- 12. 插入低代码平台菜单
+-- ==========================================
+
+-- 创建低代码管理顶级菜单
+INSERT INTO menus (id, parent_id, name, path, component, icon, type, visible, sort, status, permission_code, created_at, updated_at) VALUES
+  (gen_random_uuid(), NULL, '低代码管理', NULL, NULL, 'Code2', 'menu', true, 15, 'active', NULL, NOW(), NOW());
+
+-- 获取低代码管理菜单ID用于后续子菜单关联
+DO $$
+DECLARE
+  lowcode_parent_id UUID;
+BEGIN
+  SELECT id INTO lowcode_parent_id FROM menus WHERE name = '低代码管理' AND parent_id IS NULL;
+
+  -- 插入子菜单
+  INSERT INTO menus (id, parent_id, name, path, component, icon, type, visible, sort, status, permission_code, created_at, updated_at) VALUES
+    (gen_random_uuid(), lowcode_parent_id, '数据源管理', '/lowcode/datasources', NULL, 'Database', 'menu', true, 1, 'active', 'datasource:read', NOW(), NOW()),
+    (gen_random_uuid(), lowcode_parent_id, 'API接口管理', '/lowcode/apis', NULL, 'Workflow', 'menu', true, 2, 'active', 'api_interface:read', NOW(), NOW()),
+    (gen_random_uuid(), lowcode_parent_id, '页面管理', '/lowcode/page-configs', NULL, 'Layout', 'menu', true, 3, 'active', 'lowcode_page:read', NOW(), NOW());
+END $$;
+
+-- ==========================================
+-- 13. 将低代码平台权限授予超级管理员和管理员角色
+-- ==========================================
+
+-- 先删除已存在的低代码相关权限关联（避免重复）
+DELETE FROM role_permissions
+WHERE permission_id IN (
+  SELECT id FROM permissions
+  WHERE code LIKE 'datasource:%'
+     OR code LIKE 'api_interface:%'
+     OR code LIKE 'lowcode_page:%'
+);
+
+-- 为超级管理员角色添加所有低代码权限
+INSERT INTO role_permissions (id, role_id, permission_id, created_at)
+SELECT
+  gen_random_uuid(),
+  '5bbddbca-0ace-4641-8a5b-8882a648ca49', -- 超级管理员
+  p.id,
+  NOW()
+FROM permissions p
+WHERE p.code LIKE 'datasource:%'
+   OR p.code LIKE 'api_interface:%'
+   OR p.code LIKE 'lowcode_page:%';
+
+-- 为管理员角色添加所有低代码权限
+INSERT INTO role_permissions (id, role_id, permission_id, created_at)
+SELECT
+  gen_random_uuid(),
+  '6b81e3c2-ec0c-40f3-8e00-ec54f1b41345', -- 管理员
+  p.id,
+  NOW()
+FROM permissions p
+WHERE p.code LIKE 'datasource:%'
+   OR p.code LIKE 'api_interface:%'
+   OR p.code LIKE 'lowcode_page:%';
+
+-- ==========================================
+-- 14. 将低代码平台菜单授予超级管理员和管理员角色
+-- ==========================================
+
+-- 为超级管理员角色添加低代码菜单
+INSERT INTO role_menus (id, role_id, menu_id, created_at)
+SELECT
+  gen_random_uuid(),
+  '5bbddbca-0ace-4641-8a5b-8882a648ca49', -- 超级管理员
+  m.id,
+  NOW()
+FROM menus m
+WHERE m.name IN ('低代码管理', '数据源管理', 'API接口管理', '页面管理')
+ON CONFLICT DO NOTHING;
+
+-- 为管理员角色添加低代码菜单
+INSERT INTO role_menus (id, role_id, menu_id, created_at)
+SELECT
+  gen_random_uuid(),
+  '6b81e3c2-ec0c-40f3-8e00-ec54f1b41345', -- 管理员
+  m.id,
+  NOW()
+FROM menus m
+WHERE m.name IN ('低代码管理', '数据源管理', 'API接口管理', '页面管理')
+ON CONFLICT DO NOTHING;
+
+-- ==========================================
 -- 完成
 -- ==========================================
 

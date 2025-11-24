@@ -103,11 +103,11 @@ export default function NotificationFilter({ filters, onChange }) {
 
         {/* 操作按钮 */}
         <div className="flex-shrink-0 flex gap-2">
-          <Button onClick={handleApply}>
+          <Button onClick={handleApply} size="lg">
             <SearchIcon className="w-4 h-4 mr-2" />
             查询
           </Button>
-          <Button onClick={handleReset} variant="outline">
+          <Button onClick={handleReset} variant="outline" size="lg">
             <XIcon className="w-4 h-4 mr-2" />
             重置
           </Button>

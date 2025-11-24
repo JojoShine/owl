@@ -37,22 +37,9 @@ class RoleService {
 
     const { count, rows } = await db.Role.findAndCountAll({
       where,
-      include: [
-        {
-          model: db.Permission,
-          as: 'permissions',
-          through: { attributes: [] },
-        },
-        {
-          model: db.Menu,
-          as: 'menus',
-          through: { attributes: [] },
-        },
-      ],
       limit: parseInt(limit),
       offset,
       order: [[sort, order.toUpperCase()]],
-      distinct: true,
     });
 
     return {
@@ -60,7 +47,7 @@ class RoleService {
       pagination: {
         total: count,
         page: parseInt(page),
-        limit: parseInt(limit),
+        pageSize: parseInt(limit),
         totalPages: Math.ceil(count / limit),
       },
     };
@@ -70,32 +57,41 @@ class RoleService {
    * 获取单个角色详情
    */
   async getRoleById(id) {
-    const role = await db.Role.findByPk(id, {
-      include: [
-        {
-          model: db.Permission,
-          as: 'permissions',
+    // 并行查询角色基本信息、权限和菜单
+    const [role, permissions, menus] = await Promise.all([
+      db.Role.findByPk(id),
+      db.Permission.findAll({
+        include: [{
+          model: db.Role,
+          as: 'roles',
+          where: { id },
+          attributes: [],
           through: { attributes: [] },
-        },
-        {
-          model: db.Menu,
-          as: 'menus',
+        }],
+        attributes: ['id', 'name', 'code', 'category'],
+      }),
+      db.Menu.findAll({
+        include: [{
+          model: db.Role,
+          as: 'roles',
+          where: { id },
+          attributes: [],
           through: { attributes: [] },
-        },
-        {
-          model: db.User,
-          as: 'users',
-          through: { attributes: [] },
-          attributes: ['id', 'username', 'email', 'real_name'],
-        },
-      ],
-    });
+        }],
+        attributes: ['id', 'name', 'path', 'icon'],
+      }),
+    ]);
 
     if (!role) {
       throw ApiError.notFound('角色不存在');
     }
 
-    return role;
+    // 组装返回数据
+    const result = role.toJSON();
+    result.permissions = permissions;
+    result.menus = menus;
+
+    return result;
   }
 
   /**

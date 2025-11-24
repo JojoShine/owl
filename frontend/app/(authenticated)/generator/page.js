@@ -505,19 +505,6 @@ export default function GeneratorPage() {
 
         {/* 数据库表列表 */}
         <TabsContent value="tables" className="space-y-4">
-          <div className="flex items-center gap-2">
-            <Input
-              placeholder="搜索表名..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="max-w-sm"
-            />
-            <Button onClick={loadTables} variant="outline">
-              <RefreshCwIcon className="w-4 h-4 mr-2" />
-              刷新
-            </Button>
-          </div>
-
           <Card>
             <CardHeader>
               <CardTitle>数据库表列表</CardTitle>
@@ -526,7 +513,27 @@ export default function GeneratorPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Table>
+              {/* 搜索栏 */}
+              <div className="bg-card border rounded-lg p-4">
+                <div className="flex flex-wrap items-end gap-4">
+                  <div className="flex-1 min-w-[180px]">
+                    <Input
+                      placeholder="搜索表名..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                  </div>
+                  <div className="flex-shrink-0">
+                    <Button onClick={loadTables} variant="outline" size="lg">
+                      <RefreshCwIcon className="w-4 h-4 mr-2" />
+                      刷新
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="border rounded-lg overflow-hidden">
+                <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>表名</TableHead>
@@ -576,6 +583,7 @@ export default function GeneratorPage() {
                   )}
                 </TableBody>
               </Table>
+              </div>
 
               {tablePagination.total > 0 && (
                 <Pagination
@@ -592,95 +600,7 @@ export default function GeneratorPage() {
         {/* 模块配置列表 */}
         <TabsContent value="configs" className="space-y-4">
           <div className="flex items-center gap-2">
-            <Button onClick={loadModuleConfigs} variant="outline">
-              <RefreshCwIcon className="w-4 h-4 mr-2" />
-              刷新
-            </Button>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {moduleConfigs.map((config) => (
-              <Card key={config.id}>
-                <CardHeader>
-                  <CardTitle>{config.module_name}</CardTitle>
-                  <CardDescription>{config.description}</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="text-sm text-muted-foreground">
-                    <div>表名: <span className="font-mono">{config.table_name}</span></div>
-                    <div>路径: <span className="font-mono">{config.module_path}</span></div>
-                    <div>字段数: {config.fields?.length || 0}</div>
-                  </div>
-
-                  <div className="flex flex-wrap gap-1">
-                    {config.enable_create && <Badge variant="secondary">新增</Badge>}
-                    {config.enable_update && <Badge variant="secondary">编辑</Badge>}
-                    {config.enable_delete && <Badge variant="secondary">删除</Badge>}
-                    {config.enable_batch_delete && <Badge variant="secondary">批量删除</Badge>}
-                    {config.enable_export && <Badge variant="secondary">导出</Badge>}
-                  </div>
-
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="flex-1"
-                      onClick={() => handleEditConfig(config)}
-                    >
-                      <Settings2Icon className="w-4 h-4 mr-1" />
-                      配置
-                    </Button>
-                    <Button
-                      size="sm"
-                      className="flex-1"
-                      onClick={() => handleGenerate(config)}
-                    >
-                      <CodeIcon className="w-4 h-4 mr-1" />
-                      生成
-                    </Button>
-                  </div>
-
-                  <div className="flex gap-2">
-                    {config.generated_files?.length > 0 && (
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        className="flex-1"
-                        onClick={() => handleDeleteGeneratedCode(config.id)}
-                      >
-                        <TrashIcon className="w-4 h-4 mr-1" />
-                        删除代码
-                      </Button>
-                    )}
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="flex-1"
-                      onClick={() => handleDeleteConfig(config.id)}
-                    >
-                      删除配置
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-
-          {/* 分页组件 */}
-          {moduleConfigs.length > 0 && (
-            <Pagination
-              page={configPagination.page}
-              total={configPagination.total}
-              pageSize={configPagination.pageSize}
-              onPageChange={handleConfigPageChange}
-            />
-          )}
-        </TabsContent>
-
-        {/* 生成历史 */}
-        <TabsContent value="history" className="space-y-4">
-          <div className="flex items-center gap-2">
-            <Button onClick={loadHistory} variant="outline">
+            <Button onClick={loadModuleConfigs} variant="outline" size="lg">
               <RefreshCwIcon className="w-4 h-4 mr-2" />
               刷新
             </Button>
@@ -688,13 +608,137 @@ export default function GeneratorPage() {
 
           <Card>
             <CardHeader>
+              <CardTitle>模块配置列表</CardTitle>
+              <CardDescription>已创建的模块配置</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="border rounded-lg overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>模块名称</TableHead>
+                      <TableHead>表名</TableHead>
+                      <TableHead>路径</TableHead>
+                      <TableHead className="w-[100px]">字段数</TableHead>
+                      <TableHead>功能</TableHead>
+                      <TableHead className="text-right">操作</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {loading && activeTab === 'configs' ? (
+                      <TableRow>
+                        <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
+                          加载中...
+                        </TableCell>
+                      </TableRow>
+                    ) : moduleConfigs.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
+                          暂无数据
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      moduleConfigs.map((config) => (
+                        <TableRow key={config.id}>
+                          <TableCell>
+                            <div className="font-medium">{config.module_name}</div>
+                            {config.description && (
+                              <div className="text-xs text-muted-foreground mt-1">
+                                {config.description}
+                              </div>
+                            )}
+                          </TableCell>
+                          <TableCell className="font-mono text-sm">{config.table_name}</TableCell>
+                          <TableCell className="font-mono text-xs">{config.module_path}</TableCell>
+                          <TableCell>{config.fields?.length || 0}</TableCell>
+                          <TableCell>
+                            <div className="flex flex-wrap gap-1">
+                              {config.enable_create && <Badge variant="secondary">新增</Badge>}
+                              {config.enable_update && <Badge variant="secondary">编辑</Badge>}
+                              {config.enable_delete && <Badge variant="secondary">删除</Badge>}
+                              {config.enable_batch_delete && <Badge variant="secondary">批量删除</Badge>}
+                              {config.enable_export && <Badge variant="secondary">导出</Badge>}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-1">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleEditConfig(config)}
+                              >
+                                <Settings2Icon className="w-4 h-4 mr-1" />
+                                配置
+                              </Button>
+                              <Button
+                                size="sm"
+                                onClick={() => handleGenerate(config)}
+                              >
+                                <CodeIcon className="w-4 h-4 mr-1" />
+                                生成
+                              </Button>
+                              {config.generated_files?.length > 0 && (
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={() => handleDeleteGeneratedCode(config.id)}
+                                  title="删除代码"
+                                >
+                                  <TrashIcon className="w-4 h-4" />
+                                </Button>
+                              )}
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleDeleteConfig(config.id)}
+                                title="删除配置"
+                              >
+                                删除配置
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* 分页组件 */}
+              {moduleConfigs.length > 0 && (
+                <Pagination
+                  page={configPagination.page}
+                  total={configPagination.total}
+                  pageSize={configPagination.pageSize}
+                  onPageChange={handleConfigPageChange}
+                />
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* 生成历史 */}
+        <TabsContent value="history" className="space-y-4">
+          <Card>
+            <CardHeader>
               <CardTitle>生成历史</CardTitle>
               <CardDescription>最近的代码生成记录</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <ScrollArea className="max-h-[420px]">
-                <div className="min-w-[720px]">
-                  <Table>
+              {/* 操作栏 */}
+              <div className="bg-card border rounded-lg p-4">
+                <div className="flex flex-wrap items-end gap-4">
+                  <div className="flex-shrink-0">
+                    <Button onClick={loadHistory} variant="outline" size="lg">
+                      <RefreshCwIcon className="w-4 h-4 mr-2" />
+                      刷新
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="border rounded-lg overflow-hidden">
+                <Table>
                     <TableHeader>
                       <TableRow>
                         <TableHead>模块名称</TableHead>
@@ -754,8 +798,7 @@ export default function GeneratorPage() {
                       )}
                     </TableBody>
                   </Table>
-                </div>
-              </ScrollArea>
+              </div>
 
               {historyPagination.total > historyPagination.pageSize && (
                 <Pagination

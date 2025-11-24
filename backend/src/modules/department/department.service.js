@@ -52,7 +52,7 @@ class DepartmentService {
           attributes: ['id', 'username', 'real_name'],
         },
       ],
-      limit: parseInt(limit),
+      pageSize: parseInt(limit),
       offset,
       order: [[sort, order.toUpperCase()]],
     });
@@ -62,7 +62,7 @@ class DepartmentService {
       pagination: {
         total: count,
         page: parseInt(page),
-        limit: parseInt(limit),
+        pageSize: parseInt(limit),
         totalPages: Math.ceil(count / limit),
       },
     };
@@ -325,7 +325,7 @@ class DepartmentService {
           attributes: ['id', 'name', 'code'],
         },
       ],
-      limit: parseInt(limit),
+      pageSize: parseInt(limit),
       offset,
       order: [['created_at', 'DESC']],
     });
@@ -336,7 +336,7 @@ class DepartmentService {
       pagination: {
         total: count,
         page: parseInt(page),
-        limit: parseInt(limit),
+        pageSize: parseInt(limit),
         totalPages: Math.ceil(count / limit),
       },
     };

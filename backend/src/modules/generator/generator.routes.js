@@ -221,4 +221,40 @@ router.put(
   generatorController.updatePageConfig
 );
 
+/**
+ * @route   POST /api/generator/validate-sql
+ * @desc    验证SQL语法
+ * @access  Private
+ */
+router.post(
+  '/validate-sql',
+  checkPermission('generator', 'read'),
+  validate(generatorValidation.validateSql),
+  generatorController.validateSql
+);
+
+/**
+ * @route   POST /api/generator/preview-sql
+ * @desc    预览SQL查询结果
+ * @access  Private
+ */
+router.post(
+  '/preview-sql',
+  checkPermission('generator', 'read'),
+  validate(generatorValidation.previewSql),
+  generatorController.previewSql
+);
+
+/**
+ * @route   POST /api/generator/generate-fields-from-sql
+ * @desc    从SQL生成字段配置
+ * @access  Private
+ */
+router.post(
+  '/generate-fields-from-sql',
+  checkPermission('generator', 'create'),
+  validate(generatorValidation.generateFieldsFromSql),
+  generatorController.generateFieldsFromSql
+);
+
 module.exports = router;

@@ -82,7 +82,7 @@ class GenerationHistoryService {
           attributes: ['id', 'module_name', 'table_name', 'description'],
         },
       ],
-      limit: parseInt(limit),
+      pageSize: parseInt(limit),
       offset,
       order: [[sort, order.toUpperCase()]],
     });
@@ -92,7 +92,7 @@ class GenerationHistoryService {
       pagination: {
         total: count,
         page: parseInt(page),
-        limit: parseInt(limit),
+        pageSize: parseInt(limit),
         totalPages: Math.ceil(count / limit),
       },
     };
@@ -148,7 +148,7 @@ class GenerationHistoryService {
           attributes: ['id', 'module_name', 'table_name', 'description'],
         },
       ],
-      limit: parseInt(limit),
+      pageSize: parseInt(limit),
       offset,
       order: [[sort, order.toUpperCase()]],
     });
@@ -158,7 +158,7 @@ class GenerationHistoryService {
       pagination: {
         total: count,
         page: parseInt(page),
-        limit: parseInt(limit),
+        pageSize: parseInt(limit),
         totalPages: Math.ceil(count / limit),
       },
     };

@@ -1122,3 +1122,9 @@ ALTER TABLE user_roles ADD CONSTRAINT fk_user_roles_role_id
     FOREIGN KEY (role_id)
         REFERENCES roles (id)
         ON DELETE CASCADE;
+
+-- ========================================
+-- 完成提示
+-- ========================================
+
+SELECT '✅ 数据库迁移完成：代码生成器已扩展支持动态SQL和字段分组' AS status;

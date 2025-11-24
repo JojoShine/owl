@@ -87,7 +87,7 @@ class DepartmentController {
   async getDepartmentMembers(req, res, next) {
     try {
       const result = await departmentService.getDepartmentMembers(req.params.id, req.query);
-      success(res, result, '获取部门成员成功');
+      paginated(res, result.members, result.pagination, '获取部门成员成功');
     } catch (error) {
       next(error);
     }

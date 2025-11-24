@@ -88,6 +88,36 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: true,
       comment: '前端页面配置（用于动态渲染）',
     },
+    // 动态SQL配置
+    custom_sql: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      comment: '自定义SQL查询语句（支持多表查询）',
+    },
+    sql_parameters: {
+      type: DataTypes.JSONB,
+      allowNull: true,
+      defaultValue: [],
+      comment: 'SQL参数配置（参数化查询）',
+    },
+    sql_primary_key: {
+      type: DataTypes.STRING(50),
+      allowNull: true,
+      defaultValue: 'id',
+      comment: '动态SQL查询结果的主键字段名',
+    },
+    // 详情页配置
+    detail_display_mode: {
+      type: DataTypes.STRING(20),
+      allowNull: true,
+      defaultValue: 'dialog',
+      comment: '详情展示模式: dialog(弹窗) | page(独立页面)',
+    },
+    detail_url_pattern: {
+      type: DataTypes.STRING(200),
+      allowNull: true,
+      comment: '详情页URL模式（Page模式使用）',
+    },
     created_by: {
       type: DataTypes.UUID,
       allowNull: true,

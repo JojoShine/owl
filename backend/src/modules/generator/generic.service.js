@@ -15,6 +15,11 @@ class GenericService {
    * @param {Object} query - 查询参数
    */
   async list(moduleConfig, query) {
+    // 检查是否使用动态SQL
+    if (moduleConfig.custom_sql) {
+      return this._executeCustomSqlList(moduleConfig, query);
+    }
+
     const {
       page = 1,
       limit = 10,
@@ -64,7 +69,7 @@ class GenericService {
       pagination: {
         total: parseInt(count),
         page: parseInt(page),
-        limit: parseInt(limit),
+        pageSize: parseInt(limit),
         totalPages: Math.ceil(count / limit),
       },
     };
@@ -76,6 +81,11 @@ class GenericService {
    * @param {Number|String} id - 记录ID
    */
   async getById(moduleConfig, id) {
+    // 检查是否使用动态SQL
+    if (moduleConfig.custom_sql) {
+      return this._executeCustomSqlDetail(moduleConfig, id);
+    }
+
     const tableName = moduleConfig.table_name;
     const query = `SELECT * FROM ${tableName} WHERE id = :id LIMIT 1`;
 
@@ -373,6 +383,165 @@ class GenericService {
     });
 
     return filtered;
+  }
+
+  /**
+   * 执行自定义SQL查询（列表，带分页）
+   * @param {Object} moduleConfig - 模块配置
+   * @param {Object} query - 查询参数
+   * @returns {Object} { data, pagination }
+   */
+  async _executeCustomSqlList(moduleConfig, query) {
+    const {
+      page = 1,
+      limit = 10,
+      sort = 'created_at',
+      order = 'DESC',
+      ...searchParams
+    } = query;
+
+    const offset = (page - 1) * limit;
+
+    // 获取基础SQL
+    let baseSql = moduleConfig.custom_sql.trim().replace(/;$/, '');
+
+    // 构建动态WHERE条件
+    const { whereConditions, replacements } = this._buildDynamicWhereClause(moduleConfig, searchParams);
+
+    // 判断原SQL是否已有WHERE子句
+    const hasWhere = baseSql.toUpperCase().includes('WHERE');
+
+    // 添加动态WHERE条件
+    if (whereConditions.length > 0) {
+      const connector = hasWhere ? 'AND' : 'WHERE';
+      baseSql = `${baseSql} ${connector} ${whereConditions.join(' AND ')}`;
+    }
+
+    // 添加分页参数
+    replacements.limit = parseInt(limit);
+    replacements.offset = offset;
+
+    // 执行数据查询（包含ORDER BY和LIMIT）
+    const dataQuery = `
+      ${baseSql}
+      ORDER BY ${sort} ${order.toUpperCase()}
+      LIMIT :limit OFFSET :offset
+    `;
+
+    const rows = await sequelize.query(dataQuery, {
+      replacements,
+      type: QueryTypes.SELECT,
+    });
+
+    // 执行计数查询（不包含ORDER BY和LIMIT）
+    const countQuery = `SELECT COUNT(*) as count FROM (${baseSql}) AS subquery`;
+
+    const [{ count }] = await sequelize.query(countQuery, {
+      replacements,
+      type: QueryTypes.SELECT,
+    });
+
+    logger.info(`Custom SQL list query executed for module: ${moduleConfig.module_name}, results: ${rows.length}`);
+
+    return {
+      data: rows,
+      pagination: {
+        total: parseInt(count),
+        page: parseInt(page),
+        pageSize: parseInt(limit),
+        totalPages: Math.ceil(count / limit),
+      },
+    };
+  }
+
+  /**
+   * 执行自定义SQL查询（详情，单条记录）
+   * @param {Object} moduleConfig - 模块配置
+   * @param {Number|String} id - 记录ID
+   * @returns {Object} 记录详情
+   */
+  async _executeCustomSqlDetail(moduleConfig, id) {
+    // 获取基础SQL
+    let baseSql = moduleConfig.custom_sql.trim().replace(/;$/, '');
+
+    // 获取主键字段名（默认为 'id'）
+    const primaryKey = moduleConfig.sql_primary_key || 'id';
+
+    // 判断原SQL是否已有WHERE子句
+    const hasWhere = baseSql.toUpperCase().includes('WHERE');
+
+    // 添加主键条件
+    const connector = hasWhere ? 'AND' : 'WHERE';
+    const detailQuery = `${baseSql} ${connector} ${primaryKey} = :id LIMIT 1`;
+
+    const [item] = await sequelize.query(detailQuery, {
+      replacements: { id },
+      type: QueryTypes.SELECT,
+    });
+
+    if (!item) {
+      throw ApiError.notFound(`${moduleConfig.description}不存在`);
+    }
+
+    logger.info(`Custom SQL detail query executed for module: ${moduleConfig.module_name}, id: ${id}`);
+
+    return item;
+  }
+
+  /**
+   * 构建动态WHERE条件（用于自定义SQL）
+   * @param {Object} moduleConfig - 模块配置
+   * @param {Object} searchParams - 搜索参数
+   * @returns {Object} { whereConditions, replacements }
+   */
+  _buildDynamicWhereClause(moduleConfig, searchParams) {
+    const whereConditions = [];
+    const replacements = {};
+
+    // 获取可搜索字段
+    const searchableFields = moduleConfig.fields.filter(f => f.is_searchable);
+
+    searchableFields.forEach(field => {
+      const fieldName = field.field_name;
+      const searchValue = searchParams[fieldName];
+
+      if (searchValue !== undefined && searchValue !== null && searchValue !== '') {
+        const searchType = field.search_type || 'like';
+
+        switch (searchType) {
+          case 'like':
+            whereConditions.push(`${fieldName} ILIKE :${fieldName}`);
+            replacements[fieldName] = `%${searchValue}%`;
+            break;
+
+          case 'exact':
+            whereConditions.push(`${fieldName} = :${fieldName}`);
+            replacements[fieldName] = searchValue;
+            break;
+
+          case 'range':
+            const startValue = searchParams[`${fieldName}_start`];
+            const endValue = searchParams[`${fieldName}_end`];
+
+            if (startValue !== undefined && startValue !== null && startValue !== '') {
+              whereConditions.push(`${fieldName} >= :${fieldName}_start`);
+              replacements[`${fieldName}_start`] = startValue;
+            }
+
+            if (endValue !== undefined && endValue !== null && endValue !== '') {
+              whereConditions.push(`${fieldName} <= :${fieldName}_end`);
+              replacements[`${fieldName}_end`] = endValue;
+            }
+            break;
+
+          default:
+            whereConditions.push(`${fieldName} ILIKE :${fieldName}`);
+            replacements[fieldName] = `%${searchValue}%`;
+        }
+      }
+    });
+
+    return { whereConditions, replacements };
   }
 }
 

@@ -2,6 +2,7 @@ const dbReaderService = require('./db-reader.service');
 const moduleConfigService = require('./module-config.service');
 const codeGeneratorService = require('./code-generator.service');
 const generationHistoryService = require('./generation-history.service');
+const sqlParserService = require('./sql-parser.service');
 const { success, paginated } = require('../../utils/response');
 
 class GeneratorController {
@@ -303,6 +304,48 @@ class GeneratorController {
       const { pageConfig } = req.body;
       const result = await moduleConfigService.updatePageConfig(id, pageConfig);
       success(res, result, '更新页面配置成功');
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * 验证SQL语法
+   * POST /api/generator/validate-sql
+   */
+  async validateSql(req, res, next) {
+    try {
+      const { sql } = req.body;
+      const result = await sqlParserService.validateSql(sql);
+      success(res, result, result.valid ? 'SQL语法验证通过' : 'SQL语法验证失败');
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * 预览SQL查询结果
+   * POST /api/generator/preview-sql
+   */
+  async previewSql(req, res, next) {
+    try {
+      const { sql, limit = 10 } = req.body;
+      const result = await sqlParserService.executeSampleQuery(sql, limit);
+      success(res, result, 'SQL查询预览成功');
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * 从SQL生成字段配置
+   * POST /api/generator/generate-fields-from-sql
+   */
+  async generateFieldsFromSql(req, res, next) {
+    try {
+      const { sql } = req.body;
+      const fields = await sqlParserService.parseSqlFields(sql);
+      success(res, fields, '字段配置生成成功');
     } catch (error) {
       next(error);
     }

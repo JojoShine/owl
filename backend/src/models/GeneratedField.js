@@ -94,6 +94,35 @@ module.exports = (sequelize, DataTypes) => {
       defaultValue: false,
       comment: '是否只读',
     },
+    // 详情页配置
+    field_group: {
+      type: DataTypes.STRING(50),
+      allowNull: true,
+      defaultValue: 'default',
+      comment: '字段所属分组（信息簇）',
+    },
+    show_in_detail: {
+      type: DataTypes.BOOLEAN,
+      allowNull: true,
+      defaultValue: true,
+      comment: '是否在详情页显示',
+    },
+    detail_sort: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: 0,
+      comment: '详情页显示顺序（数字越小越靠前）',
+    },
+    detail_label: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+      comment: '详情页显示标签（自定义字段名称）',
+    },
+    detail_component: {
+      type: DataTypes.STRING(50),
+      allowNull: true,
+      comment: '详情页显示组件类型',
+    },
   }, {
     tableName: 'generated_fields',
     timestamps: true,

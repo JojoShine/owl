@@ -99,9 +99,6 @@ export default function PermissionsPage() {
           <div className="bg-card border rounded-lg p-4">
             <div className="flex flex-wrap items-end gap-4">
               <div className="flex-1 min-w-[180px]">
-                <label className="text-sm font-medium text-foreground mb-1.5 block">
-                  搜索
-                </label>
                 <Input
                   placeholder="搜索权限名称、代码、资源..."
                   value={searchTerm}
@@ -122,54 +119,56 @@ export default function PermissionsPage() {
             </div>
           </div>
 
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>权限名称</TableHead>
-                <TableHead>权限代码</TableHead>
-                <TableHead>资源</TableHead>
-                <TableHead>操作类型</TableHead>
-                <TableHead>分类</TableHead>
-                <TableHead>描述</TableHead>
-                <TableHead className="text-right">操作</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
+          <div className="border rounded-lg overflow-hidden">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8">
-                    加载中...
-                  </TableCell>
+                  <TableHead>权限名称</TableHead>
+                  <TableHead>权限代码</TableHead>
+                  <TableHead>资源</TableHead>
+                  <TableHead>操作类型</TableHead>
+                  <TableHead>分类</TableHead>
+                  <TableHead>描述</TableHead>
+                  <TableHead className="text-right">操作</TableHead>
                 </TableRow>
-              ) : permissions.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                    暂无数据
-                  </TableCell>
-                </TableRow>
-              ) : (
-                permissions.map((permission) => (
-                  <TableRow key={permission.id}>
-                    <TableCell className="font-medium">{permission.name}</TableCell>
-                    <TableCell>
-                      <code className="text-sm bg-muted px-2 py-1 rounded">{permission.code}</code>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{permission.resource}</Badge>
-                    </TableCell>
-                    <TableCell>{getActionBadge(permission.action)}</TableCell>
-                    <TableCell>{permission.category || '-'}</TableCell>
-                    <TableCell className="max-w-xs truncate">
-                      {permission.description || '-'}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="h-8"></div>
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-8">
+                      加载中...
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                ) : permissions.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                      暂无数据
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  permissions.map((permission) => (
+                    <TableRow key={permission.id}>
+                      <TableCell className="font-medium">{permission.name}</TableCell>
+                      <TableCell>
+                        <code className="text-sm bg-muted px-2 py-1 rounded">{permission.code}</code>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{permission.resource}</Badge>
+                      </TableCell>
+                      <TableCell>{getActionBadge(permission.action)}</TableCell>
+                      <TableCell>{permission.category || '-'}</TableCell>
+                      <TableCell className="max-w-xs truncate">
+                        {permission.description || '-'}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="h-8"></div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
 
           <Pagination
             page={pagination.page}

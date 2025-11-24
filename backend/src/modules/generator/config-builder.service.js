@@ -34,6 +34,12 @@ class ConfigBuilderService {
 
       // 菜单配置
       menu: this._buildMenuConfig(moduleConfig),
+
+      // 动态SQL配置（新增）
+      dynamicSql: this._buildDynamicSqlConfig(moduleConfig),
+
+      // 详情页配置（新增）
+      detailConfig: this._buildDetailConfig(moduleConfig, fields),
     };
 
     logger.info(`Page config built successfully for module: ${moduleConfig.module_name}`);
@@ -206,6 +212,114 @@ class ConfigBuilderService {
       sort: moduleConfig.menu_sort || 100,
       parentId: moduleConfig.menu_parent_id || null,
     };
+  }
+
+  /**
+   * 构建动态SQL配置
+   * @param {Object} moduleConfig
+   * @returns {Object|null}
+   */
+  _buildDynamicSqlConfig(moduleConfig) {
+    // 如果没有自定义SQL，返回null
+    if (!moduleConfig.custom_sql) {
+      return null;
+    }
+
+    return {
+      enabled: true,
+      query: moduleConfig.custom_sql,
+      parameters: moduleConfig.sql_parameters || [],
+      primaryKey: moduleConfig.sql_primary_key || 'id',
+    };
+  }
+
+  /**
+   * 构建详情页配置
+   * @param {Object} moduleConfig
+   * @param {Array} fields
+   * @returns {Object}
+   */
+  _buildDetailConfig(moduleConfig, fields) {
+    const detailConfig = {
+      displayMode: moduleConfig.detail_display_mode || 'dialog',
+      urlPattern: moduleConfig.detail_url_pattern || `/${moduleConfig.module_path}/:id`,
+      fieldGroups: this._buildFieldGroups(fields),
+    };
+
+    return detailConfig;
+  }
+
+  /**
+   * 构建字段分组配置
+   * @param {Array} fields
+   * @returns {Array}
+   */
+  _buildFieldGroups(fields) {
+    // 按field_group分组
+    const groupMap = new Map();
+
+    fields.forEach(field => {
+      // 只处理在详情页显示的字段
+      if (field.show_in_detail === false) {
+        return;
+      }
+
+      const groupKey = field.field_group || 'default';
+
+      if (!groupMap.has(groupKey)) {
+        groupMap.set(groupKey, {
+          groupKey,
+          groupLabel: this._getGroupLabel(groupKey),
+          fields: [],
+          layout: 'grid', // 默认栅格布局
+          columns: 2,     // 默认2列
+        });
+      }
+
+      // 添加字段到分组
+      groupMap.get(groupKey).fields.push({
+        fieldName: field.field_name,
+        label: field.detail_label || field.field_comment || field.field_name,
+        sort: field.detail_sort || 0,
+        component: field.detail_component,
+      });
+    });
+
+    // 转换为数组并对每个分组的字段排序
+    const groups = Array.from(groupMap.values()).map(group => {
+      group.fields.sort((a, b) => a.sort - b.sort);
+      return group;
+    });
+
+    // 如果只有default分组，给它一个更友好的名称
+    if (groups.length === 1 && groups[0].groupKey === 'default') {
+      groups[0].groupLabel = '基本信息';
+    }
+
+    return groups;
+  }
+
+  /**
+   * 获取分组标签（中文名称）
+   * @param {String} groupKey
+   * @returns {String}
+   */
+  _getGroupLabel(groupKey) {
+    const labelMap = {
+      default: '基本信息',
+      basic: '基本信息',
+      detail: '详细信息',
+      contact: '联系信息',
+      address: '地址信息',
+      family: '家庭信息',
+      education: '教育信息',
+      work: '工作信息',
+      finance: '财务信息',
+      system: '系统信息',
+      other: '其他信息',
+    };
+
+    return labelMap[groupKey] || groupKey;
   }
 
   /**

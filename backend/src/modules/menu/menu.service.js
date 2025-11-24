@@ -58,7 +58,7 @@ class MenuService {
           attributes: ['id', 'name', 'code'],
         },
       ],
-      limit: parseInt(limit),
+      pageSize: parseInt(limit),
       offset,
       order: [[sort, order.toUpperCase()]],
     });
@@ -68,7 +68,7 @@ class MenuService {
       pagination: {
         total: count,
         page: parseInt(page),
-        limit: parseInt(limit),
+        pageSize: parseInt(limit),
         totalPages: Math.ceil(count / limit),
       },
     };

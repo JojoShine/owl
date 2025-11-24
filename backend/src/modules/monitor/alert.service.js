@@ -45,7 +45,7 @@ class AlertService {
       total: count,
       items: rows,
       page: parseInt(page),
-      limit: parseInt(limit),
+      pageSize: parseInt(limit),
     };
   }
 
@@ -146,7 +146,7 @@ class AlertService {
       total: count,
       items: rows,
       page: parseInt(page),
-      limit: parseInt(limit),
+      pageSize: parseInt(limit),
     };
   }
 

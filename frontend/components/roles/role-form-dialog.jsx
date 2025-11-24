@@ -43,6 +43,7 @@ export default function RoleFormDialog({ open, onOpenChange, role, onSuccess }) 
   const [menus, setMenus] = useState([]);
   const [selectedPermissions, setSelectedPermissions] = useState([]);
   const [selectedMenus, setSelectedMenus] = useState([]);
+  const [isLoadingData, setIsLoadingData] = useState(false);
 
   const {
     register,
@@ -98,29 +99,55 @@ export default function RoleFormDialog({ open, onOpenChange, role, onSuccess }) 
 
   // 当role变化时，更新表单
   useEffect(() => {
-    if (role) {
-      reset({
-        name: role.name || '',
-        code: role.code || '',
-        description: role.description || '',
-        status: role.status || 'active',
-        sort: role.sort || 0,
-      });
-      // 设置已选择的权限和菜单
-      setSelectedPermissions(role.permissions?.map(p => p.id) || []);
-      setSelectedMenus(role.menus?.map(m => m.id) || []);
-    } else {
-      reset({
-        name: '',
-        code: '',
-        description: '',
-        status: 'active',
-        sort: 0,
-      });
-      setSelectedPermissions([]);
-      setSelectedMenus([]);
-    }
-  }, [role, reset]);
+    const fetchRoleDetail = async () => {
+      if (role && open) {
+        setIsLoadingData(true);
+        try {
+          // 调用详情接口获取完整数据（包含权限和菜单）
+          const response = await roleApi.getRole(role.id);
+          const roleDetail = response.data;
+
+          reset({
+            name: roleDetail.name || '',
+            code: roleDetail.code || '',
+            description: roleDetail.description || '',
+            status: roleDetail.status || 'active',
+            sort: roleDetail.sort || 0,
+          });
+          // 设置已选择的权限和菜单
+          setSelectedPermissions(roleDetail.permissions?.map(p => p.id) || []);
+          setSelectedMenus(roleDetail.menus?.map(m => m.id) || []);
+        } catch (error) {
+          console.error('获取角色详情失败:', error);
+          toast.error('获取角色详情失败');
+          // 如果获取失败，使用列表数据
+          reset({
+            name: role.name || '',
+            code: role.code || '',
+            description: role.description || '',
+            status: role.status || 'active',
+            sort: role.sort || 0,
+          });
+          setSelectedPermissions([]);
+          setSelectedMenus([]);
+        } finally {
+          setIsLoadingData(false);
+        }
+      } else if (!role) {
+        reset({
+          name: '',
+          code: '',
+          description: '',
+          status: 'active',
+          sort: 0,
+        });
+        setSelectedPermissions([]);
+        setSelectedMenus([]);
+      }
+    };
+
+    fetchRoleDetail();
+  }, [role, open, reset]);
 
   const onSubmit = async (data) => {
     try {
@@ -212,6 +239,14 @@ export default function RoleFormDialog({ open, onOpenChange, role, onSuccess }) 
           </DialogDescription>
         </DialogHeader>
 
+        {isLoadingData ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+              <p className="text-sm text-muted-foreground">加载角色数据...</p>
+            </div>
+          </div>
+        ) : (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <Tabs defaultValue="basic" className="w-full">
             <TabsList className="grid w-full grid-cols-3">
@@ -356,6 +391,7 @@ export default function RoleFormDialog({ open, onOpenChange, role, onSuccess }) 
             </Button>
           </DialogFooter>
         </form>
+        )}
       </DialogContent>
     </Dialog>
   );

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Edit, Trash2, Eye, MoreVertical } from 'lucide-react';
+import { Edit, Trash2, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -11,14 +11,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { formatDistanceToNow } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
@@ -73,7 +65,7 @@ export default function EmailTemplateTable({
               <TableHead>主题</TableHead>
               <TableHead>描述</TableHead>
               <TableHead>更新时间</TableHead>
-              <TableHead className="w-[100px]">操作</TableHead>
+              <TableHead className="text-right">操作</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -96,42 +88,39 @@ export default function EmailTemplateTable({
                     locale: zhCN,
                   })}
                 </TableCell>
-                <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <MoreVertical className="h-4 w-4" />
+                <TableCell className="text-right">
+                  <div className="flex justify-end gap-1">
+                    {onPreview && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onPreview(template)}
+                        title="预览"
+                      >
+                        <Eye className="h-4 w-4" />
                       </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuLabel>操作</DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      {onPreview && (
-                        <DropdownMenuItem onClick={() => onPreview(template)}>
-                          <Eye className="h-4 w-4 mr-2" />
-                          预览
-                        </DropdownMenuItem>
-                      )}
-                      {onEdit && (
-                        <DropdownMenuItem onClick={() => onEdit(template)}>
-                          <Edit className="h-4 w-4 mr-2" />
-                          编辑
-                        </DropdownMenuItem>
-                      )}
-                      {onDelete && (
-                        <>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            onClick={() => handleDeleteClick(template)}
-                            className="text-destructive"
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            删除
-                          </DropdownMenuItem>
-                        </>
-                      )}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                    )}
+                    {onEdit && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onEdit(template)}
+                        title="编辑"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                    )}
+                    {onDelete && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeleteClick(template)}
+                        title="删除"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
                 </TableCell>
               </TableRow>
             ))}

@@ -228,6 +228,37 @@ const generatorValidation = {
       daysToKeep: Joi.number().integer().min(1).default(30),
     }),
   },
+
+  // 验证SQL语法
+  validateSql: {
+    body: Joi.object({
+      sql: Joi.string().required().messages({
+        'any.required': 'SQL语句不能为空',
+        'string.empty': 'SQL语句不能为空',
+      }),
+    }),
+  },
+
+  // 预览SQL查询结果
+  previewSql: {
+    body: Joi.object({
+      sql: Joi.string().required().messages({
+        'any.required': 'SQL语句不能为空',
+        'string.empty': 'SQL语句不能为空',
+      }),
+      limit: Joi.number().integer().min(1).max(100).default(10),
+    }),
+  },
+
+  // 从SQL生成字段配置
+  generateFieldsFromSql: {
+    body: Joi.object({
+      sql: Joi.string().required().messages({
+        'any.required': 'SQL语句不能为空',
+        'string.empty': 'SQL语句不能为空',
+      }),
+    }),
+  },
 };
 
 module.exports = generatorValidation;

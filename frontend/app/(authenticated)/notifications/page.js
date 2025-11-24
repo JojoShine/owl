@@ -333,11 +333,11 @@ export default function NotificationsPage() {
         <div className="flex gap-2">
           {isAdmin && (
             <>
-              <Button onClick={() => setSendDialogOpen(true)}>
+              <Button size="lg" onClick={() => setSendDialogOpen(true)}>
                 <Send className="h-4 w-4 mr-2" />
                 发送通知
               </Button>
-              <Button variant="outline" onClick={() => setBroadcastDialogOpen(true)}>
+              <Button size="lg" variant="outline" onClick={() => setBroadcastDialogOpen(true)}>
                 <Radio className="h-4 w-4 mr-2" />
                 广播通知
               </Button>
@@ -345,11 +345,11 @@ export default function NotificationsPage() {
           )}
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={handleMarkAllAsRead}>
+          <Button size="lg" variant="outline" onClick={handleMarkAllAsRead}>
             <Check className="h-4 w-4 mr-2" />
             全部已读
           </Button>
-          <Button variant="outline" onClick={handleClearRead}>
+          <Button size="lg" variant="outline" onClick={handleClearRead}>
             <Trash2 className="h-4 w-4 mr-2" />
             清空已读
           </Button>
@@ -372,12 +372,6 @@ export default function NotificationsPage() {
         </Card>
       </div>
 
-      {/* 筛选器 */}
-      <NotificationFilter
-        filters={filters}
-        onChange={handleFiltersChange}
-      />
-
       {/* 通知列表 */}
       <Card>
         <CardHeader>
@@ -386,18 +380,27 @@ export default function NotificationsPage() {
             {page > 1 ? `第 ${(page - 1) * limit + 1} - ${Math.min(page * limit, total)} 条` : `共 ${total} 条通知`}
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <NotificationList
-            notifications={notifications}
-            onMarkAsRead={handleMarkAsRead}
-            onDelete={handleDelete}
-            onNotificationClick={handleNotificationClick}
-            isLoading={isLoading}
+        <CardContent className="space-y-4">
+          {/* 筛选器 */}
+          <NotificationFilter
+            filters={filters}
+            onChange={handleFiltersChange}
           />
+
+          {/* 表格 */}
+          <div className="border rounded-lg overflow-hidden">
+            <NotificationList
+              notifications={notifications}
+              onMarkAsRead={handleMarkAsRead}
+              onDelete={handleDelete}
+              onNotificationClick={handleNotificationClick}
+              isLoading={isLoading}
+            />
+          </div>
 
           {/* 分页 */}
           {!isLoading && notifications.length > 0 && (
-            <div className="mt-6 flex justify-center">
+            <div className="flex justify-center">
               {renderPagination()}
             </div>
           )}

@@ -5,6 +5,14 @@ import { Bell, Check, Trash2, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { formatDistanceToNow } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 
@@ -87,95 +95,96 @@ export default function NotificationList({
   }
 
   return (
-    <div className="space-y-3">
-      {notifications.map((notification) => {
-        const typeConfig = notificationTypeConfig[notification.type] || notificationTypeConfig.info;
-        const isUnread = !notification.is_read;
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead className="w-[120px]">类型</TableHead>
+          <TableHead className="w-[200px]">标题</TableHead>
+          <TableHead>内容</TableHead>
+          <TableHead className="w-[150px]">时间</TableHead>
+          <TableHead className="w-[200px] text-right">操作</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {notifications.map((notification) => {
+          const typeConfig = notificationTypeConfig[notification.type] || notificationTypeConfig.info;
+          const isUnread = !notification.is_read;
 
-        return (
-          <Card
-            key={notification.id}
-            className="p-4 transition-all hover:shadow-md"
-          >
-            <div className="flex items-start gap-4">
-              {/* 图标 */}
-              <div className="flex-shrink-0">
-                <Bell className={`h-5 w-5 ${typeConfig.textColor}`} />
-              </div>
-
-              {/* 内容 */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <h4
-                    className={`font-medium text-sm ${
-                      isUnread ? 'text-foreground' : 'text-muted-foreground'
-                    }`}
-                  >
-                    {notification.title}
-                  </h4>
+          return (
+            <TableRow key={notification.id}>
+              {/* 类型列 */}
+              <TableCell>
+                <div className="flex items-center gap-2">
                   <Badge variant="outline" className="text-xs">
                     {typeConfig.label}
                   </Badge>
                   {isUnread && (
-                    <span className="h-2 w-2 bg-blue-500 rounded-full" />
+                    <span className="h-2 w-2 bg-blue-500 rounded-full" title="未读" />
                   )}
                 </div>
+              </TableCell>
 
-                <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
+              {/* 标题列 */}
+              <TableCell className={isUnread ? 'font-medium' : 'text-muted-foreground'}>
+                {notification.title}
+              </TableCell>
+
+              {/* 内容列 */}
+              <TableCell>
+                <p className="text-sm text-muted-foreground line-clamp-2">
                   {notification.content}
                 </p>
+              </TableCell>
 
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-muted-foreground">
-                    {formatDistanceToNow(new Date(notification.created_at), {
-                      addSuffix: true,
-                      locale: zhCN,
-                    })}
-                  </span>
+              {/* 时间列 */}
+              <TableCell className="text-sm text-muted-foreground">
+                {formatDistanceToNow(new Date(notification.created_at), {
+                  addSuffix: true,
+                  locale: zhCN,
+                })}
+              </TableCell>
 
-                  <div className="flex items-center gap-1">
-                    {notification.link && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8"
-                        onClick={() => handleNotificationClick(notification)}
-                      >
-                        <ExternalLink className="h-4 w-4 mr-1" />
-                        查看详情
-                      </Button>
-                    )}
+              {/* 操作列 */}
+              <TableCell className="text-right">
+                <div className="flex justify-end gap-1">
+                  {notification.link && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleNotificationClick(notification)}
+                      title="查看详情"
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                    </Button>
+                  )}
 
-                    {isUnread && onMarkAsRead && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={() => onMarkAsRead(notification.id)}
-                        title="标记为已读"
-                      >
-                        <Check className="h-4 w-4" />
-                      </Button>
-                    )}
+                  {isUnread && onMarkAsRead && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onMarkAsRead(notification.id)}
+                      title="标记为已读"
+                    >
+                      <Check className="h-4 w-4" />
+                    </Button>
+                  )}
 
-                    {onDelete && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-destructive hover:text-destructive"
-                        onClick={() => onDelete(notification.id)}
-                        title="删除"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
+                  {onDelete && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onDelete(notification.id)}
+                      title="删除"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
-              </div>
-            </div>
-          </Card>
-        );
-      })}
-    </div>
+              </TableCell>
+            </TableRow>
+          );
+        })}
+      </TableBody>
+    </Table>
   );
 }

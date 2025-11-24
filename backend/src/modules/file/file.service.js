@@ -70,7 +70,7 @@ class FileService {
           attributes: ['id', 'username', 'real_name'],
         },
       ],
-      limit: parseInt(limit),
+      pageSize: parseInt(limit),
       offset,
       order: [[sort, order.toUpperCase()]],
     });
@@ -83,7 +83,7 @@ class FileService {
       pagination: {
         total: count,
         page: parseInt(page),
-        limit: parseInt(limit),
+        pageSize: parseInt(limit),
         totalPages: Math.ceil(count / limit),
       },
     };

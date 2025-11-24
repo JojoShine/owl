@@ -144,9 +144,6 @@ export default function RolesPage() {
           <div className="bg-card border rounded-lg p-4">
             <div className="flex flex-wrap items-end gap-4">
               <div className="flex-1 min-w-[180px]">
-                <label className="text-sm font-medium text-foreground mb-1.5 block">
-                  搜索
-                </label>
                 <Input
                   placeholder="搜索角色名称、代码..."
                   value={searchTerm}
@@ -167,6 +164,7 @@ export default function RolesPage() {
             </div>
           </div>
 
+          <div className="border rounded-lg overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow>
@@ -230,6 +228,7 @@ export default function RolesPage() {
               )}
             </TableBody>
           </Table>
+          </div>
 
           <Pagination
             page={pagination.page}

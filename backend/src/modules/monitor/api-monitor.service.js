@@ -64,7 +64,7 @@ class ApiMonitorService {
       total: count,
       items: monitorsWithLastLog,
       page: parseInt(page),
-      limit: parseInt(limit),
+      pageSize: parseInt(limit),
     };
   }
 

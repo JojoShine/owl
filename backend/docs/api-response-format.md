@@ -85,12 +85,13 @@ exports.createUser = async (req, res, next) => {
 // 分页响应
 exports.getUsers = async (req, res, next) => {
   try {
-    const { page = 1, pageSize = 10 } = req.query;
-    const { count, rows } = await User.findAndCountAll({
-      limit: pageSize,
-      offset: (page - 1) * pageSize,
-    });
-    return paginated(res, rows, count, page, pageSize, '获取用户列表成功');
+    // Service层返回格式
+    const result = await userService.getUsers(req.query);
+    // result = {
+    //   data: [...],
+    //   pagination: { total, page, pageSize, totalPages }
+    // }
+    return paginated(res, result.data, result.pagination, '获取用户列表成功');
   } catch (err) {
     next(err);
   }
@@ -145,8 +146,14 @@ throw new ApiError(400, '自定义错误消息');
 ### error(res, message, statusCode, errors)
 标准错误响应
 
-### paginated(res, items, total, page, pageSize, message)
+### paginated(res, items, pagination, message)
 分页响应
+
+参数：
+- `res`: Express响应对象
+- `items`: 数据列表数组
+- `pagination`: 分页信息对象 `{ total, page, pageSize, totalPages }`
+- `message`: 响应消息（可选）
 
 ### created(res, data, message)
 创建成功响应（201）
@@ -180,5 +187,21 @@ throw new ApiError(400, '自定义错误消息');
 1. **始终使用响应工具**：不要直接使用 `res.json()`，使用提供的响应工具方法
 2. **统一错误处理**：使用 `ApiError` 类抛出错误，让中间件统一处理
 3. **提供清晰的消息**：message字段应该清晰地描述操作结果
-4. **分页参数标准化**：使用 `page` 和 `pageSize` 作为分页参数
+4. **分页参数标准化**：
+   - 请求参数使用 `page` 和 `limit`（或 `pageSize`）
+   - 响应中pagination对象统一使用 `pageSize` 字段
+   - Service层返回的pagination对象必须包含：`{ total, page, pageSize, totalPages }`
 5. **时间戳格式**：使用ISO 8601格式（自动生成）
+6. **Service层分页格式**：
+   ```javascript
+   // Service层统一返回格式
+   return {
+     data: rows,
+     pagination: {
+       total: count,
+       page: parseInt(page),
+       pageSize: parseInt(limit),  // 注意：使用pageSize而不是limit
+       totalPages: Math.ceil(count / limit),
+     },
+   };
+   ```

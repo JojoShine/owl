@@ -47,18 +47,9 @@ class PermissionService {
 
     const { count, rows } = await db.Permission.findAndCountAll({
       where,
-      include: [
-        {
-          model: db.Role,
-          as: 'roles',
-          through: { attributes: [] },
-          attributes: ['id', 'name', 'code'],
-        },
-      ],
       limit: parseInt(limit),
       offset,
       order: [[sort, order.toUpperCase()]],
-      distinct: true,
     });
 
     return {
@@ -66,7 +57,7 @@ class PermissionService {
       pagination: {
         total: count,
         page: parseInt(page),
-        limit: parseInt(limit),
+        pageSize: parseInt(limit),
         totalPages: Math.ceil(count / limit),
       },
     };

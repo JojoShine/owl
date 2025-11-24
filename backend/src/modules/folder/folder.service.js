@@ -46,7 +46,7 @@ class FolderService {
           attributes: ['id', 'username', 'real_name'],
         },
       ],
-      limit: parseInt(limit),
+      pageSize: parseInt(limit),
       offset,
       order: [[sort, order.toUpperCase()]],
     });
@@ -56,7 +56,7 @@ class FolderService {
       pagination: {
         total: count,
         page: parseInt(page),
-        limit: parseInt(limit),
+        pageSize: parseInt(limit),
         totalPages: Math.ceil(count / limit),
       },
     };

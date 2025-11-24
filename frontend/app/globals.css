@@ -590,3 +590,37 @@
   --sidebar-ring: oklch(0.65 0.12 200);
 }
 
+/* ========== 页面设计器组件属性配置统一样式 ========== */
+@layer components {
+  /* 统一所有表单控件的高度为 h-9 (36px) */
+  .component-settings input[type="text"],
+  .component-settings input[type="number"],
+  .component-settings input[type="url"],
+  .component-settings input[type="email"],
+  .component-settings input[type="password"],
+  .component-settings select,
+  .component-settings button[role="combobox"] {
+    @apply h-9;
+  }
+
+  /* Textarea 保持自适应高度，但设置最小高度 */
+  .component-settings textarea {
+    @apply min-h-20;
+  }
+
+  /* 统一Label字号为 text-sm */
+  .component-settings label {
+    @apply text-sm font-medium leading-none;
+  }
+
+  /* 信息簇标题样式 */
+  .component-settings .settings-group-title {
+    @apply text-sm font-semibold mb-3 mt-6 first:mt-0 text-foreground;
+  }
+
+  /* 配置项容器间距 */
+  .component-settings > div + div {
+    @apply mt-4;
+  }
+}
+

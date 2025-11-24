@@ -12,12 +12,12 @@ function Pagination({
   className,
   page,
   total,
-  pageSize,
+  pageSize = 10,
   onPageChange,
   ...props
 }) {
   // 如果传入了分页参数，渲染完整的分页组件
-  if (page !== undefined && total !== undefined && pageSize !== undefined && onPageChange) {
+  if (page !== undefined && total !== undefined && onPageChange) {
     return <CompletePagination
       page={page}
       total={total}
