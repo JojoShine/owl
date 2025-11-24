@@ -31,13 +31,6 @@ export default function DashboardPage() {
   return (
     <div className="p-8">
       <div className="max-w-full">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">欢迎使用 owl 管理平台</h1>
-          <p className="text-muted-foreground">
-            您好，{user?.username || '用户'}！这是一个功能强大的管理平台。
-          </p>
-        </div>
-
         {/* Count Metrics Section */}
         {!loading && dashboardData && (
           <>
