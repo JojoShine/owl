@@ -599,122 +599,143 @@ export default function GeneratorPage() {
 
         {/* 模块配置列表 */}
         <TabsContent value="configs" className="space-y-4">
-          <div className="flex items-center gap-2">
-            <Button onClick={loadModuleConfigs} variant="outline" size="lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold">模块配置</h2>
+              <p className="text-sm text-muted-foreground">已创建的模块配置</p>
+            </div>
+            <Button onClick={loadModuleConfigs} variant="outline">
               <RefreshCwIcon className="w-4 h-4 mr-2" />
               刷新
             </Button>
           </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>模块配置列表</CardTitle>
-              <CardDescription>已创建的模块配置</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="border rounded-lg overflow-hidden">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>模块名称</TableHead>
-                      <TableHead>表名</TableHead>
-                      <TableHead>路径</TableHead>
-                      <TableHead className="w-[100px]">字段数</TableHead>
-                      <TableHead>功能</TableHead>
-                      <TableHead className="text-right">操作</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {loading && activeTab === 'configs' ? (
-                      <TableRow>
-                        <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
-                          加载中...
-                        </TableCell>
-                      </TableRow>
-                    ) : moduleConfigs.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
-                          暂无数据
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      moduleConfigs.map((config) => (
-                        <TableRow key={config.id}>
-                          <TableCell>
-                            <div className="font-medium">{config.module_name}</div>
-                            {config.description && (
-                              <div className="text-xs text-muted-foreground mt-1">
-                                {config.description}
-                              </div>
-                            )}
-                          </TableCell>
-                          <TableCell className="font-mono text-sm">{config.table_name}</TableCell>
-                          <TableCell className="font-mono text-xs">{config.module_path}</TableCell>
-                          <TableCell>{config.fields?.length || 0}</TableCell>
-                          <TableCell>
-                            <div className="flex flex-wrap gap-1">
-                              {config.enable_create && <Badge variant="secondary">新增</Badge>}
-                              {config.enable_update && <Badge variant="secondary">编辑</Badge>}
-                              {config.enable_delete && <Badge variant="secondary">删除</Badge>}
-                              {config.enable_batch_delete && <Badge variant="secondary">批量删除</Badge>}
-                              {config.enable_export && <Badge variant="secondary">导出</Badge>}
+          {loading && activeTab === 'configs' ? (
+            <div className="py-12 text-center text-muted-foreground">
+              加载中...
+            </div>
+          ) : moduleConfigs.length === 0 ? (
+            <Card>
+              <CardContent className="py-12 text-center text-muted-foreground">
+                暂无模块配置，请先从"数据库表"标签页初始化配置
+              </CardContent>
+            </Card>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {moduleConfigs.map((config) => (
+                  <Card key={config.id} className="flex flex-col hover:shadow-md transition-shadow">
+                    <CardHeader>
+                      <CardTitle className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="text-lg font-semibold">{config.module_name}</div>
+                          {config.description && (
+                            <div className="text-xs text-muted-foreground mt-1 font-normal">
+                              {config.description}
                             </div>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex justify-end gap-1">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleEditConfig(config)}
-                              >
-                                <Settings2Icon className="w-4 h-4 mr-1" />
-                                配置
-                              </Button>
-                              <Button
-                                size="sm"
-                                onClick={() => handleGenerate(config)}
-                              >
-                                <CodeIcon className="w-4 h-4 mr-1" />
-                                生成
-                              </Button>
-                              {config.generated_files?.length > 0 && (
-                                <Button
-                                  size="sm"
-                                  variant="destructive"
-                                  onClick={() => handleDeleteGeneratedCode(config.id)}
-                                  title="删除代码"
-                                >
-                                  <TrashIcon className="w-4 h-4" />
-                                </Button>
-                              )}
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => handleDeleteConfig(config.id)}
-                                title="删除配置"
-                              >
-                                删除配置
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
+                          )}
+                        </div>
+                        <Badge variant="outline" className="ml-2 shrink-0">
+                          {config.fields?.length || 0} 字段
+                        </Badge>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex-1 space-y-4">
+                      {/* 表信息 */}
+                      <div className="space-y-2 text-sm">
+                        <div className="flex items-center gap-2">
+                          <DatabaseIcon className="w-4 h-4 text-muted-foreground" />
+                          <span className="text-muted-foreground">表名:</span>
+                          <code className="text-xs bg-muted px-1.5 py-0.5 rounded">
+                            {config.table_name}
+                          </code>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <CodeIcon className="w-4 h-4 text-muted-foreground mt-0.5" />
+                          <span className="text-muted-foreground">路径:</span>
+                          <code className="text-xs bg-muted px-1.5 py-0.5 rounded break-all">
+                            {config.module_path}
+                          </code>
+                        </div>
+                      </div>
+
+                      {/* 功能标签 */}
+                      <div className="space-y-2">
+                        <div className="text-xs text-muted-foreground font-medium">支持的功能:</div>
+                        <div className="flex flex-wrap gap-1">
+                          {config.enable_create && <Badge variant="secondary" className="text-xs">新增</Badge>}
+                          {config.enable_update && <Badge variant="secondary" className="text-xs">编辑</Badge>}
+                          {config.enable_delete && <Badge variant="secondary" className="text-xs">删除</Badge>}
+                          {config.enable_batch_delete && <Badge variant="secondary" className="text-xs">批量删除</Badge>}
+                          {config.enable_export && <Badge variant="secondary" className="text-xs">导出</Badge>}
+                          {!config.enable_create && !config.enable_update && !config.enable_delete &&
+                           !config.enable_batch_delete && !config.enable_export && (
+                            <span className="text-xs text-muted-foreground">无</span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* 操作按钮 */}
+                      <div className="flex flex-col gap-2 pt-2">
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="flex-1"
+                            onClick={() => handleEditConfig(config)}
+                          >
+                            <Settings2Icon className="w-4 h-4 mr-1" />
+                            配置
+                          </Button>
+                          <Button
+                            size="sm"
+                            className="flex-1"
+                            onClick={() => handleGenerate(config)}
+                          >
+                            <CodeIcon className="w-4 h-4 mr-1" />
+                            生成
+                          </Button>
+                        </div>
+                        <div className="flex gap-2">
+                          {config.generated_files?.length > 0 && (
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              className="flex-1"
+                              onClick={() => handleDeleteGeneratedCode(config.id)}
+                            >
+                              <TrashIcon className="w-4 h-4 mr-1" />
+                              删除代码
+                            </Button>
+                          )}
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="flex-1"
+                            onClick={() => handleDeleteConfig(config.id)}
+                          >
+                            删除配置
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
 
               {/* 分页组件 */}
-              {moduleConfigs.length > 0 && (
-                <Pagination
-                  page={configPagination.page}
-                  total={configPagination.total}
-                  pageSize={configPagination.pageSize}
-                  onPageChange={handleConfigPageChange}
-                />
+              {configPagination.total > configPagination.pageSize && (
+                <div className="flex justify-center pt-4">
+                  <Pagination
+                    page={configPagination.page}
+                    total={configPagination.total}
+                    pageSize={configPagination.pageSize}
+                    onPageChange={handleConfigPageChange}
+                  />
+                </div>
               )}
-            </CardContent>
-          </Card>
+            </>
+          )}
         </TabsContent>
 
         {/* 生成历史 */}
