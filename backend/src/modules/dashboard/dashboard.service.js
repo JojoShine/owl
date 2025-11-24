@@ -71,8 +71,15 @@ class DashboardService {
       for (let i = 6; i >= 0; i--) {
         const date = new Date(today);
         date.setDate(date.getDate() - i);
-        const startOfDay = new Date(date.setHours(0, 0, 0, 0));
-        const endOfDay = new Date(date.setHours(23, 59, 59, 999));
+
+        // 保存日期字符串
+        const dateStr = date.toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit' });
+
+        // 创建新的Date对象来计算日期范围
+        const startOfDay = new Date(date);
+        startOfDay.setHours(0, 0, 0, 0);
+        const endOfDay = new Date(date);
+        endOfDay.setHours(23, 59, 59, 999);
 
         const loginCount = await User.count({
           where: {
@@ -83,7 +90,7 @@ class DashboardService {
         });
 
         trend.push({
-          date: date.toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit' }),
+          date: dateStr,
           登录数: Math.max(loginCount, Math.floor(Math.random() * 20) + 5)
         });
       }
