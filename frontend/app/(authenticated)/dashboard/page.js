@@ -1,65 +1,124 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Settings, FileText, Activity } from 'lucide-react';
+import { CountMetricsContainer } from '@/components/dashboard/CountMetric';
+import DashboardCard from '@/components/dashboard/DashboardCard';
+import axios from '@/lib/axios';
 
 export default function DashboardPage() {
   const { user } = useAuth();
+  const [dashboardData, setDashboardData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        const response = await axios.get('/dashboard');
+        if (response.success) {
+          setDashboardData(response.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch dashboard data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
 
   return (
     <div className="p-8">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-full">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">欢迎使用 owl 管理平台</h1>
-          <p className="text-gray-600">
-            您好，{user?.username || '用户'}！这是一个功能强大的管理平台，请从左侧菜单选择相应功能模块。
+          <p className="text-muted-foreground">
+            您好，{user?.username || '用户'}！这是一个功能强大的管理平台。
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card className="hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-50 rounded-lg">
-                  <Settings className="h-6 w-6 text-blue-600" />
-                </div>
-                <CardTitle className="text-lg">系统管理</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-gray-600">用户、角色、权限、部门管理</p>
-            </CardContent>
-          </Card>
+        {/* Count Metrics Section */}
+        {!loading && dashboardData && (
+          <>
+            <CountMetricsContainer metrics={dashboardData.metrics} />
 
-          <Card className="hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-green-50 rounded-lg">
-                  <FileText className="h-6 w-6 text-green-600" />
-                </div>
-                <CardTitle className="text-lg">文件管理</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-gray-600">文件上传、下载、预览</p>
-            </CardContent>
-          </Card>
+            {/* Dashboard Cards Section */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <DashboardCard
+                title="最近登录趋势"
+                data={dashboardData.recentLogins}
+                mode="line"
+                dataKey="登录数"
+                xKey="date"
+              />
 
-          <Card className="hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-purple-50 rounded-lg">
-                  <Activity className="h-6 w-6 text-purple-600" />
+              <DashboardCard
+                title="系统概览"
+                data={dashboardData.systemOverview}
+                mode="pie"
+                dataKey="value"
+                xKey="name"
+              />
+
+              <DashboardCard
+                title="存储概览"
+                data={dashboardData.storageOverview}
+                mode="bar"
+                dataKey="value"
+                xKey="name"
+              />
+
+              <DashboardCard
+                title="操作统计"
+                data={dashboardData.recentOperations}
+                mode="bar"
+                dataKey="value"
+                xKey="name"
+              />
+
+              <DashboardCard
+                title="在线用户趋势"
+                data={dashboardData.onlineUsers}
+                mode="area"
+                dataKey="在线用户"
+                xKey="time"
+              />
+
+              <DashboardCard
+                title="访问趋势"
+                data={dashboardData.accessTrend}
+                mode="line"
+                dataKey="visits"
+                xKey="date"
+              />
+            </div>
+          </>
+        )}
+
+        {loading && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="bg-card border rounded-lg p-6 animate-pulse">
+                  <div className="h-4 bg-muted rounded mb-2 w-1/2"></div>
+                  <div className="h-8 bg-muted rounded"></div>
                 </div>
-                <CardTitle className="text-lg">监控中心</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-gray-600">系统监控、日志查看</p>
-            </CardContent>
-          </Card>
-        </div>
+              ))}
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="bg-card border rounded-lg p-6 animate-pulse">
+                  <div className="h-6 bg-muted rounded mb-4 w-1/3"></div>
+                  <div className="space-y-2">
+                    <div className="h-4 bg-muted rounded"></div>
+                    <div className="h-4 bg-muted rounded w-5/6"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

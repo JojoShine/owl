@@ -16,6 +16,7 @@ const logRoutes = require('../modules/log/log.routes');
 const monitorRoutes = require('../modules/monitor/monitor.routes');
 const notificationRoutes = require('../modules/notification/notification.routes');
 const generatorRoutes = require('../modules/generator/generator.routes');
+const dashboardRoutes = require('../modules/dashboard/dashboard.routes');
 
 /**
  * API路由统一入口
@@ -27,6 +28,9 @@ router.use('/auth', authRoutes);
 
 // 验证码路由
 router.use('/captcha', captchaRoutes);
+
+// 仪表板路由
+router.use('/dashboard', dashboardRoutes);
 
 // 用户管理路由
 router.use('/users', userRoutes);
@@ -48,6 +52,10 @@ router.use('/folders', folderRoutes);
 
 // 文件管理路由
 router.use('/files', fileRoutes);
+
+// 文件权限管理路由
+const filePermissionRoutes = require('../modules/file/file-permission.routes');
+router.use('/file-permissions', filePermissionRoutes);
 
 // 文件分享路由
 router.use('/file-shares', fileShareRoutes);
