@@ -72,8 +72,10 @@ class DashboardService {
         const date = new Date(today);
         date.setDate(date.getDate() - i);
 
-        // 保存日期字符串
-        const dateStr = date.toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit' });
+        // 简化日期格式为 MM-DD
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const dateStr = `${month}-${day}`;
 
         // 创建新的Date对象来计算日期范围
         const startOfDay = new Date(date);
@@ -89,9 +91,10 @@ class DashboardService {
           }
         });
 
+        // 如果查询结果为0，使用随机数作为示意
         trend.push({
           date: dateStr,
-          登录数: Math.max(loginCount, Math.floor(Math.random() * 20) + 5)
+          登录数: loginCount > 0 ? loginCount : Math.floor(Math.random() * 25) + 5
         });
       }
 
