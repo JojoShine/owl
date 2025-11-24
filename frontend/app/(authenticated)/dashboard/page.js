@@ -59,6 +59,7 @@ export default function DashboardPage() {
                 mode="pie"
                 dataKey="value"
                 xKey="name"
+                hideTitle={true}
               />
 
               <DashboardCard
