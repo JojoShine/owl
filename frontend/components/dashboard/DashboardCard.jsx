@@ -65,17 +65,18 @@ export default function DashboardCard({ title, data, mode = 'line', dataKey = 'v
   const renderLineChart = () => {
     return (
       <ResponsiveContainer width="100%" height={300}>
-        <LineChart data={data} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
+        <LineChart data={data} margin={{ top: 5, right: 30, left: 50, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
           <XAxis dataKey={xKey} stroke="var(--muted-foreground)" fontSize={12} />
-          <YAxis stroke="var(--muted-foreground)" fontSize={12} />
+          <YAxis stroke="var(--muted-foreground)" fontSize={12} width={40} />
           <Tooltip content={<CustomTooltip />} />
           <Line
             type="monotone"
             dataKey={dataKey}
             stroke="hsl(var(--primary))"
             strokeWidth={2}
-            dot={false}
+            dot={{ fill: 'hsl(var(--primary))', r: 4 }}
+            activeDot={{ r: 6 }}
             isAnimationActive={true}
           />
         </LineChart>
@@ -86,10 +87,10 @@ export default function DashboardCard({ title, data, mode = 'line', dataKey = 'v
   const renderBarChart = () => {
     return (
       <ResponsiveContainer width="100%" height={300}>
-        <BarChart data={data} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
+        <BarChart data={data} margin={{ top: 5, right: 30, left: 50, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
           <XAxis dataKey={xKey} stroke="var(--muted-foreground)" fontSize={12} />
-          <YAxis stroke="var(--muted-foreground)" fontSize={12} />
+          <YAxis stroke="var(--muted-foreground)" fontSize={12} width={40} />
           <Tooltip content={<CustomTooltip />} />
           <Bar dataKey={dataKey} fill="hsl(var(--primary))" isAnimationActive={true} />
         </BarChart>
@@ -100,10 +101,10 @@ export default function DashboardCard({ title, data, mode = 'line', dataKey = 'v
   const renderAreaChart = () => {
     return (
       <ResponsiveContainer width="100%" height={300}>
-        <AreaChart data={data} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
+        <AreaChart data={data} margin={{ top: 5, right: 30, left: 50, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
           <XAxis dataKey={xKey} stroke="var(--muted-foreground)" fontSize={12} />
-          <YAxis stroke="var(--muted-foreground)" fontSize={12} />
+          <YAxis stroke="var(--muted-foreground)" fontSize={12} width={40} />
           <Tooltip content={<CustomTooltip />} />
           <Area
             type="monotone"
