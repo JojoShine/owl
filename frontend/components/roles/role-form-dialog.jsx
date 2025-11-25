@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Loading } from '@/components/ui/loading';
 import { roleApi, permissionApi, menuApi } from '@/lib/api';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
@@ -240,12 +241,7 @@ export default function RoleFormDialog({ open, onOpenChange, role, onSuccess }) 
         </DialogHeader>
 
         {isLoadingData ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-              <p className="text-sm text-muted-foreground">加载角色数据...</p>
-            </div>
-          </div>
+          <Loading size="md" variant="spinner" text="加载角色数据..." />
         ) : (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <Tabs defaultValue="basic" className="w-full">

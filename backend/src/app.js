@@ -30,9 +30,10 @@ app.use(accessLogMiddleware);
 app.use(operationLogMiddleware);
 
 // 限流（排除特定接口）
+const isProduction = process.env.NODE_ENV === 'production';
 const limiter = rateLimit({
-  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000,
-  max: parseInt(process.env.RATE_LIMIT_MAX) || 100,
+  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || (isProduction ? 15 * 60 * 1000 : 60 * 60 * 1000),
+  max: parseInt(process.env.RATE_LIMIT_MAX) || (isProduction ? 100 : 1000),
   message: '请求过于频繁，请稍后再试',
   skip: (req) => {
     // 排除以下接口不受限流影响：
@@ -40,12 +41,17 @@ const limiter = rateLimit({
     // - 健康检查接口
     // - 验证码接口（登录页面需要频繁刷新）
     // - 认证接口（登录、注册等）
+    // - 仪表板接口（需要频繁刷新）
+    // - 文件接口（文件操作可能较多）
     const excludedPaths = [
       '/api/monitor',
       '/api/health',
       '/api/captcha',
       '/api/auth/login',
       '/api/auth/register',
+      '/api/dashboard',
+      '/api/files',
+      '/api/folders',
     ];
 
     return excludedPaths.some(path => req.path.startsWith(path));

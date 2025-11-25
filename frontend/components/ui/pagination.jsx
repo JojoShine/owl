@@ -7,6 +7,16 @@ import {
 
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+// 每页条数选项
+const PAGE_SIZE_OPTIONS = [5, 10, 15, 20, 50, 100];
 
 function Pagination({
   className,
@@ -14,6 +24,7 @@ function Pagination({
   total,
   pageSize = 10,
   onPageChange,
+  onPageSizeChange,
   ...props
 }) {
   // 如果传入了分页参数，渲染完整的分页组件
@@ -23,6 +34,7 @@ function Pagination({
       total={total}
       pageSize={pageSize}
       onPageChange={onPageChange}
+      onPageSizeChange={onPageSizeChange}
       className={className}
     />;
   }
@@ -39,7 +51,7 @@ function Pagination({
 }
 
 // 完整的分页组件实现
-const CompletePagination = React.memo(function CompletePagination({ page, total, pageSize, onPageChange, className }) {
+const CompletePagination = React.memo(function CompletePagination({ page, total, pageSize, onPageChange, onPageSizeChange, className }) {
   // 计算总页数 - 使用 useMemo 缓存
   const totalPages = React.useMemo(() => {
     return Math.ceil(total / pageSize);
@@ -97,16 +109,42 @@ const CompletePagination = React.memo(function CompletePagination({ page, total,
     }
   }, [page, totalPages, onPageChange]);
 
+  // 处理每页条数变化
+  const handlePageSizeChange = React.useCallback((value) => {
+    const newPageSize = parseInt(value, 10);
+    if (onPageSizeChange) {
+      onPageSizeChange(newPageSize);
+      // 切换每页条数后，重置到第一页
+      onPageChange(1);
+    }
+  }, [onPageSizeChange, onPageChange]);
+
   // 如果只有一页或没有数据，不显示分页
   if (totalPages <= 1) {
     return null;
   }
 
   return (
-    <div className={cn("flex items-center justify-between w-full", className)}>
-      {/* 左侧：记录信息 */}
-      <div className="text-sm text-muted-foreground whitespace-nowrap flex-shrink-0">
-        共 {total} 条记录
+    <div className={cn("flex items-center justify-between w-full gap-4", className)}>
+      {/* 左侧：记录信息和每页条数选择 */}
+      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+        <span className="whitespace-nowrap">共 {total} 条记录</span>
+        <div className="flex items-center gap-2">
+          <span className="whitespace-nowrap">每页</span>
+          <Select value={String(pageSize)} onValueChange={handlePageSizeChange}>
+            <SelectTrigger className="h-8 w-[70px]">
+              <SelectValue placeholder={pageSize} />
+            </SelectTrigger>
+            <SelectContent>
+              {PAGE_SIZE_OPTIONS.map((size) => (
+                <SelectItem key={size} value={String(size)}>
+                  {size}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <span className="whitespace-nowrap">条</span>
+        </div>
       </div>
 
       {/* 右侧：分页控件 */}

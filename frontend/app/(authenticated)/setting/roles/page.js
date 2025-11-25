@@ -12,6 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { TableLoading } from '@/components/ui/table-loading';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Search, Edit, Trash2, X } from 'lucide-react';
 import RoleFormDialog from '@/components/roles/role-form-dialog';
@@ -61,7 +62,7 @@ export default function RolesPage() {
   useEffect(() => {
     fetchRoles();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pagination.page]);
+  }, [pagination.page, pagination.pageSize]);
 
   // 搜索
   const handleSearch = () => {
@@ -79,6 +80,11 @@ export default function RolesPage() {
   // 分页变化
   const handlePageChange = (newPage) => {
     setPagination(prev => ({ ...prev, page: newPage }));
+  };
+
+  // 每页数量变化
+  const handlePageSizeChange = (newPageSize) => {
+    setPagination(prev => ({ ...prev, pageSize: newPageSize, page: 1 }));
   };
 
   // 新增角色
@@ -179,11 +185,7 @@ export default function RolesPage() {
             </TableHeader>
             <TableBody>
               {isLoading ? (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8">
-                    加载中...
-                  </TableCell>
-                </TableRow>
+                <TableLoading colSpan={7} />
               ) : roles.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
@@ -235,6 +237,7 @@ export default function RolesPage() {
             total={pagination.total}
             pageSize={pagination.pageSize}
             onPageChange={handlePageChange}
+            onPageSizeChange={handlePageSizeChange}
           />
         </CardContent>
       </Card>

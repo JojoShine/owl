@@ -20,48 +20,49 @@ const sequelize = new Sequelize(
 
 const db = {};
 
-// 导入模型
-db.User = require('./User')(sequelize, Sequelize.DataTypes);
-db.Role = require('./Role')(sequelize, Sequelize.DataTypes);
-db.Permission = require('./Permission')(sequelize, Sequelize.DataTypes);
-db.Menu = require('./Menu')(sequelize, Sequelize.DataTypes);
-db.Department = require('./Department')(sequelize, Sequelize.DataTypes);
-db.Folder = require('./Folder')(sequelize, Sequelize.DataTypes);
-db.File = require('./File')(sequelize, Sequelize.DataTypes);
-db.FileShare = require('./FileShare')(sequelize, Sequelize.DataTypes);
+// ========== System Models ==========
+// 用户、角色、权限、菜单等系统模型
+db.User = require('./system/User')(sequelize, Sequelize.DataTypes);
+db.Role = require('./system/Role')(sequelize, Sequelize.DataTypes);
+db.Permission = require('./system/Permission')(sequelize, Sequelize.DataTypes);
+db.Menu = require('./system/Menu')(sequelize, Sequelize.DataTypes);
+db.Department = require('./system/Department')(sequelize, Sequelize.DataTypes);
+db.Folder = require('./system/Folder')(sequelize, Sequelize.DataTypes);
+db.File = require('./system/File')(sequelize, Sequelize.DataTypes);
+db.FileShare = require('./system/FileShare')(sequelize, Sequelize.DataTypes);
+db.FilePermission = require('./system/FilePermission')(sequelize, Sequelize.DataTypes);
+db.Attachment = require('./system/Attachment')(sequelize, Sequelize.DataTypes);
+db.Dictionary = require('./system/Dictionary')(sequelize, Sequelize.DataTypes);
 
-// 导入监控模型
-db.MonitorMetric = require('./MonitorMetric')(sequelize, Sequelize.DataTypes);
-db.ApiMonitor = require('./ApiMonitor')(sequelize, Sequelize.DataTypes);
-db.ApiMonitorLog = require('./ApiMonitorLog')(sequelize, Sequelize.DataTypes);
-db.AlertRule = require('./AlertRule')(sequelize, Sequelize.DataTypes);
-db.AlertHistory = require('./AlertHistory')(sequelize, Sequelize.DataTypes);
+// ========== Monitor Models ==========
+// 监控告警相关模型
+db.MonitorMetric = require('./monitor/MonitorMetric')(sequelize, Sequelize.DataTypes);
+db.ApiMonitor = require('./monitor/ApiMonitor')(sequelize, Sequelize.DataTypes);
+db.ApiMonitorLog = require('./monitor/ApiMonitorLog')(sequelize, Sequelize.DataTypes);
+db.AlertRule = require('./monitor/AlertRule')(sequelize, Sequelize.DataTypes);
+db.AlertHistory = require('./monitor/AlertHistory')(sequelize, Sequelize.DataTypes);
 
-// 导入通知模型
-db.Notification = require('./Notification')(sequelize, Sequelize.DataTypes);
-db.EmailLog = require('./EmailLog')(sequelize, Sequelize.DataTypes);
-db.NotificationSettings = require('./NotificationSettings')(sequelize, Sequelize.DataTypes);
-db.EmailTemplate = require('./EmailTemplate')(sequelize, Sequelize.DataTypes);
+// ========== Notification Models ==========
+// 邮件、通知相关模型
+db.Notification = require('./notification/Notification')(sequelize, Sequelize.DataTypes);
+db.EmailLog = require('./notification/EmailLog')(sequelize, Sequelize.DataTypes);
+db.NotificationSettings = require('./notification/NotificationSettings')(sequelize, Sequelize.DataTypes);
+db.EmailTemplate = require('./notification/EmailTemplate')(sequelize, Sequelize.DataTypes);
 
-// 导入代码生成器模型
-db.GeneratedModule = require('./GeneratedModule')(sequelize, Sequelize.DataTypes);
-db.GeneratedField = require('./GeneratedField')(sequelize, Sequelize.DataTypes);
-db.GenerationHistory = require('./GenerationHistory')(sequelize, Sequelize.DataTypes);
+// ========== Generator Models ==========
+// 代码生成器相关模型
+db.GeneratedModule = require('./generator/GeneratedModule')(sequelize, Sequelize.DataTypes);
+db.GeneratedField = require('./generator/GeneratedField')(sequelize, Sequelize.DataTypes);
+db.GenerationHistory = require('./generator/GenerationHistory')(sequelize, Sequelize.DataTypes);
 
-// 导入字典和附件模型
-db.Attachment = require('./Attachment')(sequelize, Sequelize.DataTypes);
-db.Dictionary = require('./Dictionary')(sequelize, Sequelize.DataTypes);
+// ========== Association Models ==========
+// 中间关联表
+db.UserRole = require('./association/UserRole')(sequelize, Sequelize.DataTypes);
+db.RolePermission = require('./association/RolePermission')(sequelize, Sequelize.DataTypes);
+db.RoleMenu = require('./association/RoleMenu')(sequelize, Sequelize.DataTypes);
 
-// 动态生成的模型
-// (模型会在代码生成时自动注册到这里)
-
-// 动态生成的模型
-// (模型会在代码生成时自动注册到这里，使用原生SQL无需在此注册)
-
-// 导入中间表模型
-db.UserRole = require('./UserRole')(sequelize, Sequelize.DataTypes);
-db.RolePermission = require('./RolePermission')(sequelize, Sequelize.DataTypes);
-db.RoleMenu = require('./RoleMenu')(sequelize, Sequelize.DataTypes);
+// 动态生成的模型会在代码生成时自动注册到这里
+// (使用原生SQL时无需在此注册)
 
 // 设置模型关联
 Object.keys(db).forEach((modelName) => {

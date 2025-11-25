@@ -22,6 +22,9 @@ import FileList from '@/components/files/FileList';
 import NewFolderDialog from '@/components/files/NewFolderDialog';
 import FilePreviewDialog from '@/components/files/FilePreviewDialog';
 import FileShareDialog from '@/components/files/FileShareDialog';
+import RenameDialog from '@/components/files/RenameDialog';
+import MoveDialog from '@/components/files/MoveDialog';
+import PermissionDialog from '@/components/files/PermissionDialog';
 
 export default function FilesPage() {
   const router = useRouter();
@@ -42,7 +45,12 @@ export default function FilesPage() {
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+  const [renameDialogOpen, setRenameDialogOpen] = useState(false);
+  const [moveDialogOpen, setMoveDialogOpen] = useState(false);
+  const [permissionDialogOpen, setPermissionDialogOpen] = useState(false);
   const [currentFile, setCurrentFile] = useState(null); // 当前操作的文件
+  const [currentItem, setCurrentItem] = useState(null); // 当前操作的项（文件或文件夹）
+  const [currentItemIsFolder, setCurrentItemIsFolder] = useState(false); // 当前操作项是否为文件夹
   const [itemToDelete, setItemToDelete] = useState(null); // 待删除的项 {item, isFolder}
 
   // 初始化：加载存储统计和根目录内容
@@ -227,18 +235,29 @@ export default function FilesPage() {
         break;
 
       case 'rename':
-        // TODO: 打开重命名对话框
-        toast.info('重命名功能将在下一步实现');
+        // 打开重命名对话框
+        setCurrentItem(item);
+        setCurrentItemIsFolder(isFolder);
+        setRenameDialogOpen(true);
         break;
 
       case 'move':
-        // TODO: 打开移动对话框
-        toast.info('移动功能将在下一步实现');
+        // 打开移动对话框
+        setCurrentItem(item);
+        setCurrentItemIsFolder(isFolder);
+        setMoveDialogOpen(true);
         break;
 
       case 'copy':
         // TODO: 打开复制对话框
         toast.info('复制功能将在下一步实现');
+        break;
+
+      case 'permissions':
+        // 打开权限管理对话框
+        setCurrentItem(item);
+        setCurrentItemIsFolder(isFolder);
+        setPermissionDialogOpen(true);
         break;
 
       case 'delete':
@@ -279,6 +298,52 @@ export default function FilesPage() {
   };
 
   /**
+   * 处理重命名
+   */
+  const handleRename = async (newName) => {
+    if (!currentItem) return;
+
+    try {
+      if (currentItemIsFolder) {
+        await folderApi.updateFolder(currentItem.id, { name: newName });
+        toast.success('文件夹重命名成功');
+      } else {
+        await fileApi.updateFile(currentItem.id, { original_name: newName });
+        toast.success('文件重命名成功');
+      }
+      handleRefresh();
+    } catch (error) {
+      console.error('Failed to rename:', error);
+      const errorMessage = error.response?.data?.message || error.message || '重命名失败';
+      toast.error(errorMessage);
+      throw error;
+    }
+  };
+
+  /**
+   * 处理移动
+   */
+  const handleMove = async (targetFolderId) => {
+    if (!currentItem) return;
+
+    try {
+      if (currentItemIsFolder) {
+        await folderApi.updateFolder(currentItem.id, { parent_id: targetFolderId });
+        toast.success('文件夹移动成功');
+      } else {
+        await fileApi.moveFile(currentItem.id, targetFolderId);
+        toast.success('文件移动成功');
+      }
+      handleRefresh();
+    } catch (error) {
+      console.error('Failed to move:', error);
+      const errorMessage = error.response?.data?.message || error.message || '移动失败';
+      toast.error(errorMessage);
+      throw error;
+    }
+  };
+
+  /**
    * 搜索过滤
    */
   const getFilteredItems = () => {
@@ -313,19 +378,23 @@ export default function FilesPage() {
         </div>
 
         {/* 存储统计 */}
-        {stats && (
-          <div className="flex items-center gap-2 px-4 py-2 bg-muted rounded-lg">
-            <HardDriveIcon className="w-5 h-5 text-muted-foreground" />
-            <div className="text-sm">
-              <span className="font-medium text-foreground">
-                {formatFileSize(stats.totalSize)}
-              </span>
-              <span className="text-muted-foreground ml-1">
-                / {stats.totalFiles} 个文件
-              </span>
-            </div>
-          </div>
-        )}
+        <div className="flex items-center gap-2 px-4 py-2 bg-muted rounded-lg min-h-[44px]">
+          {stats ? (
+            <>
+              <HardDriveIcon className="w-5 h-5 text-muted-foreground" />
+              <div className="text-sm">
+                <span className="font-medium text-foreground">
+                  {formatFileSize(stats.totalSize)}
+                </span>
+                <span className="text-muted-foreground ml-1">
+                  / {stats.totalFiles} 个文件
+                </span>
+              </div>
+            </>
+          ) : (
+            <div className="w-32 h-4 bg-muted-foreground/10 rounded animate-pulse" />
+          )}
+        </div>
       </div>
 
       {/* 操作按钮和搜索 */}
@@ -443,6 +512,29 @@ export default function FilesPage() {
         confirmText="删除"
         cancelText="取消"
         variant="destructive"
+      />
+
+      <RenameDialog
+        open={renameDialogOpen}
+        onClose={() => setRenameDialogOpen(false)}
+        item={currentItem}
+        isFolder={currentItemIsFolder}
+        onSuccess={handleRename}
+      />
+
+      <MoveDialog
+        open={moveDialogOpen}
+        onClose={() => setMoveDialogOpen(false)}
+        item={currentItem}
+        isFolder={currentItemIsFolder}
+        onSuccess={handleMove}
+      />
+
+      <PermissionDialog
+        open={permissionDialogOpen}
+        onClose={() => setPermissionDialogOpen(false)}
+        item={currentItem}
+        isFolder={currentItemIsFolder}
       />
     </div>
   );

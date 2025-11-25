@@ -41,7 +41,7 @@ export default function DashboardPage() {
               <DashboardCard
                 title="最近登录趋势"
                 data={dashboardData.recentLogins}
-                mode="line"
+                mode="area"
                 dataKey="登录数"
                 xKey="date"
               />
@@ -60,6 +60,7 @@ export default function DashboardPage() {
                 mode="bar"
                 dataKey="value"
                 xKey="name"
+                unit="GB"
               />
 
               <DashboardCard
@@ -81,7 +82,7 @@ export default function DashboardPage() {
               <DashboardCard
                 title="访问趋势"
                 data={dashboardData.accessTrend}
-                mode="line"
+                mode="area"
                 dataKey="visits"
                 xKey="date"
               />

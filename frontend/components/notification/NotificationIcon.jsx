@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Bell, Check, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Loading } from '@/components/ui/loading';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -203,8 +204,8 @@ export default function NotificationIcon() {
         <DropdownMenuSeparator />
 
         {isLoading ? (
-          <div className="py-6 text-center text-sm text-muted-foreground">
-            加载中...
+          <div className="w-56">
+            <Loading size="sm" variant="pulse" />
           </div>
         ) : notifications.length === 0 ? (
           <div className="py-6 text-center text-sm text-muted-foreground">

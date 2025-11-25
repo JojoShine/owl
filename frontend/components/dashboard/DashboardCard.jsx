@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   BarChart,
@@ -20,14 +21,34 @@ import {
   Label,
 } from 'recharts';
 
-const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
+// Tailwind color palette (matching monitor center chart colors)
+const CHART_COLORS = {
+  primary: 'hsl(var(--primary))',  // primary color (for line/bar/area charts, matches monitor CPU trend)
+  emerald: '#10b981',     // emerald-500 (pie chart)
+  amber: '#f59e0b',       // amber-500 (pie chart)
+  red: '#ef4444',         // red-500 (pie chart)
+  purple: '#a855f7',      // purple-500 (pie chart)
+  pink: '#ec4899',        // pink-500 (pie chart)
+};
+
+const COLORS = [
+  CHART_COLORS.primary,
+  CHART_COLORS.emerald,
+  CHART_COLORS.amber,
+  CHART_COLORS.red,
+  CHART_COLORS.purple,
+  CHART_COLORS.pink,
+];
 
 /**
  * Dashboard Card Component
  * Flexible card that renders different chart types
  * Modes: 'line', 'bar', 'area', 'pie'
  */
-export default function DashboardCard({ title, data, mode = 'line', dataKey = 'value', xKey = 'name', hideTitle = false }) {
+export default function DashboardCard({ title, data, mode = 'line', dataKey = 'value', xKey = 'name', hideTitle = false, unit = '' }) {
+  // Use the primary color from CSS variable
+  const primaryColor = 'hsl(var(--primary))';
+
   const renderContent = () => {
     if (!data || (Array.isArray(data) && data.length === 0)) {
       return <p className="text-muted-foreground text-center py-12">暂无数据</p>;
@@ -47,6 +68,7 @@ export default function DashboardCard({ title, data, mode = 'line', dataKey = 'v
     }
   };
 
+
   const CustomTooltip = ({ active, payload }) => {
     if (!active || !payload || !payload.length) return null;
 
@@ -55,7 +77,7 @@ export default function DashboardCard({ title, data, mode = 'line', dataKey = 'v
         {payload.map((entry, index) => (
           <p key={index} className="text-sm text-foreground">
             <span style={{ color: entry.color }}>{entry.name}: </span>
-            <span className="font-semibold">{entry.value}</span>
+            <span className="font-semibold">{entry.value}{unit && ` ${unit}`}</span>
           </p>
         ))}
       </div>
@@ -69,15 +91,24 @@ export default function DashboardCard({ title, data, mode = 'line', dataKey = 'v
           <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
           <XAxis dataKey={xKey} stroke="var(--muted-foreground)" fontSize={12} />
           <YAxis stroke="var(--muted-foreground)" fontSize={12} width={40} />
-          <Tooltip content={<CustomTooltip />} />
+          <Tooltip
+            content={<CustomTooltip />}
+            contentStyle={{
+              backgroundColor: 'hsl(var(--card))',
+              border: '1px solid hsl(var(--border))',
+              borderRadius: '6px',
+            }}
+          />
+          <Legend wrapperStyle={{ color: '#ffffff' }} />
           <Line
             type="monotone"
             dataKey={dataKey}
-            stroke="hsl(var(--primary))"
+            stroke={primaryColor}
             strokeWidth={2}
-            dot={{ fill: 'hsl(var(--primary))', r: 4 }}
+            dot={{ fill: primaryColor, r: 4 }}
             activeDot={{ r: 6 }}
             isAnimationActive={true}
+            connectNulls={true}
           />
         </LineChart>
       </ResponsiveContainer>
@@ -91,8 +122,16 @@ export default function DashboardCard({ title, data, mode = 'line', dataKey = 'v
           <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
           <XAxis dataKey={xKey} stroke="var(--muted-foreground)" fontSize={12} />
           <YAxis stroke="var(--muted-foreground)" fontSize={12} width={40} />
-          <Tooltip content={<CustomTooltip />} />
-          <Bar dataKey={dataKey} fill="hsl(var(--primary))" isAnimationActive={true} />
+          <Tooltip
+            content={<CustomTooltip />}
+            contentStyle={{
+              backgroundColor: 'hsl(var(--card))',
+              border: '1px solid hsl(var(--border))',
+              borderRadius: '6px',
+            }}
+          />
+          <Legend wrapperStyle={{ color: '#ffffff' }} />
+          <Bar dataKey={dataKey} fill={primaryColor} isAnimationActive={true} />
         </BarChart>
       </ResponsiveContainer>
     );
@@ -105,12 +144,20 @@ export default function DashboardCard({ title, data, mode = 'line', dataKey = 'v
           <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
           <XAxis dataKey={xKey} stroke="var(--muted-foreground)" fontSize={12} />
           <YAxis stroke="var(--muted-foreground)" fontSize={12} width={40} />
-          <Tooltip content={<CustomTooltip />} />
+          <Tooltip
+            content={<CustomTooltip />}
+            contentStyle={{
+              backgroundColor: 'hsl(var(--card))',
+              border: '1px solid hsl(var(--border))',
+              borderRadius: '6px',
+            }}
+          />
+          <Legend wrapperStyle={{ color: '#ffffff' }} />
           <Area
             type="monotone"
             dataKey={dataKey}
-            fill="hsl(var(--primary))"
-            stroke="hsl(var(--primary))"
+            fill={primaryColor}
+            stroke={primaryColor}
             isAnimationActive={true}
             fillOpacity={0.3}
           />
@@ -136,7 +183,7 @@ export default function DashboardCard({ title, data, mode = 'line', dataKey = 'v
     return (
       <div className="flex justify-center items-center py-4">
         <ResponsiveContainer width="100%" height={280}>
-          <PieChart margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+          <PieChart margin={{ top: 20, right: 20, left: 20, bottom: 20 }}>
             <Pie
               data={data}
               cx="50%"
@@ -154,7 +201,15 @@ export default function DashboardCard({ title, data, mode = 'line', dataKey = 'v
                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
               ))}
             </Pie>
-            <Tooltip content={<CustomPieTooltip />} />
+            <Tooltip
+              content={<CustomPieTooltip />}
+              contentStyle={{
+                backgroundColor: 'hsl(var(--card))',
+                border: '1px solid hsl(var(--border))',
+                borderRadius: '6px',
+              }}
+            />
+            <Legend wrapperStyle={{ color: '#ffffff' }} />
           </PieChart>
         </ResponsiveContainer>
       </div>

@@ -1124,6 +1124,78 @@ ALTER TABLE user_roles ADD CONSTRAINT fk_user_roles_role_id
         ON DELETE CASCADE;
 
 -- ========================================
+-- 文件权限管理系统
+-- ========================================
+
+-- 文件权限表
+
+DROP TABLE IF EXISTS file_permissions CASCADE;
+
+CREATE TABLE file_permissions (
+  id UUID NOT NULL DEFAULT gen_random_uuid(),
+  resource_type VARCHAR(20) NOT NULL,  -- 'file' | 'folder'
+  resource_id UUID NOT NULL,           -- file_id or folder_id
+  user_id UUID,                        -- NULL表示角色权限
+  role_id UUID,                        -- NULL表示用户权限
+  permission VARCHAR(20) NOT NULL,     -- 'read' | 'write' | 'delete' | 'admin'
+  granted_by UUID,                     -- 授权人user_id
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+
+  -- 约束：user_id 和 role_id 不能同时为 NULL
+  CONSTRAINT chk_file_permissions_user_or_role CHECK (
+    (user_id IS NOT NULL AND role_id IS NULL) OR
+    (user_id IS NULL AND role_id IS NOT NULL)
+  )
+);
+
+COMMENT ON COLUMN file_permissions.id IS '权限ID，主键';
+COMMENT ON COLUMN file_permissions.resource_type IS '资源类型：file(文件) 或 folder(文件夹)';
+COMMENT ON COLUMN file_permissions.resource_id IS '资源ID（文件ID或文件夹ID）';
+COMMENT ON COLUMN file_permissions.user_id IS '用户ID，NULL表示这是角色权限';
+COMMENT ON COLUMN file_permissions.role_id IS '角色ID，NULL表示这是用户权限';
+COMMENT ON COLUMN file_permissions.permission IS '权限类型：read(读)、write(写)、delete(删除)、admin(管理)';
+COMMENT ON COLUMN file_permissions.granted_by IS '授权人ID';
+COMMENT ON COLUMN file_permissions.created_at IS '创建时间';
+COMMENT ON COLUMN file_permissions.updated_at IS '更新时间';
+
+COMMENT ON TABLE file_permissions IS '文件和文件夹权限表';
+
+CREATE INDEX idx_file_permissions_resource ON file_permissions(resource_type, resource_id);
+CREATE INDEX idx_file_permissions_user ON file_permissions(user_id);
+CREATE INDEX idx_file_permissions_role ON file_permissions(role_id);
+CREATE INDEX idx_file_permissions_granted_by ON file_permissions(granted_by);
+
+ALTER TABLE file_permissions ADD CONSTRAINT fk_file_permissions_user
+    FOREIGN KEY (user_id)
+        REFERENCES users (id)
+        ON DELETE CASCADE;
+ALTER TABLE file_permissions ADD CONSTRAINT fk_file_permissions_role
+    FOREIGN KEY (role_id)
+        REFERENCES roles (id)
+        ON DELETE CASCADE;
+ALTER TABLE file_permissions ADD CONSTRAINT fk_file_permissions_granted_by
+    FOREIGN KEY (granted_by)
+        REFERENCES users (id)
+        ON DELETE SET NULL;
+
+-- 为文件权限表添加updated_at触发器
+CREATE TRIGGER update_file_permissions_updated_at
+BEFORE UPDATE ON file_permissions
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();
+
+-- 修改folders表，添加权限继承字段
+ALTER TABLE folders ADD COLUMN IF NOT EXISTS inherit_permissions BOOLEAN DEFAULT TRUE;
+COMMENT ON COLUMN folders.inherit_permissions IS '是否继承父文件夹权限，默认为TRUE';
+
+-- 修改files表，添加权限继承字段
+ALTER TABLE files ADD COLUMN IF NOT EXISTS inherit_permissions BOOLEAN DEFAULT TRUE;
+COMMENT ON COLUMN files.inherit_permissions IS '是否继承所在文件夹权限，默认为TRUE';
+
+
+-- ========================================
 -- 完成提示
 -- ========================================
 

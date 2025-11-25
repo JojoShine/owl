@@ -5,6 +5,7 @@ import { menuApi } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
+import { Loading } from '@/components/ui/loading';
 import { Plus, Edit, Trash2, ChevronRight, ChevronDown } from 'lucide-react';
 import MenuFormDialog from '@/components/menus/menu-form-dialog';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
@@ -256,7 +257,11 @@ export default function MenusPage() {
 
       {/* 菜单树 */}
       {isLoading ? (
-        <div className="text-center py-12 text-muted-foreground">加载中...</div>
+        <Card>
+          <CardContent className="pt-6">
+            <Loading size="md" variant="pulse" />
+          </CardContent>
+        </Card>
       ) : menus.length === 0 ? (
         <Card>
           <CardContent className="text-center py-12 text-muted-foreground">

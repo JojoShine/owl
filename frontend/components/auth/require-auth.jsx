@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
+import { Loading } from '@/components/ui/loading';
 import { useAuth } from '@/lib/auth';
 
 /**
@@ -27,10 +28,7 @@ export default function RequireAuth({ children }) {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 dark:border-gray-100 mx-auto"></div>
-          <p className="mt-4 text-sm text-muted-foreground">加载中...</p>
-        </div>
+        <Loading size="lg" variant="spinner" fullHeight={false} />
       </div>
     );
   }

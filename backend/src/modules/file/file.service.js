@@ -14,6 +14,7 @@ const {
   generateFilePath,
   getFileCategory,
 } = require('../../utils/file');
+const filePermissionService = require('./file-permission.service');
 
 class FileService {
   /**
@@ -161,6 +162,9 @@ class FileService {
         folder_id: folder_id || null,
         uploaded_by: userId,
       });
+
+      // 设置默认权限
+      await filePermissionService.setDefaultPermissions('file', file.id, userId);
 
       logger.info(`File uploaded: ${originalname} by user ${userId}`);
 

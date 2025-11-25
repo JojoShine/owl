@@ -75,7 +75,8 @@ const moveFile = {
   body: Joi.object({
     folder_id: Joi.alternatives().try(
       Joi.string().uuid(),
-      Joi.string().valid('null')
+      Joi.string().valid('null'),
+      Joi.allow(null)
     ).required(),
   }),
 };

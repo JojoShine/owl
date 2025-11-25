@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const folderController = require('./folder.controller');
+const filePermissionController = require('../file/file-permission.controller');
 const { authenticate } = require('../../middlewares/auth');
 const validate = require('../../middlewares/validate');
 const folderValidation = require('./folder.validation');
@@ -86,6 +87,39 @@ router.delete(
   authenticate,
   validate(folderValidation.deleteFolder),
   folderController.deleteFolder
+);
+
+/**
+ * @route GET /api/folders/:id/permissions
+ * @desc 获取文件夹权限列表
+ * @access Private - 已认证用户
+ */
+router.get(
+  '/:id/permissions',
+  authenticate,
+  filePermissionController.getFolderPermissions
+);
+
+/**
+ * @route POST /api/folders/:id/permissions
+ * @desc 添加文件夹权限
+ * @access Private - 已认证用户（需要文件夹admin权限）
+ */
+router.post(
+  '/:id/permissions',
+  authenticate,
+  filePermissionController.addFolderPermission
+);
+
+/**
+ * @route PUT /api/folders/:id/inherit
+ * @desc 设置文件夹权限继承
+ * @access Private - 已认证用户（需要文件夹admin权限）
+ */
+router.put(
+  '/:id/inherit',
+  authenticate,
+  filePermissionController.setFolderInherit
 );
 
 module.exports = router;

@@ -119,9 +119,23 @@ class DashboardService {
         hour.setHours(hour.getHours() - i);
         const formattedHour = hour.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
 
+        // 计算该小时的在线用户数（最近登录在最近24小时内的用户）
+        const hourStart = new Date(hour);
+        hourStart.setMinutes(0, 0, 0);
+        const hourEnd = new Date(hour);
+        hourEnd.setMinutes(59, 59, 999);
+
+        const onlineCount = await User.count({
+          where: {
+            last_login_at: {
+              [sequelize.Sequelize.Op.between]: [hourStart, hourEnd]
+            }
+          }
+        });
+
         trend.push({
           time: formattedHour,
-          在线用户: Math.floor(Math.random() * 50) + 10
+          在线用户: Math.max(onlineCount, 1)
         });
       }
 
@@ -165,18 +179,49 @@ class DashboardService {
    */
   async getStorageOverview() {
     try {
-      // 返回柱状图数据格式（存储使用分布）
-      const totalStorage = 500; // GB
-      const usedStorage = Math.floor(Math.random() * 300) + 50;
-      const documentStorage = Math.floor(usedStorage * 0.4);
-      const mediaStorage = Math.floor(usedStorage * 0.35);
-      const archiveStorage = usedStorage - documentStorage - mediaStorage;
+      const { File } = require('../../models');
+
+      // 获取文件统计信息
+      const fileStats = await File.findAll({
+        attributes: [
+          'mime_type',
+          [sequelize.fn('SUM', sequelize.col('size')), 'totalSize']
+        ],
+        group: ['mime_type'],
+        raw: true
+      });
+
+      // 计算各类型文件大小（转换为GB）
+      let documentSize = 0;
+      let mediaSize = 0;
+      let archiveSize = 0;
+      let otherSize = 0;
+
+      fileStats.forEach(stat => {
+        const mimeType = stat.mime_type || '';
+        const size = (stat.totalSize || 0) / (1024 * 1024 * 1024); // 转换为GB
+
+        if (mimeType.includes('document') || mimeType.includes('text') || mimeType.includes('pdf') || mimeType.includes('word')) {
+          documentSize += size;
+        } else if (mimeType.includes('image') || mimeType.includes('video') || mimeType.includes('audio')) {
+          mediaSize += size;
+        } else if (mimeType.includes('archive') || mimeType.includes('zip') || mimeType.includes('rar')) {
+          archiveSize += size;
+        } else {
+          otherSize += size;
+        }
+      });
+
+      const usedStorage = documentSize + mediaSize + archiveSize + otherSize;
+      const totalStorage = 500; // 500 GB
+      const availableStorage = Math.max(0, totalStorage - usedStorage); // 防止负数
 
       return [
-        { name: '文档', value: documentStorage },
-        { name: '媒体', value: mediaStorage },
-        { name: '存档', value: archiveStorage },
-        { name: '可用', value: totalStorage - usedStorage }
+        { name: '文档', value: Math.round(documentSize * 100) / 100 },
+        { name: '媒体', value: Math.round(mediaSize * 100) / 100 },
+        { name: '存档', value: Math.round(archiveSize * 100) / 100 },
+        { name: '其他', value: Math.round(otherSize * 100) / 100 },
+        { name: '可用', value: Math.round(availableStorage * 100) / 100 }
       ];
     } catch (error) {
       console.error('获取存储概览失败:', error);
@@ -209,7 +254,7 @@ class DashboardService {
    */
   async getAccessTrend() {
     try {
-      // 生成最近7天的访问数据
+      // 获取最近7天的访问趋势数据（基于用户最后登录时间）
       const trend = [];
       const today = new Date();
 
@@ -217,9 +262,24 @@ class DashboardService {
         const date = new Date(today);
         date.setDate(date.getDate() - i);
 
+        // 创建日期范围
+        const startOfDay = new Date(date);
+        startOfDay.setHours(0, 0, 0, 0);
+        const endOfDay = new Date(date);
+        endOfDay.setHours(23, 59, 59, 999);
+
+        // 统计该天的访问次数（登录用户数）
+        const visitCount = await User.count({
+          where: {
+            last_login_at: {
+              [sequelize.Sequelize.Op.between]: [startOfDay, endOfDay]
+            }
+          }
+        });
+
         trend.push({
           date: date.toLocaleDateString('zh-CN'),
-          visits: Math.floor(Math.random() * 100) + 20
+          visits: visitCount
         });
       }
 

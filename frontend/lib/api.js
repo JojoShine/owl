@@ -88,6 +88,15 @@ export const folderApi = {
 
   // 删除文件夹
   deleteFolder: (id) => axios.delete(`/folders/${id}`),
+
+  // 获取文件夹权限列表
+  getPermissions: (folderId) => axios.get(`/folders/${folderId}/permissions`),
+
+  // 添加文件夹权限
+  addPermission: (folderId, data) => axios.post(`/folders/${folderId}/permissions`, data),
+
+  // 设置文件夹权限继承
+  setInherit: (folderId, data) => axios.put(`/folders/${folderId}/inherit`, data),
 };
 
 // 文件管理API
@@ -153,6 +162,15 @@ export const fileApi = {
 
   // 获取存储统计
   getStats: () => axios.get('/files/stats'),
+
+  // 获取文件权限列表
+  getPermissions: (fileId) => axios.get(`/files/${fileId}/permissions`),
+
+  // 添加文件权限
+  addPermission: (fileId, data) => axios.post(`/files/${fileId}/permissions`, data),
+
+  // 设置文件权限继承
+  setInherit: (fileId, data) => axios.put(`/files/${fileId}/inherit`, data),
 };
 
 // 文件分享API

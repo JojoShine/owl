@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { getMenuIcon } from '@/lib/menu-icons';
+import { Loading } from '@/components/ui/loading';
 import api from '@/lib/api';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { useSocket } from '@/contexts/SocketContext';
@@ -169,9 +170,7 @@ export default function Sidebar() {
       {/* 菜单区域 */}
       <nav className="flex-1 overflow-y-auto p-4">
         {loading ? (
-          <div className="text-center text-sm text-muted-foreground py-4">
-            加载中...
-          </div>
+          <Loading size="sm" variant="pulse" />
         ) : menuItems.length === 0 ? (
           <div className="text-center text-sm text-muted-foreground py-4">
             暂无可用菜单

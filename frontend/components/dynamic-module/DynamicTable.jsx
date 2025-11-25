@@ -9,6 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { TableLoading } from '@/components/ui/table-loading';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Edit, Trash2 } from 'lucide-react';
@@ -143,8 +144,12 @@ export function DynamicTable({
 
   if (loading) {
     return (
-      <div className="border rounded-lg p-8">
-        <div className="text-center text-muted-foreground">加载中...</div>
+      <div className="border rounded-lg overflow-hidden">
+        <Table>
+          <TableBody>
+            <TableLoading colSpan={listFields.length + (features.batchDelete ? 1 : 0) + ((features.update || features.delete) ? 1 : 0)} />
+          </TableBody>
+        </Table>
       </div>
     );
   }

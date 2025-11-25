@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Loading } from '@/components/ui/loading';
 import {
   Play,
   Pencil,
@@ -113,11 +114,7 @@ export default function ApiMonitorTable({
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-muted-foreground">加载中...</div>
-      </div>
-    );
+    return <Loading size="md" variant="pulse" />;
   }
 
   if (!monitors || monitors.length === 0) {

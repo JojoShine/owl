@@ -22,9 +22,36 @@ export default function FileUploadDialog({ open, onClose, folderId, onUploadComp
   const [files, setFiles] = useState([]); // 待上传的文件列表
   const [uploading, setUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
+  const [previewUrls, setPreviewUrls] = useState({}); // 图片预览 URL {fileId: url}
   const fileInputRef = useRef(null);
 
   const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
+
+  /**
+   * 检查文件是否为图片
+   */
+  const isImage = (file) => {
+    return file.type.startsWith('image/');
+  };
+
+  /**
+   * 生成图片预览
+   */
+  const generateImagePreview = (file, fileId) => {
+    if (!isImage(file)) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setPreviewUrls(prev => ({
+        ...prev,
+        [fileId]: e.target.result
+      }));
+    };
+    reader.onerror = () => {
+      console.error('Failed to read image file:', file.name);
+    };
+    reader.readAsDataURL(file);
+  };
 
   /**
    * 处理文件选择
@@ -38,15 +65,19 @@ export default function FileUploadDialog({ open, onClose, folderId, onUploadComp
 
     fileArray.forEach(file => {
       if (validateFileSize(file, MAX_FILE_SIZE)) {
+        const fileId = `${file.name}-${Date.now()}-${Math.random()}`;
         validFiles.push({
           file,
-          id: `${file.name}-${Date.now()}-${Math.random()}`,
+          id: fileId,
           name: file.name,
           size: file.size,
           status: 'pending', // pending | uploading | success | error
           progress: 0,
           error: null
         });
+
+        // 为图片生成预览
+        generateImagePreview(file, fileId);
       } else {
         invalidFiles.push(file.name);
       }
@@ -99,6 +130,12 @@ export default function FileUploadDialog({ open, onClose, folderId, onUploadComp
    */
   const handleRemoveFile = (fileId) => {
     setFiles(prev => prev.filter(f => f.id !== fileId));
+    // 清理图片预览 URL
+    setPreviewUrls(prev => {
+      const newUrls = { ...prev };
+      delete newUrls[fileId];
+      return newUrls;
+    });
   };
 
   /**
@@ -207,6 +244,7 @@ export default function FileUploadDialog({ open, onClose, folderId, onUploadComp
     }
 
     setFiles([]);
+    setPreviewUrls({});
     onClose();
   };
 
@@ -288,14 +326,25 @@ export default function FileUploadDialog({ open, onClose, folderId, onUploadComp
               <div className="space-y-2">
                 {files.map(fileItem => {
                   const FileIconComponent = getFileIcon(fileItem.name);
+                  const hasPreview = previewUrls[fileItem.id];
 
                   return (
                     <div
                       key={fileItem.id}
                       className="flex items-center gap-3 p-3 border border-border rounded-lg bg-card"
                     >
-                      {/* 文件图标 */}
-                      <FileIconComponent className="w-8 h-8 text-muted-foreground flex-shrink-0" />
+                      {/* 文件图标或图片预览 */}
+                      {hasPreview ? (
+                        <div className="w-16 h-16 flex-shrink-0 rounded-md overflow-hidden bg-muted">
+                          <img
+                            src={previewUrls[fileItem.id]}
+                            alt={fileItem.name}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      ) : (
+                        <FileIconComponent className="w-8 h-8 text-muted-foreground flex-shrink-0" />
+                      )}
 
                       {/* 文件信息 */}
                       <div className="flex-1 min-w-0">

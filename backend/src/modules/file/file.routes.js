@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const fileController = require('./file.controller');
+const filePermissionController = require('./file-permission.controller');
 const { authenticate } = require('../../middlewares/auth');
 const { uploadSingle, uploadMultiple } = require('../../middlewares/upload');
 const validate = require('../../middlewares/validate');
@@ -135,6 +136,39 @@ router.delete(
   authenticate,
   validate(fileValidation.deleteFile),
   fileController.deleteFile
+);
+
+/**
+ * @route GET /api/files/:id/permissions
+ * @desc 获取文件权限列表
+ * @access Private - 已认证用户
+ */
+router.get(
+  '/:id/permissions',
+  authenticate,
+  filePermissionController.getFilePermissions
+);
+
+/**
+ * @route POST /api/files/:id/permissions
+ * @desc 添加文件权限
+ * @access Private - 已认证用户（需要文件admin权限）
+ */
+router.post(
+  '/:id/permissions',
+  authenticate,
+  filePermissionController.addFilePermission
+);
+
+/**
+ * @route PUT /api/files/:id/inherit
+ * @desc 设置文件权限继承
+ * @access Private - 已认证用户（需要文件admin权限）
+ */
+router.put(
+  '/:id/inherit',
+  authenticate,
+  filePermissionController.setFileInherit
 );
 
 module.exports = router;

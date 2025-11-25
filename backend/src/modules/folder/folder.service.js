@@ -2,6 +2,7 @@ const { Op } = require('sequelize');
 const db = require('../../models');
 const ApiError = require('../../utils/ApiError');
 const { logger } = require('../../config/logger');
+const filePermissionService = require('../file/file-permission.service');
 
 class FolderService {
   /**
@@ -218,6 +219,9 @@ class FolderService {
       parent_id: parent_id || null,
       created_by: userId,
     });
+
+    // 设置默认权限
+    await filePermissionService.setDefaultPermissions('folder', folder.id, userId);
 
     logger.info(`Folder created: ${name} by user ${userId}`);
 

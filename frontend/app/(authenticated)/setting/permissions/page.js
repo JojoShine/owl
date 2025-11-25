@@ -12,6 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { TableLoading } from '@/components/ui/table-loading';
 import { Badge } from '@/components/ui/badge';
 import { Search, X } from 'lucide-react';
 import { Pagination } from '@/components/ui/pagination';
@@ -53,7 +54,7 @@ export default function PermissionsPage() {
   useEffect(() => {
     fetchPermissions();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pagination.page]);
+  }, [pagination.page, pagination.pageSize]);
 
   // 搜索
   const handleSearch = () => {
@@ -71,6 +72,11 @@ export default function PermissionsPage() {
   // 分页变化
   const handlePageChange = (newPage) => {
     setPagination(prev => ({ ...prev, page: newPage }));
+  };
+
+  // 每页数量变化
+  const handlePageSizeChange = (newPageSize) => {
+    setPagination(prev => ({ ...prev, pageSize: newPageSize, page: 1 }));
   };
 
   // 操作类型徽章颜色
@@ -134,11 +140,7 @@ export default function PermissionsPage() {
               </TableHeader>
               <TableBody>
                 {isLoading ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8">
-                      加载中...
-                    </TableCell>
-                  </TableRow>
+                  <TableLoading colSpan={7} />
                 ) : permissions.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
@@ -175,6 +177,7 @@ export default function PermissionsPage() {
             total={pagination.total}
             pageSize={pagination.pageSize}
             onPageChange={handlePageChange}
+            onPageSizeChange={handlePageSizeChange}
           />
         </CardContent>
       </Card>

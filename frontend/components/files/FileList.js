@@ -8,12 +8,13 @@ import {
   EditIcon,
   TrashIcon,
   MoveIcon,
-  CopyIcon,
   ShareIcon,
   EyeIcon,
   ChevronRightIcon,
-  HomeIcon
+  HomeIcon,
+  LockIcon
 } from 'lucide-react';
+import { Loading } from '@/components/ui/loading';
 import { formatFileSize, formatDate, getFileIcon, getFileCategoryColor } from '@/lib/file-utils';
 
 /**
@@ -74,7 +75,7 @@ function GridItem({ item, isFolder, onItemClick, onAction }) {
         </p>
 
         {/* 元信息 */}
-        <div className="flex flex-col items-center gap-1 mt-1 min-h-[36px]">
+        <div className="flex flex-col items-center gap-1 mt-1 h-[44px] justify-center">
           {!isFolder && (
             <>
               <span className="text-xs text-muted-foreground">
@@ -155,15 +156,13 @@ function GridItem({ item, isFolder, onItemClick, onAction }) {
                 <MoveIcon className="w-4 h-4" />
                 移动
               </button>
-              {!isFolder && (
-                <button
-                  onClick={() => handleAction('copy')}
-                  className="w-full flex items-center gap-2 px-4 py-2 text-sm text-foreground hover:bg-accent"
-                >
-                  <CopyIcon className="w-4 h-4" />
-                  复制
-                </button>
-              )}
+              <button
+                onClick={() => handleAction('permissions')}
+                className="w-full flex items-center gap-2 px-4 py-2 text-sm text-foreground hover:bg-accent"
+              >
+                <LockIcon className="w-4 h-4" />
+                权限
+              </button>
               <div className="border-t border-border my-1" />
               <button
                 onClick={() => handleAction('delete')}
@@ -292,15 +291,13 @@ function ListItem({ item, isFolder, onItemClick, onAction }) {
                 <MoveIcon className="w-4 h-4" />
                 移动
               </button>
-              {!isFolder && (
-                <button
-                  onClick={() => handleAction('copy')}
-                  className="w-full flex items-center gap-2 px-4 py-2 text-sm text-foreground hover:bg-accent"
-                >
-                  <CopyIcon className="w-4 h-4" />
-                  复制
-                </button>
-              )}
+              <button
+                onClick={() => handleAction('permissions')}
+                className="w-full flex items-center gap-2 px-4 py-2 text-sm text-foreground hover:bg-accent"
+              >
+                <LockIcon className="w-4 h-4" />
+                权限
+              </button>
               <div className="border-t border-border my-1" />
               <button
                 onClick={() => handleAction('delete')}
@@ -353,21 +350,21 @@ export default function FileList({
         onNavigate={onFolderClick}
       />
 
-      {/* 加载状态 */}
-      {loading ? (
-        <div className="flex items-center justify-center h-64">
-          <div className="text-muted-foreground">加载中...</div>
-        </div>
-      ) : isEmpty ? (
-        /* 空状态 */
-        <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
-          <FolderIcon className="w-16 h-16 mb-4" />
-          <p className="text-lg font-medium text-foreground">此文件夹为空</p>
-          <p className="text-sm mt-1">上传文件或创建新文件夹</p>
-        </div>
-      ) : (
-        /* 文件列表 */
-        <div>
+      {/* 内容区域 - 添加 min-height 防止抖动，添加 transition 平滑过渡 */}
+      <div className="min-h-[400px] transition-opacity duration-200">
+        {/* 加载状态 */}
+        {loading ? (
+          <Loading size="md" variant="pulse" />
+        ) : isEmpty ? (
+          /* 空状态 */
+          <div className="flex flex-col items-center justify-center h-64 text-muted-foreground animate-in fade-in duration-300">
+            <FolderIcon className="w-16 h-16 mb-4" />
+            <p className="text-lg font-medium text-foreground">此文件夹为空</p>
+            <p className="text-sm mt-1">上传文件或创建新文件夹</p>
+          </div>
+        ) : (
+          /* 文件列表 */
+          <div className="animate-in fade-in duration-300">
           {viewMode === 'grid' ? (
             /* 网格视图 */
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
@@ -427,8 +424,9 @@ export default function FileList({
               ))}
             </div>
           )}
-        </div>
-      )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

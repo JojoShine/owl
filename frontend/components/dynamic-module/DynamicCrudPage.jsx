@@ -79,7 +79,7 @@ export function DynamicCrudPage({ config }) {
   // 初始加载和分页/筛选变化时加载数据
   useEffect(() => {
     fetchData();
-  }, [pagination.page]);
+  }, [pagination.page, pagination.pageSize]);
 
   // 搜索
   const handleSearch = () => {
@@ -97,6 +97,11 @@ export function DynamicCrudPage({ config }) {
   // 分页变化
   const handlePageChange = (newPage) => {
     setPagination((prev) => ({ ...prev, page: newPage }));
+  };
+
+  // 每页条数变化
+  const handlePageSizeChange = (newPageSize) => {
+    setPagination((prev) => ({ ...prev, pageSize: newPageSize, page: 1 }));
   };
 
   // 打开新增对话框
@@ -263,6 +268,7 @@ export function DynamicCrudPage({ config }) {
             total={pagination.total}
             pageSize={pagination.pageSize}
             onPageChange={handlePageChange}
+            onPageSizeChange={handlePageSizeChange}
           />
         </div>
       )}
