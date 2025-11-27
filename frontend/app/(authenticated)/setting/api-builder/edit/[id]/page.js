@@ -338,24 +338,28 @@ export default function ApiBuilderEditPage() {
                   value={formData.sql_query}
                   onChange={(e) => handleFieldChange('sql_query', e.target.value)}
                   placeholder="SELECT * FROM users WHERE id = :id"
-                  className="w-full px-3 py-2 border rounded-md font-mono text-sm h-40"
+                  className="w-full px-3 py-2 border rounded-md font-mono text-sm h-40 bg-background text-foreground"
                 />
 
                 {testError && (
-                  <div className="mt-4 p-3 bg-slate-800 dark:bg-slate-700 border border-slate-600 rounded-md">
-                    <p className="text-xs font-semibold text-red-400">测试失败：</p>
-                    <p className="text-xs text-slate-300 mt-1">{testError}</p>
-                  </div>
+                  <>
+                    <div className="mt-4 border-t"></div>
+                    <div className="mt-2 p-3 border rounded-md" style={{ backgroundColor: '#171717' }}>
+                      <p className="text-xs font-semibold text-red-400">测试失败：</p>
+                      <p className="text-xs text-gray-300 mt-1">{testError}</p>
+                    </div>
+                  </>
                 )}
 
                 {extractedParams.length > 0 && (
-                  <div className="mt-4 p-3 bg-slate-800 dark:bg-slate-700 border border-slate-600 rounded-md space-y-3">
-                    <div>
-                      <p className="text-xs font-semibold text-slate-200 mb-3">请求参数值：</p>
+                  <>
+                    <div className="mt-4 border-t"></div>
+                    <div className="mt-2 p-3 border rounded-md" style={{ backgroundColor: '#171717' }}>
+                      <p className="text-xs font-semibold text-white mb-3">请求参数值：</p>
                       <div className="space-y-2">
                         {extractedParams.map((param) => (
                           <div key={param.name} className="grid grid-cols-2 gap-2">
-                            <label className="text-xs text-slate-300 flex items-center">
+                            <label className="text-xs text-gray-300 flex items-center">
                               {param.name}
                               <span className="text-red-400 ml-1">*</span>
                             </label>
@@ -370,49 +374,52 @@ export default function ApiBuilderEditPage() {
                         ))}
                       </div>
                     </div>
-                  </div>
+                  </>
                 )}
 
                 {testResult && (
-                  <div className="mt-4 p-3 bg-slate-800 dark:bg-slate-700 border border-slate-600 rounded-md">
-                    <p className="text-xs font-semibold text-slate-200 mb-3">测试结果</p>
-                    <div className="text-xs text-slate-300 space-y-2">
-                      <p>返回行数：<strong>{testResult.rowCount}</strong></p>
-                      <p>返回列：<strong>{testResult.columns?.length || 0}</strong></p>
-                    </div>
+                  <>
+                    <div className="mt-4 border-t"></div>
+                    <div className="mt-2 p-3 border rounded-md" style={{ backgroundColor: '#171717' }}>
+                      <p className="text-xs font-semibold text-white mb-3">测试结果</p>
+                      <div className="text-xs text-gray-300 space-y-2">
+                        <p>返回行数：<strong>{testResult.rowCount}</strong></p>
+                        <p>返回列：<strong>{testResult.columns?.length || 0}</strong></p>
+                      </div>
 
-                    {/* 显示查询结果数据表格 */}
-                    {Array.isArray(testResult.sample) && testResult.sample.length > 0 ? (
-                      <div className="mt-3 overflow-x-auto">
-                        <table className="w-full text-xs border-collapse">
-                          <thead>
-                            <tr className="bg-slate-700 dark:bg-slate-600">
-                              {testResult.columns?.map((col) => (
-                                <th key={col.name} className="border border-slate-600 px-2 py-1 text-left font-semibold text-slate-200">
-                                  {col.name}
-                                </th>
-                              ))}
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {testResult.sample.map((row, idx) => (
-                              <tr key={idx} className="bg-slate-750 dark:bg-slate-800 hover:bg-slate-700 dark:hover:bg-slate-700">
+                      {/* 显示查询结果数据表格 */}
+                      {Array.isArray(testResult.sample) && testResult.sample.length > 0 ? (
+                        <div className="mt-3 overflow-x-auto">
+                          <table className="w-full text-xs border-collapse">
+                            <thead>
+                              <tr style={{ backgroundColor: '#0f0f0f' }}>
                                 {testResult.columns?.map((col) => (
-                                  <td key={col.name} className="border border-slate-600 px-2 py-1 text-slate-300 max-w-xs truncate">
-                                    {String(row[col.name] ?? '-')}
-                                  </td>
+                                  <th key={col.name} className="border px-2 py-1 text-left font-semibold text-white">
+                                    {col.name}
+                                  </th>
                                 ))}
                               </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    ) : (
-                      <div className="mt-3 p-2 bg-slate-700 rounded text-xs text-slate-300">
-                        <p>暂无数据记录</p>
-                      </div>
-                    )}
-                  </div>
+                            </thead>
+                            <tbody>
+                              {testResult.sample.map((row, idx) => (
+                                <tr key={idx} style={{ backgroundColor: '#0a0a0a' }} className="hover:bg-gray-900">
+                                  {testResult.columns?.map((col) => (
+                                    <td key={col.name} className="border px-2 py-1 text-gray-300 max-w-xs truncate">
+                                      {String(row[col.name] ?? '-')}
+                                    </td>
+                                  ))}
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      ) : (
+                        <div className="mt-3 p-2" style={{ backgroundColor: '#0f0f0f' }}>
+                          <p className="text-xs text-gray-300">暂无数据记录</p>
+                        </div>
+                      )}
+                    </div>
+                  </>
                 )}
               </div>
             </TabsContent>
