@@ -383,8 +383,8 @@ export default function ApiBuilderEditPage() {
                     <div className="mt-2 p-3 border rounded-md" style={{ backgroundColor: '#171717' }}>
                       <p className="text-sm font-semibold text-white mb-3">测试结果</p>
                       <div className="text-sm text-gray-300 space-y-2">
-                        <p>返回行数：<strong>{testResult.rowCount}</strong></p>
-                        <p>返回列：<strong>{testResult.columns?.length || 0}</strong></p>
+                        <p>总数据行数：<strong>{testResult.rowCount}</strong> | 显示：<strong>{Math.min(testResult.rowCount, 5)}</strong> 条</p>
+                        <p>返回列数：<strong>{testResult.columns?.length || 0}</strong></p>
                       </div>
 
                       {/* 显示查询结果数据表格 */}
