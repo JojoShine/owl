@@ -29,6 +29,21 @@ import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import ApiKeysDialog from '@/components/api-builder/api-keys-dialog';
 import TestInterfaceDialog from '@/components/api-builder/test-interface-dialog';
 
+// 格式化日期的辅助函数
+const formatDate = (dateString) => {
+  if (!dateString) return '-';
+  try {
+    // 处理多种日期格式
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) {
+      return '-';
+    }
+    return date.toLocaleString('zh-CN');
+  } catch (error) {
+    return '-';
+  }
+};
+
 export default function ApiBuilderPage() {
   const router = useRouter();
   const [interfaces, setInterfaces] = useState([]);
@@ -249,7 +264,7 @@ export default function ApiBuilderPage() {
                         </button>
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
-                        {new Date(interface_.created_at).toLocaleString('zh-CN')}
+                        {formatDate(interface_.created_at)}
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">

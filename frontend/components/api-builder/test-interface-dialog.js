@@ -34,7 +34,7 @@ export default function TestInterfaceDialog({ open, onOpenChange, interface_ }) 
       setIsLoading(true);
       setError(null);
       const response = await apiBuilderApi.testInterface(interface_.id, params);
-      setResult(response.data?.data || null);
+      setResult(response.data || null);
       toast.success('接口测试成功');
     } catch (error) {
       console.error('接口测试失败:', error);
@@ -95,7 +95,7 @@ export default function TestInterfaceDialog({ open, onOpenChange, interface_ }) 
 
           {/* 错误信息 */}
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-800">
+            <div className="border rounded-lg p-3 text-sm text-red-400" style={{ backgroundColor: '#171717' }}>
               {error}
             </div>
           )}
@@ -113,7 +113,7 @@ export default function TestInterfaceDialog({ open, onOpenChange, interface_ }) 
                   <Copy className="h-4 w-4" />
                 </Button>
               </div>
-              <pre className="bg-white p-3 rounded border overflow-x-auto text-xs">
+              <pre className="p-3 rounded border overflow-x-auto text-xs text-gray-300" style={{ backgroundColor: '#0f0f0f' }}>
                 {JSON.stringify(result, null, 2)}
               </pre>
             </div>
@@ -122,7 +122,7 @@ export default function TestInterfaceDialog({ open, onOpenChange, interface_ }) 
           {/* SQL预览 */}
           <div className="border rounded-lg p-4 bg-muted/50">
             <h3 className="font-semibold mb-2">SQL查询</h3>
-            <pre className="bg-white p-3 rounded border overflow-x-auto text-xs">
+            <pre className="p-3 rounded border overflow-x-auto text-xs text-gray-300" style={{ backgroundColor: '#0f0f0f' }}>
               {interface_.sql_query}
             </pre>
           </div>

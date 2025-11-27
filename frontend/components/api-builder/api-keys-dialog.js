@@ -33,7 +33,7 @@ export default function ApiKeysDialog({ open, onOpenChange, interface_ }) {
     try {
       setIsLoading(true);
       const response = await apiBuilderApi.getInterfaceKeys(interface_.id);
-      setKeys(response.data?.data || []);
+      setKeys(response.data || []);
     } catch (error) {
       console.error('获取密钥列表失败:', error);
       toast.error('获取密钥列表失败');
@@ -191,11 +191,11 @@ export default function ApiKeysDialog({ open, onOpenChange, interface_ }) {
           </div>
 
           {/* 使用说明 */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm">
-            <div className="font-semibold mb-2">调用说明：</div>
-            <div className="font-mono text-xs space-y-1">
+          <div className="border rounded-lg p-3 text-sm" style={{ backgroundColor: '#171717' }}>
+            <div className="font-semibold mb-2 text-blue-400">调用说明：</div>
+            <div className="font-mono text-xs space-y-1 text-gray-300">
               <div>curl -X GET /api/api-builder/custom/{interface_.endpoint}</div>
-              <div className="text-muted-foreground">
+              <div>
                 -H "X-API-Key: YOUR_API_KEY"
               </div>
             </div>
