@@ -327,7 +327,7 @@ export default function ApiBuilderEditPage() {
                 <div className="flex items-center justify-between mb-2">
                   <div>
                     <Label>SQL查询语句 *</Label>
-                    <p className="text-xs text-muted-foreground">输入SELECT查询语句，参数使用 :paramName 格式</p>
+                    <p className="text-sm text-muted-foreground">输入SELECT查询语句，参数使用 :paramName 格式</p>
                   </div>
                   <Button size="sm" onClick={handleTestSql} disabled={isTesting || !formData.sql_query.trim()}>
                     <Play className="h-3.5 w-3.5 mr-1" />
@@ -345,8 +345,8 @@ export default function ApiBuilderEditPage() {
                   <>
                     <div className="mt-4 border-t"></div>
                     <div className="mt-2 p-3 border rounded-md" style={{ backgroundColor: '#171717' }}>
-                      <p className="text-xs font-semibold text-red-400">测试失败：</p>
-                      <p className="text-xs text-gray-300 mt-1">{testError}</p>
+                      <p className="text-sm font-semibold text-red-400">测试失败：</p>
+                      <p className="text-sm text-gray-300 mt-1">{testError}</p>
                     </div>
                   </>
                 )}
@@ -355,11 +355,11 @@ export default function ApiBuilderEditPage() {
                   <>
                     <div className="mt-4 border-t"></div>
                     <div className="mt-2 p-3 border rounded-md" style={{ backgroundColor: '#171717' }}>
-                      <p className="text-xs font-semibold text-white mb-3">请求参数值：</p>
+                      <p className="text-sm font-semibold text-white mb-3">请求参数值：</p>
                       <div className="space-y-2">
                         {extractedParams.map((param) => (
                           <div key={param.name} className="grid grid-cols-2 gap-2">
-                            <label className="text-xs text-gray-300 flex items-center">
+                            <label className="text-sm text-gray-300 flex items-center">
                               {param.name}
                               <span className="text-red-400 ml-1">*</span>
                             </label>
@@ -368,7 +368,7 @@ export default function ApiBuilderEditPage() {
                               value={formData.parameterValues[param.name] || ''}
                               onChange={(e) => handleParameterValueChange(param.name, e.target.value)}
                               placeholder={`输入 ${param.name} 值`}
-                              className="h-7 text-xs"
+                              className="h-8 text-sm"
                             />
                           </div>
                         ))}
@@ -381,8 +381,8 @@ export default function ApiBuilderEditPage() {
                   <>
                     <div className="mt-4 border-t"></div>
                     <div className="mt-2 p-3 border rounded-md" style={{ backgroundColor: '#171717' }}>
-                      <p className="text-xs font-semibold text-white mb-3">测试结果</p>
-                      <div className="text-xs text-gray-300 space-y-2">
+                      <p className="text-sm font-semibold text-white mb-3">测试结果</p>
+                      <div className="text-sm text-gray-300 space-y-2">
                         <p>返回行数：<strong>{testResult.rowCount}</strong></p>
                         <p>返回列：<strong>{testResult.columns?.length || 0}</strong></p>
                       </div>
@@ -390,7 +390,7 @@ export default function ApiBuilderEditPage() {
                       {/* 显示查询结果数据表格 */}
                       {Array.isArray(testResult.sample) && testResult.sample.length > 0 ? (
                         <div className="mt-3 overflow-x-auto">
-                          <table className="w-full text-xs border-collapse">
+                          <table className="w-full text-sm border-collapse">
                             <thead>
                               <tr style={{ backgroundColor: '#0f0f0f' }}>
                                 {testResult.columns?.map((col) => (
@@ -415,7 +415,7 @@ export default function ApiBuilderEditPage() {
                         </div>
                       ) : (
                         <div className="mt-3 p-2" style={{ backgroundColor: '#0f0f0f' }}>
-                          <p className="text-xs text-gray-300">暂无数据记录</p>
+                          <p className="text-sm text-gray-300">暂无数据记录</p>
                         </div>
                       )}
                     </div>
@@ -428,46 +428,46 @@ export default function ApiBuilderEditPage() {
             <TabsContent value="review" className="space-y-6 mt-6">
               <div className="space-y-4">
                 <div className="border rounded-lg p-4 bg-muted/50">
-                  <h3 className="font-semibold text-sm mb-3">接口摘要</h3>
+                  <h3 className="font-semibold text-base mb-3">接口摘要</h3>
                   <div className="grid grid-cols-2 gap-3 text-sm">
                     <div>
-                      <span className="text-muted-foreground text-xs">名称:</span>
+                      <span className="text-muted-foreground text-sm">名称:</span>
                       <p className="font-medium">{formData.name || '未设置'}</p>
                     </div>
                     <div>
-                      <span className="text-muted-foreground text-xs">端点:</span>
-                      <p className="font-mono font-medium text-xs">{formData.endpoint || '未设置'}</p>
+                      <span className="text-muted-foreground text-sm">端点:</span>
+                      <p className="font-mono font-medium text-sm">{formData.endpoint || '未设置'}</p>
                     </div>
                     <div>
-                      <span className="text-muted-foreground text-xs">请求方式:</span>
+                      <span className="text-muted-foreground text-sm">请求方式:</span>
                       <p className="font-medium text-sm">{formData.method}</p>
                     </div>
                     <div>
-                      <span className="text-muted-foreground text-xs">版本:</span>
+                      <span className="text-muted-foreground text-sm">版本:</span>
                       <p className="font-medium">v{formData.version}</p>
                     </div>
                     <div className="col-span-2">
-                      <span className="text-muted-foreground text-xs">描述:</span>
+                      <span className="text-muted-foreground text-sm">描述:</span>
                       <p className="font-medium text-sm">{formData.description || '无'}</p>
                     </div>
                   </div>
                 </div>
 
                 <div className="border rounded-lg p-4 bg-muted/50">
-                  <h3 className="font-semibold text-sm mb-2">SQL查询</h3>
-                  <pre className="bg-background p-2 rounded border text-xs overflow-x-auto max-h-32">
+                  <h3 className="font-semibold text-base mb-2">SQL查询</h3>
+                  <pre className="bg-background p-2 rounded border text-sm overflow-x-auto max-h-32">
                     {formData.sql_query || '未设置'}
                   </pre>
                 </div>
 
                 {extractedParams.length > 0 && (
                   <div className="border rounded-lg p-4 bg-muted/50">
-                    <h3 className="font-semibold text-sm mb-3">请求参数</h3>
+                    <h3 className="font-semibold text-base mb-3">请求参数</h3>
                     <div className="space-y-2">
                       {extractedParams.map((param) => (
                         <div key={param.name} className="flex items-center justify-between text-sm">
                           <span className="font-medium">{param.name}</span>
-                          <span className="text-muted-foreground text-xs">必需 • {param.type}</span>
+                          <span className="text-muted-foreground text-sm">必需 • {param.type}</span>
                         </div>
                       ))}
                     </div>
@@ -478,8 +478,8 @@ export default function ApiBuilderEditPage() {
                   <div className="flex items-start gap-2">
                     <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
                     <div>
-                      <p className="font-semibold text-sm text-green-900">检查完成</p>
-                      <p className="text-xs text-green-800 mt-1">
+                      <p className="font-semibold text-base text-green-900">检查完成</p>
+                      <p className="text-sm text-green-800 mt-1">
                         所有必填项已完成，点击右上角"保存"按钮来更新该接口。
                       </p>
                     </div>
