@@ -389,12 +389,12 @@ export default function ApiBuilderEditPage() {
 
                       {/* 显示查询结果数据表格 */}
                       {Array.isArray(testResult.sample) && testResult.sample.length > 0 ? (
-                        <div className="mt-3 overflow-x-auto">
+                        <div className="mt-3 overflow-x-auto" style={{ minHeight: '280px' }}>
                           <table className="w-full text-sm border-collapse">
                             <thead>
                               <tr style={{ backgroundColor: '#0f0f0f' }}>
                                 {testResult.columns?.map((col) => (
-                                  <th key={col.name} className="border px-2 py-1 text-left font-semibold text-white">
+                                  <th key={col.name} className="border px-3 py-3 text-left font-semibold text-white">
                                     {col.name}
                                   </th>
                                 ))}
@@ -404,7 +404,7 @@ export default function ApiBuilderEditPage() {
                               {testResult.sample.map((row, idx) => (
                                 <tr key={idx} style={{ backgroundColor: '#0a0a0a' }} className="hover:bg-gray-900">
                                   {testResult.columns?.map((col) => (
-                                    <td key={col.name} className="border px-2 py-1 text-gray-300 max-w-xs truncate">
+                                    <td key={col.name} className="border px-3 py-3 text-gray-300 max-w-xs truncate">
                                       {String(row[col.name] ?? '-')}
                                     </td>
                                   ))}
@@ -414,7 +414,7 @@ export default function ApiBuilderEditPage() {
                           </table>
                         </div>
                       ) : (
-                        <div className="mt-3 p-2" style={{ backgroundColor: '#0f0f0f' }}>
+                        <div className="mt-3 p-3" style={{ backgroundColor: '#0f0f0f', minHeight: '280px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                           <p className="text-sm text-gray-300">暂无数据记录</p>
                         </div>
                       )}
