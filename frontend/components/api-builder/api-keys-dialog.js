@@ -75,7 +75,7 @@ export default function ApiKeysDialog({ open, onOpenChange, interface_ }) {
               <div className="text-sm font-medium mb-2">JavaScript 示例：</div>
               <div className="flex items-start gap-2" style={{ backgroundColor: '#171717', padding: '12px', borderRadius: '6px' }}>
                 <code className="text-xs text-gray-300 flex-1 font-mono break-words">
-                  fetch('/api/custom{interface_.endpoint}', {'{'}method: '{interface_.method}'{'}})
+                  {`fetch('/api/custom${interface_.endpoint}', {method: '${interface_.method}'})`}
                 </code>
                 <Button
                   variant="ghost"
