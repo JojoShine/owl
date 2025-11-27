@@ -52,6 +52,7 @@ export default function ApiBuilderEditPage() {
     require_auth: true,
     rate_limit: 1000,
     pageSize: 10,
+    status: 'active', // 默认状态
   });
 
   useEffect(() => {
