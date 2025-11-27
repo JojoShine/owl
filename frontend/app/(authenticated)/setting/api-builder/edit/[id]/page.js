@@ -69,7 +69,22 @@ export default function ApiBuilderEditPage() {
       if (interfaceData.endpoint?.startsWith('/custom')) {
         interfaceData.endpoint = interfaceData.endpoint.substring(7); // 移除 '/custom'
       }
-      setFormData(interfaceData);
+      // 合并数据，确保所有字段都有值
+      setFormData({
+        name: interfaceData.name || '',
+        description: interfaceData.description || '',
+        endpoint: interfaceData.endpoint || '',
+        method: interfaceData.method || 'GET',
+        version: interfaceData.version || 1,
+        sql_query: interfaceData.sql_query || '',
+        parameters: interfaceData.parameters || [],
+        parameterValues: interfaceData.parameterValues || {},
+        returnColumns: interfaceData.returnColumns || [],
+        require_auth: interfaceData.require_auth !== undefined ? interfaceData.require_auth : true,
+        rate_limit: interfaceData.rate_limit || 1000,
+        pageSize: interfaceData.pageSize || 10,
+        status: interfaceData.status || 'active',
+      });
     } catch (error) {
       console.error('获取接口详情失败:', error);
       toast.error('获取接口详情失败');
