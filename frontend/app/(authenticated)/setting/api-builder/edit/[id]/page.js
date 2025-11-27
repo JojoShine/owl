@@ -63,7 +63,12 @@ export default function ApiBuilderEditPage() {
   const fetchInterface = async () => {
     try {
       const response = await apiBuilderApi.getInterfaceById(id);
-      setFormData(response.data?.data || {});
+      const interfaceData = response.data || {};
+      // 移除 /custom 前缀以便编辑
+      if (interfaceData.endpoint?.startsWith('/custom')) {
+        interfaceData.endpoint = interfaceData.endpoint.substring(7); // 移除 '/custom'
+      }
+      setFormData(interfaceData);
     } catch (error) {
       console.error('获取接口详情失败:', error);
       toast.error('获取接口详情失败');
@@ -156,8 +161,14 @@ export default function ApiBuilderEditPage() {
 
     try {
       setIsSaving(true);
+      // 自动添加 /custom 前缀
+      const endpoint = formData.endpoint.startsWith('/custom')
+        ? formData.endpoint
+        : `/custom${formData.endpoint.startsWith('/') ? formData.endpoint : '/' + formData.endpoint}`;
+
       const dataToSave = {
         ...formData,
+        endpoint,
         parameters: extractedParams, // 使用自动识别的参数
       };
 
@@ -436,7 +447,15 @@ export default function ApiBuilderEditPage() {
                     </div>
                     <div>
                       <span className="text-muted-foreground text-sm">端点:</span>
-                      <p className="font-mono font-medium text-sm">{formData.endpoint || '未设置'}</p>
+                      <p className="font-mono font-medium text-sm">
+                        {(() => {
+                          const endpoint = formData.endpoint || '未设置';
+                          if (endpoint === '未设置') return endpoint;
+                          return formData.endpoint.startsWith('/custom')
+                            ? formData.endpoint
+                            : `/custom${formData.endpoint.startsWith('/') ? formData.endpoint : '/' + formData.endpoint}`;
+                        })()}
+                      </p>
                     </div>
                     <div>
                       <span className="text-muted-foreground text-sm">请求方式:</span>
