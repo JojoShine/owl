@@ -33,6 +33,8 @@ db.FileShare = require('./system/FileShare')(sequelize, Sequelize.DataTypes);
 db.FilePermission = require('./system/FilePermission')(sequelize, Sequelize.DataTypes);
 db.Attachment = require('./system/Attachment')(sequelize, Sequelize.DataTypes);
 db.Dictionary = require('./system/Dictionary')(sequelize, Sequelize.DataTypes);
+db.ApiInterface = require('./system/ApiInterface')(sequelize, Sequelize.DataTypes);
+db.ApiKey = require('./system/ApiKey')(sequelize, Sequelize.DataTypes);
 
 // ========== Monitor Models ==========
 // 监控告警相关模型

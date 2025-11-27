@@ -76,6 +76,12 @@ router.use('/generator', generatorRoutes);
 const dictionaryRoutes = require('../modules/dictionary/dictionary.routes');
 router.use('/dictionaries', dictionaryRoutes);
 
+// API构建器路由（接口开发功能）
+const apiBuilderRoutes = require('../modules/api-builder/api-builder.routes');
+const apiBuilderExecutorRoutes = require('../modules/api-builder/api-builder-executor.routes');
+router.use('/api-builder', apiBuilderRoutes);
+router.use('/api-builder', apiBuilderExecutorRoutes);
+
 // 动态生成的模块路由将通过 dynamic-routes.js 自动加载
 
 const dynamicRoutes = require('./dynamic-routes');
