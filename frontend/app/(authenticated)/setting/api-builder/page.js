@@ -30,44 +30,13 @@ import ApiKeysDialog from '@/components/api-builder/api-keys-dialog';
 import TestInterfaceDialog from '@/components/api-builder/test-interface-dialog';
 import { getFullApiUrl } from '@/lib/api-url';
 
-// 格式化日期的辅助函数 - 转换为本地时间
+// 格式化日期的辅助函数
 const formatDate = (dateString) => {
   if (!dateString) return '-';
   try {
-    let date;
-
-    // 如果是ISO格式或ISO-like格式
-    if (typeof dateString === 'string' && (dateString.includes('T') || dateString.includes('Z'))) {
-      date = new Date(dateString);
-    } else if (typeof dateString === 'string') {
-      // 处理"YYYY-MM-DD HH:mm:ss"格式 - 假设为UTC时间，需要转换为本地时间
-      const match = dateString.match(/(\d{4})-(\d{2})-(\d{2})\s?(\d{2})?:?(\d{2})?:?(\d{2})?/);
-      if (match) {
-        const [, year, month, day, hour = 0, minute = 0, second = 0] = match;
-        // 创建UTC时间
-        date = new Date(Date.UTC(year, month - 1, day, hour, minute, second));
-      } else {
-        date = new Date(dateString);
-      }
-    } else {
-      date = new Date(dateString);
-    }
-
-    if (isNaN(date.getTime())) {
-      return '-';
-    }
-
-    // 转换为本地时间字符串（中文格式）
-    return date.toLocaleString('zh-CN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-    });
+    return new Date(dateString).toLocaleString('zh-CN');
   } catch (error) {
-    return '-';
+    return dateString; // 如果格式化失败，直接返回原值
   }
 };
 

@@ -15,6 +15,7 @@ const sequelize = new Sequelize(
     dialect: dbConfig.dialect,
     logging: dbConfig.logging ? (msg) => logger.debug(msg) : false,
     pool: dbConfig.pool,
+    timezone: '+08:00', // 设置时区为中国标准时间（UTC+8）
   }
 );
 
