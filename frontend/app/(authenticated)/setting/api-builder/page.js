@@ -265,7 +265,7 @@ export default function ApiBuilderPage() {
                           {getStatusBadge(interface_.status)}
                         </button>
                       </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
+                      <TableCell className="text-sm text-muted-foreground dark:text-white">
                         {formatDate(interface_.createdAt || interface_.created_at)}
                       </TableCell>
                       <TableCell className="text-right">

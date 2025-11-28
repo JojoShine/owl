@@ -70,22 +70,22 @@ export default function ApiKeysDialog({ open, onOpenChange, interface_ }) {
           </div>
 
           {/* 调用流程 */}
-          <div className="border rounded-lg p-4" style={{ backgroundColor: '#0a0a0a' }}>
-            <h3 className="font-semibold text-base mb-4 text-white">调用流程</h3>
+          <div className="border rounded-lg p-4 bg-muted">
+            <h3 className="font-semibold text-base mb-4">调用流程</h3>
 
             {interface_.require_auth ? (
               <Tabs defaultValue="step1" className="w-full">
-                <TabsList className="grid w-full grid-cols-2 mb-4">
+                <TabsList className="grid w-full grid-cols-2 mb-4 bg-muted rounded-lg">
                   <TabsTrigger value="step1">步骤 1：获取令牌</TabsTrigger>
                   <TabsTrigger value="step2">步骤 2：调用接口</TabsTrigger>
                 </TabsList>
 
                 {/* 步骤1：获取Token */}
                 <TabsContent value="step1" className="space-y-3">
-                  <p className="text-sm text-gray-300 mb-3">该接口需要认证。请先获取令牌，然后调用接口时在请求头中传递。</p>
-                  <div className="text-xs text-gray-400 mb-2">使用 cURL 获取令牌：</div>
-                  <div className="flex items-center gap-2 overflow-hidden" style={{ backgroundColor: '#171717', padding: '12px', borderRadius: '6px' }}>
-                    <code className="text-xs text-gray-300 flex-1 font-mono break-words overflow-hidden">
+                  <p className="text-sm mb-3">该接口需要认证。请先获取令牌，然后调用接口时在请求头中传递。</p>
+                  <div className="text-xs mb-2 text-muted-foreground">使用 cURL 获取令牌：</div>
+                  <div className="flex items-center gap-2 overflow-hidden bg-card" style={{ padding: '12px', borderRadius: '6px' }}>
+                    <code className="text-xs flex-1 font-mono break-words overflow-hidden">
                       {`curl -X POST http://localhost:3001/api/auth/api-token \\\n  -H "Content-Type: application/json" \\\n  -d '{\n    "app_id": "your-app-id",\n    "app_key": "your-app-key"\n  }'`}
                     </code>
                     <Button
@@ -99,25 +99,25 @@ export default function ApiKeysDialog({ open, onOpenChange, interface_ }) {
                     </Button>
                   </div>
 
-                  <div className="text-xs text-gray-300 mt-4 p-3 rounded" style={{ backgroundColor: '#0f0f0f' }}>
+                  <div className="text-xs mt-4 p-3 rounded bg-card border border-border">
                     <p className="mb-2">💡 说明：</p>
-                    <ul className="list-disc list-inside space-y-1 text-xs text-gray-400">
-                      <li>从密钥管理页面获取您的 <code className="text-gray-300 bg-gray-800 px-1 rounded">app_id</code> 和 <code className="text-gray-300 bg-gray-800 px-1 rounded">app_key</code></li>
+                    <ul className="list-disc list-inside space-y-1 text-xs text-muted-foreground">
+                      <li>从密钥管理页面获取您的 <code className="px-1 rounded bg-muted">app_id</code> 和 <code className="px-1 rounded bg-muted">app_key</code></li>
                       <li>执行上述 cURL 命令（替换实际的ID和密钥）</li>
-                      <li>响应包含 <code className="text-gray-300 bg-gray-800 px-1 rounded">token</code> 字段</li>
+                      <li>响应包含 <code className="px-1 rounded bg-muted">token</code> 字段</li>
                     </ul>
                   </div>
                 </TabsContent>
 
                 {/* 步骤2：使用Token调用接口 */}
                 <TabsContent value="step2" className="space-y-3">
-                  <p className="text-sm text-gray-300 mb-3">使用获取的令牌调用接口，在请求头中传递 <code className="text-gray-300 bg-gray-800 px-1 rounded">Authorization: Bearer {'{token}'}</code></p>
+                  <p className="text-sm mb-3">使用获取的令牌调用接口，在请求头中传递 <code className="px-1 rounded bg-muted">Authorization: Bearer {'{token}'}</code></p>
 
                   {hasParams && (
                     <>
-                      <div className="text-xs text-gray-400 mb-2">请求参数示例：</div>
-                      <div className="flex items-center gap-2 overflow-hidden" style={{ backgroundColor: '#171717', padding: '12px', borderRadius: '6px' }}>
-                        <code className="text-xs text-gray-300 flex-1 font-mono break-words overflow-hidden">
+                      <div className="text-xs mb-2 text-muted-foreground">请求参数示例：</div>
+                      <div className="flex items-center gap-2 overflow-hidden bg-card border border-border" style={{ padding: '12px', borderRadius: '6px' }}>
+                        <code className="text-xs flex-1 font-mono break-words overflow-hidden">
                           {JSON.stringify(sampleParams, null, 2)}
                         </code>
                         <Button
@@ -133,9 +133,9 @@ export default function ApiKeysDialog({ open, onOpenChange, interface_ }) {
                     </>
                   )}
 
-                  <div className="text-xs text-gray-400 mt-3 mb-2">cURL 示例：</div>
-                  <div className="flex items-center gap-2 overflow-hidden" style={{ backgroundColor: '#171717', padding: '12px', borderRadius: '6px' }}>
-                    <code className="text-xs text-gray-300 flex-1 font-mono break-words overflow-hidden">
+                  <div className="text-xs mt-3 mb-2 text-muted-foreground">cURL 示例：</div>
+                  <div className="flex items-center gap-2 overflow-hidden bg-card border border-border" style={{ padding: '12px', borderRadius: '6px' }}>
+                    <code className="text-xs flex-1 font-mono break-words overflow-hidden">
                       {`curl -X ${interface_.method} ${getFullApiUrl(interface_.endpoint)}${interface_.method === 'GET' && hasParams ? '?' + Object.entries(sampleParams).map(([k, v]) => `${k}=${v}`).join('&') : ''} \\\n  -H "Authorization: Bearer YOUR_TOKEN"${interface_.method !== 'GET' && hasParams ? ` \\\n  -H "Content-Type: application/json" \\\n  -d '${JSON.stringify(sampleParams)}'` : ''}`}
                     </code>
                     <Button
@@ -152,13 +152,13 @@ export default function ApiKeysDialog({ open, onOpenChange, interface_ }) {
               </Tabs>
             ) : (
               <div className="space-y-3">
-                <p className="text-sm text-gray-300">该接口不需要认证，直接调用即可。</p>
+                <p className="text-sm">该接口不需要认证，直接调用即可。</p>
 
                 {hasParams && (
                   <>
-                    <div className="text-xs text-gray-400 mb-2">请求参数示例：</div>
-                    <div className="flex items-center gap-2 overflow-hidden" style={{ backgroundColor: '#171717', padding: '12px', borderRadius: '6px' }}>
-                      <code className="text-xs text-gray-300 flex-1 font-mono break-words overflow-hidden">
+                    <div className="text-xs mb-2 text-muted-foreground">请求参数示例：</div>
+                    <div className="flex items-center gap-2 overflow-hidden bg-card border border-border" style={{ padding: '12px', borderRadius: '6px' }}>
+                      <code className="text-xs flex-1 font-mono break-words overflow-hidden">
                         {JSON.stringify(sampleParams, null, 2)}
                       </code>
                       <Button
@@ -174,9 +174,9 @@ export default function ApiKeysDialog({ open, onOpenChange, interface_ }) {
                   </>
                 )}
 
-                <div className="text-xs text-gray-400 mb-2">cURL 示例：</div>
-                <div className="flex items-center gap-2 overflow-hidden" style={{ backgroundColor: '#171717', padding: '12px', borderRadius: '6px' }}>
-                  <code className="text-xs text-gray-300 flex-1 font-mono break-words overflow-hidden">
+                <div className="text-xs mb-2 text-muted-foreground">cURL 示例：</div>
+                <div className="flex items-center gap-2 overflow-hidden bg-card border border-border" style={{ padding: '12px', borderRadius: '6px' }}>
+                  <code className="text-xs flex-1 font-mono break-words overflow-hidden">
                     {`curl -X ${interface_.method} ${getFullApiUrl(interface_.endpoint)}${interface_.method === 'GET' && hasParams ? '?' + Object.entries(sampleParams).map(([k, v]) => `${k}=${v}`).join('&') : ''}${interface_.method !== 'GET' && hasParams ? ` \\\n  -H "Content-Type: application/json" \\\n  -d '${JSON.stringify(sampleParams)}'` : ''}`}
                   </code>
                   <Button
