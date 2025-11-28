@@ -464,7 +464,7 @@ export default function ApiBuilderEditPage() {
                     </Button>
                   </div>
                 </div>
-                <div className="border border-black dark:border-slate-700 rounded-md mt-1 overflow-hidden">
+                <div className="border rounded-md mt-1 overflow-hidden">
                   <AceEditor
                     mode="sql"
                     theme={editorTheme}
