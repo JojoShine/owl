@@ -17,10 +17,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { ArrowLeft, CheckCircle2, Play } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Play, Wand2 } from 'lucide-react';
 import AceEditor from 'react-ace';
 import 'ace-builds/src-noconflict/mode-sql';
 import 'ace-builds/src-noconflict/theme-monokai';
+import { format as formatSql } from 'sql-formatter';
 
 // 从SQL中提取参数（:paramName格式）
 const extractSqlParameters = (sql) => {
@@ -123,6 +124,25 @@ export default function ApiBuilderEditPage() {
 
   const handleFieldChange = (field, value) => {
     setFormData({ ...formData, [field]: value });
+  };
+
+  const handleFormatSql = () => {
+    if (!formData.sql_query.trim()) {
+      toast.error('请输入SQL查询语句');
+      return;
+    }
+
+    try {
+      const formatted = formatSql(formData.sql_query, {
+        language: 'mysql',
+        linesBetweenQueries: 2,
+      });
+      setFormData({ ...formData, sql_query: formatted });
+      toast.success('SQL已格式化');
+    } catch (error) {
+      console.error('SQL格式化失败:', error);
+      toast.error('SQL格式化失败：' + error.message);
+    }
   };
 
   const handleTestSql = async () => {
@@ -395,10 +415,22 @@ export default function ApiBuilderEditPage() {
                     <Label className="text-base">SQL语句 *</Label>
                     <p className="text-sm text-muted-foreground">支持 SELECT、INSERT、UPDATE、DELETE 操作，参数使用 :paramName 格式。禁止 DROP、TRUNCATE、ALTER 等危险操作。</p>
                   </div>
-                  <Button size="lg" onClick={handleTestSql} disabled={isTesting || !formData.sql_query.trim()}>
-                    <Play className="h-3.5 w-3.5 mr-1" />
-                    {isTesting ? '测试中...' : '测试SQL'}
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      size="lg"
+                      variant="outline"
+                      onClick={handleFormatSql}
+                      disabled={!formData.sql_query.trim()}
+                      title="格式化SQL语句"
+                    >
+                      <Wand2 className="h-3.5 w-3.5 mr-1" />
+                      格式化
+                    </Button>
+                    <Button size="lg" onClick={handleTestSql} disabled={isTesting || !formData.sql_query.trim()}>
+                      <Play className="h-3.5 w-3.5 mr-1" />
+                      {isTesting ? '测试中...' : '测试SQL'}
+                    </Button>
+                  </div>
                 </div>
                 <div className="border border-primary rounded-md mt-1 overflow-hidden">
                   <AceEditor
