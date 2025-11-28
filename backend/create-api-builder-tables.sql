@@ -75,7 +75,6 @@ CREATE INDEX IF NOT EXISTS idx_api_keys_api_key ON api_keys(api_key);
 CREATE INDEX IF NOT EXISTS idx_api_keys_expires_at ON api_keys(expires_at);
 
 -- 注：api_call_logs 表不需要创建，日志存储在文件系统中
-
 -- 修改interface_id为可选（允许为null，用于全局API密钥）
 ALTER TABLE api_keys ALTER COLUMN interface_id DROP NOT NULL;
 

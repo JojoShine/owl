@@ -87,5 +87,11 @@ module.exports = (sequelize, DataTypes) => {
     });
   };
 
+  // 自定义 toJSON 方法，返回普通对象，避免 JSON.stringify 再次转换时间
+  ApiInterface.prototype.toJSON = function() {
+    const values = this.get({ plain: true });
+    return values;
+  };
+
   return ApiInterface;
 };

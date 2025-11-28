@@ -1,3 +1,4 @@
+const { Op } = require('sequelize');
 const db = require('../../models');
 const ApiError = require('../../utils/ApiError');
 const { logger } = require('../../config/logger');
@@ -45,9 +46,9 @@ class ApiBuilderService {
     const where = {};
     if (status) where.status = status;
     if (search) {
-      where.$or = [
-        { name: { $iLike: `%${search}%` } },
-        { endpoint: { $iLike: `%${search}%` } },
+      where[Op.or] = [
+        { name: { [Op.iLike]: `%${search}%` } },
+        { endpoint: { [Op.iLike]: `%${search}%` } },
       ];
     }
 
@@ -63,10 +64,11 @@ class ApiBuilderService {
       offset,
       limit: parseInt(limit),
       order: [['created_at', 'DESC']],
+      distinct: true,
     });
 
     return {
-      items: rows,
+      items: rows.map(row => row.get({ plain: true })),
       pagination: {
         page: parseInt(page),
         limit: parseInt(limit),

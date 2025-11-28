@@ -1,207 +1,137 @@
 const apiBuilderService = require('./api-builder.service');
 const { logger } = require('../../config/logger');
+const { success, created, paginated } = require('../../utils/response');
 
 class ApiBuilderController {
   /**
    * 创建接口
    */
-  async createInterface(req, res) {
+  async createInterface(req, res, next) {
     try {
       const data = req.body;
       const userId = req.user.id;
 
       const interface_ = await apiBuilderService.createInterface(data, userId);
-
-      res.status(201).json({
-        success: true,
-        message: '接口创建成功',
-        data: interface_,
-      });
+      created(res, interface_.get({ plain: true }), '接口创建成功');
     } catch (error) {
       logger.error('Error creating interface:', error);
-      res.status(error.statusCode || 500).json({
-        success: false,
-        message: error.message || '创建接口失败',
-      });
+      next(error);
     }
   }
 
   /**
    * 获取接口列表
    */
-  async getInterfaces(req, res) {
+  async getInterfaces(req, res, next) {
     try {
       const result = await apiBuilderService.getInterfaces(req.query);
-
-      res.json({
-        success: true,
-        message: '获取接口列表成功',
-        data: result.items,
-        pagination: result.pagination,
-      });
+      paginated(res, result.items, result.pagination, '获取接口列表成功');
     } catch (error) {
       logger.error('Error getting interfaces:', error);
-      res.status(error.statusCode || 500).json({
-        success: false,
-        message: error.message || '获取接口列表失败',
-      });
+      next(error);
     }
   }
 
   /**
    * 获取接口详情
    */
-  async getInterface(req, res) {
+  async getInterface(req, res, next) {
     try {
       const { id } = req.params;
       const interface_ = await apiBuilderService.getInterfaceById(id);
-
-      res.json({
-        success: true,
-        message: '获取接口详情成功',
-        data: interface_,
-      });
+      success(res, interface_.get({ plain: true }), '获取接口详情成功');
     } catch (error) {
       logger.error('Error getting interface:', error);
-      res.status(error.statusCode || 500).json({
-        success: false,
-        message: error.message || '获取接口详情失败',
-      });
+      next(error);
     }
   }
 
   /**
    * 更新接口
    */
-  async updateInterface(req, res) {
+  async updateInterface(req, res, next) {
     try {
       const { id } = req.params;
       const data = req.body;
 
       const interface_ = await apiBuilderService.updateInterface(id, data);
-
-      res.json({
-        success: true,
-        message: '接口更新成功',
-        data: interface_,
-      });
+      success(res, interface_.get({ plain: true }), '接口更新成功');
     } catch (error) {
       logger.error('Error updating interface:', error);
-      res.status(error.statusCode || 500).json({
-        success: false,
-        message: error.message || '更新接口失败',
-      });
+      next(error);
     }
   }
 
   /**
    * 删除接口
    */
-  async deleteInterface(req, res) {
+  async deleteInterface(req, res, next) {
     try {
       const { id } = req.params;
       const result = await apiBuilderService.deleteInterface(id);
-
-      res.json({
-        success: true,
-        message: result.message,
-      });
+      success(res, result, result.message);
     } catch (error) {
       logger.error('Error deleting interface:', error);
-      res.status(error.statusCode || 500).json({
-        success: false,
-        message: error.message || '删除接口失败',
-      });
+      next(error);
     }
   }
 
   /**
    * 创建API密钥
    */
-  async createApiKey(req, res) {
+  async createApiKey(req, res, next) {
     try {
       const { id } = req.params;
       const { app_name } = req.body;
       const userId = req.user.id;
 
       const key = await apiBuilderService.createApiKey(id, app_name, userId);
-
-      res.status(201).json({
-        success: true,
-        message: 'API密钥创建成功（3天有效期）',
-        data: key,
-      });
+      created(res, key.get({ plain: true }), 'API密钥创建成功（3天有效期）');
     } catch (error) {
       logger.error('Error creating API key:', error);
-      res.status(error.statusCode || 500).json({
-        success: false,
-        message: error.message || '创建API密钥失败',
-      });
+      next(error);
     }
   }
 
   /**
    * 获取接口的密钥列表
    */
-  async getInterfaceKeys(req, res) {
+  async getInterfaceKeys(req, res, next) {
     try {
       const { id } = req.params;
       const keys = await apiBuilderService.getInterfaceKeys(id);
-
-      res.json({
-        success: true,
-        message: '获取密钥列表成功',
-        data: keys,
-      });
+      success(res, keys.map(k => k.get({ plain: true })), '获取密钥列表成功');
     } catch (error) {
       logger.error('Error getting interface keys:', error);
-      res.status(error.statusCode || 500).json({
-        success: false,
-        message: error.message || '获取密钥列表失败',
-      });
+      next(error);
     }
   }
 
   /**
    * 删除API密钥
    */
-  async deleteApiKey(req, res) {
+  async deleteApiKey(req, res, next) {
     try {
       const { keyId } = req.params;
       const result = await apiBuilderService.deleteApiKey(keyId);
-
-      res.json({
-        success: true,
-        message: result.message,
-      });
+      success(res, result, result.message);
     } catch (error) {
       logger.error('Error deleting API key:', error);
-      res.status(error.statusCode || 500).json({
-        success: false,
-        message: error.message || '删除API密钥失败',
-      });
+      next(error);
     }
   }
 
   /**
    * 重新生成API密钥
    */
-  async regenerateApiKey(req, res) {
+  async regenerateApiKey(req, res, next) {
     try {
       const { keyId } = req.params;
       const key = await apiBuilderService.regenerateApiKey(keyId);
-
-      res.json({
-        success: true,
-        message: 'API密钥已重新生成（3天有效期）',
-        data: key,
-      });
+      success(res, key.get({ plain: true }), 'API密钥已重新生成（3天有效期）');
     } catch (error) {
       logger.error('Error regenerating API key:', error);
-      res.status(error.statusCode || 500).json({
-        success: false,
-        message: error.message || '重新生成API密钥失败',
-      });
+      next(error);
     }
   }
 

@@ -64,10 +64,10 @@ export default function ApiBuilderPage() {
         status: status || undefined,
       });
 
-      setInterfaces(response.data || []);
+      setInterfaces(response.data?.items || []);
       setPagination((prev) => ({
         ...prev,
-        total: response.pagination?.total || 0,
+        total: response.data?.pagination?.total || 0,
       }));
     } catch (error) {
       console.error('获取接口列表失败:', error);
