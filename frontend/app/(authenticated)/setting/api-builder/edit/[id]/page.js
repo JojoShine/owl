@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import { useTheme } from 'next-themes';
 import { useRouter, useParams } from 'next/navigation';
 import { apiBuilderApi } from '@/lib/api';
 import { Button } from '@/components/ui/button';
@@ -20,7 +21,8 @@ import { toast } from 'sonner';
 import { ArrowLeft, CheckCircle2, Play, Wand2 } from 'lucide-react';
 import AceEditor from 'react-ace';
 import 'ace-builds/src-noconflict/mode-sql';
-import 'ace-builds/src-noconflict/theme-monokai';
+import 'ace-builds/src-noconflict/theme-textmate';
+import 'ace-builds/src-noconflict/theme-dracula';
 import { format as formatSql } from 'sql-formatter';
 
 // 从SQL中提取参数（:paramName格式）
@@ -35,8 +37,13 @@ const extractSqlParameters = (sql) => {
 export default function ApiBuilderEditPage() {
   const router = useRouter();
   const params = useParams();
+  const { resolvedTheme } = useTheme();
   const id = params.id;
   const isNewMode = id === 'new';
+
+  // 根据系统主题选择编辑器主题
+  // resolvedTheme: 'dark' | 'light' | undefined（初始化时）
+  const editorTheme = resolvedTheme === 'dark' ? 'dracula' : 'textmate';
 
   const [isLoading, setIsLoading] = useState(!isNewMode);
   const [isSaving, setIsSaving] = useState(false);
@@ -457,10 +464,10 @@ export default function ApiBuilderEditPage() {
                     </Button>
                   </div>
                 </div>
-                <div className="border border-primary rounded-md mt-1 overflow-hidden">
+                <div className="border border-slate-300 dark:border-slate-700 rounded-md mt-1 overflow-hidden">
                   <AceEditor
                     mode="sql"
-                    theme="monokai"
+                    theme={editorTheme}
                     value={formData.sql_query}
                     onChange={(value) => handleFieldChange('sql_query', value)}
                     name="sql_query"
@@ -480,9 +487,9 @@ export default function ApiBuilderEditPage() {
                 {testError && (
                   <>
                     <div className="mt-4 border-t"></div>
-                    <div className="mt-2 p-3 border rounded-md" style={{ backgroundColor: '#171717' }}>
-                      <p className="text-sm font-semibold text-red-400">测试失败：</p>
-                      <p className="text-sm text-gray-300 mt-1">{testError}</p>
+                    <div className="mt-2 p-3 border rounded-md bg-red-50 dark:bg-red-950">
+                      <p className="text-sm font-semibold text-red-700 dark:text-red-400">测试失败：</p>
+                      <p className="text-sm text-red-600 dark:text-red-300 mt-1">{testError}</p>
                     </div>
                   </>
                 )}
@@ -490,12 +497,12 @@ export default function ApiBuilderEditPage() {
                 {extractedParams.length > 0 && (
                   <>
                     <div className="mt-4 border-t"></div>
-                    <div className="mt-2 p-3 border rounded-md" style={{ backgroundColor: '#171717' }}>
-                      <p className="text-base font-semibold text-white mb-3">请求参数值：</p>
+                    <div className="mt-2 p-3 border rounded-md bg-muted/50">
+                      <p className="text-base font-semibold text-slate-900 dark:text-white mb-3">请求参数值：</p>
                       <div className="space-y-3">
                         {extractedParams.map((param) => (
                           <div key={param.name} className="grid grid-cols-2 gap-2">
-                            <label className="text-base text-gray-300 flex items-center">
+                            <label className="text-base text-slate-700 dark:text-gray-300 flex items-center">
                               {param.name}
                               <span className="text-red-400 ml-1">*</span>
                             </label>
@@ -516,12 +523,12 @@ export default function ApiBuilderEditPage() {
                 {testResult && (
                   <>
                     <div className="mt-4 border-t"></div>
-                    <div className="mt-2 p-3 border rounded-md" style={{ backgroundColor: '#171717' }}>
-                      <p className="text-sm font-semibold text-white mb-3">测试结果</p>
+                    <div className="mt-2 p-3 border rounded-md bg-muted/50">
+                      <p className="text-sm font-semibold text-slate-900 dark:text-white mb-3">测试结果</p>
 
                       {testResult.operationType === 'SELECT' ? (
                         <>
-                          <div className="text-sm text-gray-300 space-y-2 mb-3">
+                          <div className="text-sm text-slate-700 dark:text-gray-300 space-y-2 mb-3">
                             <p>总数据行数：<strong>{testResult.rowCount}</strong> | 显示：<strong>{Math.min(testResult.rowCount, 5)}</strong> 条</p>
                             <p>返回列数：<strong>{testResult.columns?.length || 0}</strong></p>
                           </div>
@@ -531,9 +538,9 @@ export default function ApiBuilderEditPage() {
                             <div className="mt-3 overflow-x-auto" style={{ minHeight: '280px' }}>
                               <table className="w-full text-sm border-collapse">
                                 <thead>
-                                  <tr style={{ backgroundColor: '#0f0f0f' }}>
+                                  <tr className="bg-slate-200 dark:bg-slate-800">
                                     {testResult.columns?.map((col) => (
-                                      <th key={col.name} className="border px-3 py-3 text-left font-semibold text-white">
+                                      <th key={col.name} className="border px-3 py-3 text-left font-semibold text-slate-900 dark:text-white">
                                         {col.name}
                                       </th>
                                     ))}
@@ -541,9 +548,9 @@ export default function ApiBuilderEditPage() {
                                 </thead>
                                 <tbody>
                                   {testResult.sample.map((row, idx) => (
-                                    <tr key={idx} style={{ backgroundColor: '#0a0a0a' }} className="hover:bg-gray-900">
+                                    <tr key={idx} className="bg-white dark:bg-slate-950 hover:bg-slate-100 dark:hover:bg-slate-800">
                                       {testResult.columns?.map((col) => (
-                                        <td key={col.name} className="border px-3 py-3 text-gray-300 max-w-xs truncate">
+                                        <td key={col.name} className="border px-3 py-3 text-slate-700 dark:text-gray-300 max-w-xs truncate">
                                           {String(row[col.name] ?? '-')}
                                         </td>
                                       ))}
@@ -553,17 +560,17 @@ export default function ApiBuilderEditPage() {
                               </table>
                             </div>
                           ) : (
-                            <div className="mt-3 p-3" style={{ backgroundColor: '#0f0f0f', minHeight: '280px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                              <p className="text-sm text-gray-300">暂无数据记录</p>
+                            <div className="mt-3 p-3 bg-white dark:bg-slate-800 rounded" style={{ minHeight: '280px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <p className="text-sm text-slate-600 dark:text-gray-300">暂无数据记录</p>
                             </div>
                           )}
                         </>
                       ) : (
                         <div className="space-y-3">
-                          <div className="p-3" style={{ backgroundColor: '#0f0f0f', borderRadius: '4px' }}>
-                            <p className="text-sm text-green-400 font-semibold mb-2">✓ {testResult.operationType} 操作成功</p>
-                            <p className="text-sm text-gray-300">受影响行数：<strong className="text-white">{testResult.affectedRows}</strong></p>
-                            <p className="text-sm text-gray-400 mt-2">{testResult.message}</p>
+                          <div className="p-3 bg-green-50 dark:bg-green-950 rounded">
+                            <p className="text-sm text-green-700 dark:text-green-400 font-semibold mb-2">✓ {testResult.operationType} 操作成功</p>
+                            <p className="text-sm text-green-600 dark:text-gray-300">受影响行数：<strong className="text-green-900 dark:text-white">{testResult.affectedRows}</strong></p>
+                            <p className="text-sm text-green-700 dark:text-gray-400 mt-2">{testResult.message}</p>
                           </div>
                         </div>
                       )}
