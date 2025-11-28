@@ -133,11 +133,36 @@ export default function ApiBuilderEditPage() {
     }
 
     try {
-      const formatted = formatSql(formData.sql_query, {
+      let sqlToFormat = formData.sql_query;
+      const paramMap = {}; // 存储参数映射关系
+
+      // 提取所有参数占位符
+      const paramMatches = sqlToFormat.match(/:([\w]+)/g);
+
+      if (paramMatches) {
+        // 创建临时值映射，便于格式化后恢复
+        paramMatches.forEach((match, index) => {
+          const tempPlaceholder = `__PARAM_${index}__`;
+          paramMap[tempPlaceholder] = match;
+          // 用临时值替换参数（用字符串格式，这样格式化器能正确处理）
+          sqlToFormat = sqlToFormat.replace(new RegExp(`\\${match}`, 'g'), `'${tempPlaceholder}'`);
+        });
+      }
+
+      // 格式化SQL
+      const formatted = formatSql(sqlToFormat, {
         language: 'postgresql',
         linesBetweenQueries: 2,
       });
-      setFormData({ ...formData, sql_query: formatted });
+
+      // 还原参数占位符
+      let result = formatted;
+      Object.entries(paramMap).forEach(([tempKey, originalParam]) => {
+        // 恢复参数，移除引号
+        result = result.replace(new RegExp(`'${tempKey}'`, 'g'), originalParam);
+      });
+
+      setFormData({ ...formData, sql_query: result });
       toast.success('SQL已格式化');
     } catch (error) {
       console.error('SQL格式化失败:', error);
