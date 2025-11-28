@@ -234,6 +234,36 @@ class ApiBuilderController {
       });
     }
   }
+
+  /**
+   * 执行SQL查询（实际执行自定义API）
+   */
+  async executeSql(req, res) {
+    try {
+      const { sql_query, parameters } = req.body;
+
+      if (!sql_query) {
+        return res.status(400).json({
+          success: false,
+          message: '请输入SQL查询语句',
+        });
+      }
+
+      const result = await apiBuilderService.executeSql(sql_query, parameters || {});
+
+      res.json({
+        success: true,
+        message: '执行成功',
+        data: result,
+      });
+    } catch (error) {
+      logger.error('Error executing SQL:', error);
+      res.status(error.statusCode || 500).json({
+        success: false,
+        message: error.message || 'SQL执行失败',
+      });
+    }
+  }
 }
 
 module.exports = new ApiBuilderController();

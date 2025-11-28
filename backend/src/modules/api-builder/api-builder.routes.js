@@ -71,10 +71,15 @@ router.post(
   (req, res) => controller.regenerateApiKey(req, res)
 );
 
-// 测试SQL查询
+// SQL查询相关API（这两个路由需要在其他路由前面，防止被 /:id 路由匹配）
 router.post(
   '/test-sql',
   (req, res) => controller.testSql(req, res)
+);
+
+router.post(
+  '/execute-sql',
+  (req, res) => controller.executeSql(req, res)
 );
 
 module.exports = router;

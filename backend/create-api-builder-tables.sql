@@ -36,12 +36,12 @@ COMMENT ON COLUMN api_interfaces.updated_at IS '更新时间';
 
 -- 创建索引
 CREATE INDEX IF NOT EXISTS idx_api_interfaces_status ON api_interfaces(status);
-CREATE INDEX IF NOT EXISTS idx_api_interfaces_created_by ON api_interfaces(created_by);
+CREATE INDEX IF NOT EXISTS idx_api_interfaces_created_by ON api_interfaces (created_by);
 CREATE INDEX IF NOT EXISTS idx_api_interfaces_endpoint ON api_interfaces(endpoint);
 CREATE UNIQUE INDEX IF NOT EXISTS uk_api_interfaces_endpoint_version ON api_interfaces(endpoint, version);
 
 -- 创建API密钥表
-CREATE TABLE IF NOT EXISTS api_keys (
+CREATE TABLE IF NOT EXISTS  (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   interface_id UUID NOT NULL REFERENCES api_interfaces(id) ON DELETE CASCADE,
   app_name VARCHAR(255) NOT NULL,
@@ -75,3 +75,10 @@ CREATE INDEX IF NOT EXISTS idx_api_keys_api_key ON api_keys(api_key);
 CREATE INDEX IF NOT EXISTS idx_api_keys_expires_at ON api_keys(expires_at);
 
 -- 注：api_call_logs 表不需要创建，日志存储在文件系统中
+
+-- 修改interface_id为可选（允许为null，用于全局API密钥）
+ALTER TABLE api_keys ALTER COLUMN interface_id DROP NOT NULL;
+
+-- 为api_interfaces表添加api_key_id字段（关联授权密钥）
+ALTER TABLE api_interfaces ADD COLUMN IF NOT EXISTS api_key_id UUID REFERENCES api_keys(id) ON DELETE SET NULL;
+COMMENT ON COLUMN api_interfaces.api_key_id IS '关联的API密钥ID（可选，当require_auth=true时使用）';

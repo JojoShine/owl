@@ -45,42 +45,33 @@ class ApiBuilderExecutorController {
 
   /**
    * 执行动态API接口
-   * GET/POST/PUT/DELETE /api/custom/:endpoint?version=1
+   * GET/POST/PUT/DELETE /api/custom/*?version=1
    */
   async executeCustomApi(req, res) {
     try {
-      const { endpoint } = req.params;
+      // 从通配符参数中获取完整的端点路径
+      // 使用 '/*' 时，Express会将匹配的路径放在 params[0] 中
+      // 需要添加 /custom 前缀，因为数据库中存储的endpoint包含/custom前缀
+      const endpoint = `/custom/${req.params[0]}`;
       const version = parseInt(req.query.version) || 1;
       const method = req.method;
-
-      // 获取API密钥
-      let apiKey = null;
-      let apiKeyRecord = null;
-
-      // 从认证中间件获取验证信息
-      if (req.apiKey) {
-        apiKey = req.apiKey;
-        apiKeyRecord = req.apiKeyRecord;
-      } else if (!req.user) {
-        // 如果接口需要认证但没有认证信息，返回错误
-        const interface_ = await this.findInterface(endpoint, version);
-        if (interface_.require_auth) {
-          throw ApiError.unauthorized('接口需要API密钥认证');
-        }
-      }
 
       // 查找接口配置
       const interface_ = await this.findInterface(endpoint, version, method);
 
-      // 如果接口需要认证但没有提供密钥，返回错误
-      if (interface_.require_auth && !apiKeyRecord) {
-        throw ApiError.unauthorized('此接口需要有效的API密钥');
-      }
+      // 检查认证要求
+      if (interface_.require_auth) {
+        // 接口需要认证，检查是否有有效的用户或API密钥
+        if (!req.user) {
+          throw ApiError.unauthorized('未提供认证token');
+        }
 
-      // 检查限流
-      if (apiKeyRecord) {
-        await apiBuilderExecutorService.checkRateLimit(interface_.id, apiKeyRecord.id);
+        // 如果使用了API key认证，验证API key的拥有者是否是当前用户
+        if (req.apiKeyRecord && req.user.id !== req.apiKeyRecord.created_by) {
+          throw new Error('无权限访问此接口 - API密钥与当前用户不匹配');
+        }
       }
+      // 如果接口不需要认证，req.user可以为空，直接继续执行
 
       // 收集参数（支持GET和POST）
       const params = {
@@ -98,13 +89,6 @@ class ApiBuilderExecutorController {
         params,
         req.ip
       );
-
-      // 记录调用
-      if (apiKeyRecord) {
-        await apiKeyRecord.update({
-          last_used_at: new Date(),
-        });
-      }
 
       res.json({
         success: true,

@@ -57,6 +57,11 @@ module.exports = (sequelize, DataTypes) => {
         defaultValue: 1000,
         comment: '每小时请求限制',
       },
+      api_key_id: {
+        type: DataTypes.UUID,
+        allowNull: true,
+        comment: '关联的API密钥ID',
+      },
       created_by: {
         type: DataTypes.UUID,
         allowNull: false,

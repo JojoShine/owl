@@ -28,13 +28,24 @@ import { Pagination } from '@/components/ui/pagination';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import ApiKeysDialog from '@/components/api-builder/api-keys-dialog';
 import TestInterfaceDialog from '@/components/api-builder/test-interface-dialog';
+import { getFullApiUrl } from '@/lib/api-url';
 
 // 格式化日期的辅助函数
 const formatDate = (dateString) => {
   if (!dateString) return '-';
   try {
-    // 处理多种日期格式
-    const date = new Date(dateString);
+    // 首先尝试直接用new Date解析（支持ISO格式）
+    let date = new Date(dateString);
+    
+    // 如果是无效日期，尝试处理"YYYY-MM-DD HH:mm:ss"格式
+    if (isNaN(date.getTime()) && typeof dateString === 'string') {
+      const match = dateString.match(/(\d{4})-(\d{2})-(\d{2})\s?(\d{2})?:?(\d{2})?:?(\d{2})?/);
+      if (match) {
+        const [, year, month, day, hour = 0, minute = 0, second = 0] = match;
+        date = new Date(year, month - 1, day, hour, minute, second);
+      }
+    }
+
     if (isNaN(date.getTime())) {
       return '-';
     }
@@ -174,10 +185,16 @@ export default function ApiBuilderPage() {
             <CardTitle>接口开发</CardTitle>
             <CardDescription>管理通过SQL生成的动态API接口</CardDescription>
           </div>
-          <Button onClick={handleCreate} size="sm" className="sm:w-auto">
-            <Plus className="h-4 w-4 mr-1" />
-            新增
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={() => router.push('/setting/api-builder/keys')} size="lg" className="sm:w-auto" variant="outline">
+              <Key className="h-4 w-4 mr-1" />
+              密钥管理
+            </Button>
+            <Button onClick={handleCreate} size="lg" className="sm:w-auto">
+              <Plus className="h-4 w-4 mr-1" />
+              新增
+            </Button>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* 搜索栏 */}
@@ -247,8 +264,8 @@ export default function ApiBuilderPage() {
                   interfaces.map((interface_) => (
                     <TableRow key={interface_.id}>
                       <TableCell className="font-medium">{interface_.name}</TableCell>
-                      <TableCell className="font-mono text-sm">{interface_.endpoint}</TableCell>
-                      <TableCell>v{interface_.version}</TableCell>
+                      <TableCell className="font-mono text-sm">{getFullApiUrl(interface_.endpoint)}</TableCell>
+                      <TableCell>V{interface_.version}</TableCell>
                       <TableCell>{getMethodBadge(interface_.method)}</TableCell>
                       <TableCell>
                         <button
@@ -264,13 +281,13 @@ export default function ApiBuilderPage() {
                         </button>
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
-                        {formatDate(interface_.created_at)}
+                        {formatDate(interface_.createdAt || interface_.created_at)}
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
                           <Button
                             variant="ghost"
-                            size="sm"
+                            size="lg"
                             onClick={() => handleTest(interface_)}
                             title="测试接口"
                           >
@@ -278,7 +295,7 @@ export default function ApiBuilderPage() {
                           </Button>
                           <Button
                             variant="ghost"
-                            size="sm"
+                            size="lg"
                             onClick={() => handleManageKeys(interface_)}
                             title="管理密钥"
                           >
@@ -286,7 +303,7 @@ export default function ApiBuilderPage() {
                           </Button>
                           <Button
                             variant="ghost"
-                            size="sm"
+                            size="lg"
                             onClick={() => handleEdit(interface_.id)}
                             title="编辑接口"
                           >
@@ -294,7 +311,7 @@ export default function ApiBuilderPage() {
                           </Button>
                           <Button
                             variant="ghost"
-                            size="sm"
+                            size="lg"
                             onClick={() => handleDelete(interface_)}
                             title="删除接口"
                           >

@@ -17,10 +17,13 @@ const createInterfaceRules = () => [
     .notEmpty()
     .withMessage('SQL查询语句不能为空')
     .custom((value) => {
-      // 只允许SELECT查询
+      // 支持 SELECT、INSERT、UPDATE、DELETE
       const upperValue = value.trim().toUpperCase();
-      if (!upperValue.startsWith('SELECT')) {
-        throw new Error('只支持SELECT查询');
+      if (!upperValue.startsWith('SELECT') &&
+          !upperValue.startsWith('INSERT') &&
+          !upperValue.startsWith('UPDATE') &&
+          !upperValue.startsWith('DELETE')) {
+        throw new Error('仅支持 SELECT、INSERT、UPDATE、DELETE 操作');
       }
       return true;
     }),
@@ -52,6 +55,7 @@ const createInterfaceRules = () => [
     .optional()
     .isInt({ min: 1 })
     .withMessage('限流值必须是正整数'),
+  body('api_key_id').optional(),
 ];
 
 const updateInterfaceRules = () => [
@@ -73,9 +77,13 @@ const updateInterfaceRules = () => [
     .notEmpty()
     .withMessage('SQL查询语句不能为空')
     .custom((value) => {
+      // 支持 SELECT、INSERT、UPDATE、DELETE
       const upperValue = value.trim().toUpperCase();
-      if (!upperValue.startsWith('SELECT')) {
-        throw new Error('只支持SELECT查询');
+      if (!upperValue.startsWith('SELECT') &&
+          !upperValue.startsWith('INSERT') &&
+          !upperValue.startsWith('UPDATE') &&
+          !upperValue.startsWith('DELETE')) {
+        throw new Error('仅支持 SELECT、INSERT、UPDATE、DELETE 操作');
       }
       return true;
     }),
@@ -112,6 +120,7 @@ const updateInterfaceRules = () => [
     .optional()
     .isInt({ min: 1 })
     .withMessage('限流值必须是正整数'),
+  body('api_key_id').optional(),
 ];
 
 const createApiKeyRules = () => [

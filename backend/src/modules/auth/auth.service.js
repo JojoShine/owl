@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const db = require('../../models');
 const ApiError = require('../../utils/ApiError');
 const { logger } = require('../../config/logger');
@@ -72,6 +73,7 @@ class AuthService {
   async login(credentials) {
     const { username, password, captchaId, captchaCode } = credentials;
 
+    // 用户名/密码认证模式
     // 验证验证码
     const isCaptchaValid = await captchaService.verifyCaptcha(captchaId, captchaCode);
     if (!isCaptchaValid) {
@@ -119,6 +121,74 @@ class AuthService {
     const token = this.generateToken(user);
 
     logger.info(`User logged in: ${username}`);
+
+    return {
+      token,
+      user: user.toSafeJSON(),
+    };
+  }
+
+  /**
+   * 使用API密钥进行登录
+   */
+  async loginWithApiKey(appId, appKey) {
+    // 查找API密钥
+    const apiKey = await db.ApiKey.findOne({
+      where: { id: appId },
+    });
+
+    if (!apiKey) {
+      throw ApiError.unauthorized('无效的应用ID或密钥');
+    }
+
+    // 验证API密钥的api_secret
+    const expectedSecret = crypto
+      .createHmac('sha256', process.env.API_SECRET_KEY || 'your-secret-key')
+      .update(appKey)
+      .digest('hex');
+
+    if (apiKey.api_secret !== expectedSecret) {
+      throw ApiError.unauthorized('无效的应用ID或密钥');
+    }
+
+    // 检查API密钥状态
+    if (apiKey.status === 'inactive') {
+      throw ApiError.forbidden('应用密钥已禁用');
+    }
+
+    // 检查过期时间
+    if (apiKey.expires_at < new Date()) {
+      await apiKey.update({ status: 'inactive' });
+      throw ApiError.forbidden('应用密钥已过期');
+    }
+
+    // 获取关联的用户
+    const user = await db.User.findByPk(apiKey.created_by, {
+      include: [
+        {
+          model: db.Role,
+          as: 'roles',
+          through: { attributes: [] },
+        },
+      ],
+    });
+
+    if (!user) {
+      throw ApiError.notFound('关联用户不存在');
+    }
+
+    // 检查用户状态
+    if (user.status !== 'active') {
+      throw ApiError.forbidden('账户状态异常');
+    }
+
+    // 更新API密钥的最后使用时间
+    await apiKey.update({ last_used_at: new Date() });
+
+    // 生成token
+    const token = this.generateToken(user);
+
+    logger.info(`User logged in via API key: ${user.username} (app_id: ${appId})`);
 
     return {
       token,

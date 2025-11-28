@@ -568,11 +568,10 @@ export const apiBuilderApi = {
   // 测试接口
   testInterface: (id, params = {}) => axios.post(`/api-builder/test/${id}`, { params }),
 
-  // 创建API密钥
-  createApiKey: (interfaceId, appName) =>
-    axios.post(`/api-builder/${interfaceId}/keys`, { app_name: appName }),
+  // 创建全局API密钥（不需要关联接口）
+  createApiKey: (data) => axios.post('/api-builder/keys', data),
 
-  // 获取接口的密钥列表
+  // 获取接口的密钥列表（保留向后兼容）
   getInterfaceKeys: (interfaceId) => axios.get(`/api-builder/${interfaceId}/keys`),
 
   // 删除API密钥
@@ -581,9 +580,19 @@ export const apiBuilderApi = {
   // 重新生成API密钥
   regenerateApiKey: (keyId) => axios.post(`/api-builder/keys/${keyId}/regenerate`),
 
+  // 获取所有API密钥
+  getAllApiKeys: () => axios.get('/api-builder/keys'),
+
+  // 更新API密钥信息
+  updateApiKey: (id, data) => axios.put(`/api-builder/keys/${id}`, data),
+
   // 测试SQL查询
   testSql: (sql_query, parameters = {}) =>
     axios.post('/api-builder/test-sql', { sql_query, parameters }),
+
+  // 执行SQL查询（实际执行，用于自定义API）
+  executeSql: (sql_query, parameters = {}) =>
+    axios.post('/api-builder/execute-sql', { sql_query, parameters }),
 
   // 执行动态接口
   executeCustomApi: (endpoint, params = {}, apiKey = null) => {

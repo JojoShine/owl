@@ -18,6 +18,9 @@ import {
 } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { ArrowLeft, CheckCircle2, Play } from 'lucide-react';
+import AceEditor from 'react-ace';
+import 'ace-builds/src-noconflict/mode-sql';
+import 'ace-builds/src-noconflict/theme-monokai';
 
 // 从SQL中提取参数（:paramName格式）
 const extractSqlParameters = (sql) => {
@@ -49,17 +52,30 @@ export default function ApiBuilderEditPage() {
     parameters: [],
     parameterValues: {}, // 参数值
     returnColumns: [], // 返回列信息
-    require_auth: true,
+    require_auth: false,
+    api_key_id: null, // 关联的API密钥ID
     rate_limit: 1000,
-    pageSize: 10,
     status: 'active', // 默认状态
   });
 
+  const [apiKeys, setApiKeys] = useState([]); // 可用的API密钥列表
+
   useEffect(() => {
+    fetchApiKeys(); // 获取API密钥列表
     if (!isNewMode) {
       fetchInterface();
     }
   }, []);
+
+  // 获取API密钥列表
+  const fetchApiKeys = async () => {
+    try {
+      const response = await apiBuilderApi.getAllApiKeys();
+      setApiKeys(response.data || []);
+    } catch (error) {
+      console.error('获取API密钥列表失败:', error);
+    }
+  };
 
   const fetchInterface = async () => {
     try {
@@ -81,8 +97,8 @@ export default function ApiBuilderEditPage() {
         parameterValues: interfaceData.parameterValues || {},
         returnColumns: interfaceData.returnColumns || [],
         require_auth: interfaceData.require_auth !== undefined ? interfaceData.require_auth : true,
+        api_key_id: interfaceData.api_key_id || null,
         rate_limit: interfaceData.rate_limit || 1000,
-        pageSize: interfaceData.pageSize || 10,
         status: interfaceData.status || 'active',
       });
     } catch (error) {
@@ -226,7 +242,7 @@ export default function ApiBuilderEditPage() {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
-          <h2 className="text-2xl font-bold">{isNewMode ? '新增接口' : '编辑接口'}</h2>
+          <h2 className="text-xl font-bold">{isNewMode ? '新增接口' : '编辑接口'}</h2>
           <p className="text-sm text-muted-foreground">{isNewMode ? '创建一个新的API接口' : '修改API接口配置'}</p>
         </div>
       </div>
@@ -256,28 +272,28 @@ export default function ApiBuilderEditPage() {
             <TabsContent value="basic" className="space-y-4 mt-6">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>接口名称 *</Label>
+                  <Label className="text-base">接口名称 *</Label>
                   <Input
                     value={formData.name}
                     onChange={(e) => handleFieldChange('name', e.target.value)}
                     placeholder="例：用户查询"
-                    className="mt-1"
+                    className="mt-1 text-base"
                   />
                 </div>
                 <div>
-                  <Label>接口端点 *</Label>
+                  <Label className="text-base">接口端点 *</Label>
                   <Input
                     value={formData.endpoint}
                     onChange={(e) => handleFieldChange('endpoint', e.target.value)}
                     placeholder="例：/users/query"
-                    className="mt-1"
+                    className="mt-1 text-base"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>请求方式</Label>
+                  <Label className="text-base">请求方式</Label>
                   <Select value={formData.method} onValueChange={(value) => handleFieldChange('method', value)}>
                     <SelectTrigger className="mt-1">
                       <SelectValue />
@@ -291,48 +307,37 @@ export default function ApiBuilderEditPage() {
                   </Select>
                 </div>
                 <div>
-                  <Label>版本号</Label>
+                  <Label className="text-base">版本号</Label>
                   <Input
                     type="number"
                     value={formData.version}
                     onChange={(e) => handleFieldChange('version', parseInt(e.target.value))}
                     min="1"
-                    className="mt-1"
+                    className="mt-1 text-base"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>限流值（/小时）</Label>
+                  <Label className="text-base">限流值（/小时）</Label>
                   <Input
                     type="number"
                     value={formData.rate_limit}
                     onChange={(e) => handleFieldChange('rate_limit', parseInt(e.target.value))}
                     min="1"
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label>分页大小（行数）</Label>
-                  <Input
-                    type="number"
-                    value={formData.pageSize || 10}
-                    onChange={(e) => handleFieldChange('pageSize', parseInt(e.target.value))}
-                    min="1"
-                    max="1000"
-                    className="mt-1"
+                    className="mt-1 text-base"
                   />
                 </div>
               </div>
 
               <div>
-                <Label>接口描述</Label>
+                <Label className="text-base">接口描述</Label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => handleFieldChange('description', e.target.value)}
                   placeholder="输入接口描述"
-                  className="w-full px-3 py-2 border rounded-md mt-1 text-sm h-20"
+                  className="w-full px-3 py-2 border rounded-md mt-1 text-base h-20"
                 />
               </div>
 
@@ -342,10 +347,44 @@ export default function ApiBuilderEditPage() {
                   checked={formData.require_auth}
                   onCheckedChange={(checked) => handleFieldChange('require_auth', checked)}
                 />
-                <Label htmlFor="require_auth" className="cursor-pointer text-sm font-normal">
+                <Label htmlFor="require_auth" className="cursor-pointer text-base font-normal">
                   需要API密钥认证
                 </Label>
               </div>
+
+              {formData.require_auth && (
+                <div>
+                  <Label className="text-base">关联的API密钥</Label>
+                  <Select
+                    value={formData.api_key_id || 'none'}
+                    onValueChange={(value) => handleFieldChange('api_key_id', value === 'none' ? null : value)}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue>
+                        {formData.api_key_id ? (
+                          (() => {
+                            const selectedKey = apiKeys.find((k) => k.id === formData.api_key_id);
+                            return selectedKey ? selectedKey.app_name : '密钥已删除';
+                          })()
+                        ) : (
+                          '选择要关联的API密钥'
+                        )}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">无（不关联密钥）</SelectItem>
+                      {apiKeys.map((key) => (
+                        <SelectItem key={key.id} value={key.id}>
+                          {key.app_name} ({key.id.substring(0, 8)}...)
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {apiKeys.length === 0 && (
+                    <p className="text-sm text-muted-foreground mt-1">暂无可用的API密钥，请先在密钥管理中创建</p>
+                  )}
+                </div>
+              )}
             </TabsContent>
 
             {/* 步骤2: SQL查询 */}
@@ -353,20 +392,33 @@ export default function ApiBuilderEditPage() {
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <div>
-                    <Label>SQL查询语句 *</Label>
-                    <p className="text-sm text-muted-foreground">输入SELECT查询语句，参数使用 :paramName 格式</p>
+                    <Label className="text-base">SQL语句 *</Label>
+                    <p className="text-sm text-muted-foreground">支持 SELECT、INSERT、UPDATE、DELETE 操作，参数使用 :paramName 格式。禁止 DROP、TRUNCATE、ALTER 等危险操作。</p>
                   </div>
-                  <Button size="sm" onClick={handleTestSql} disabled={isTesting || !formData.sql_query.trim()}>
+                  <Button size="lg" onClick={handleTestSql} disabled={isTesting || !formData.sql_query.trim()}>
                     <Play className="h-3.5 w-3.5 mr-1" />
                     {isTesting ? '测试中...' : '测试SQL'}
                   </Button>
                 </div>
-                <textarea
-                  value={formData.sql_query}
-                  onChange={(e) => handleFieldChange('sql_query', e.target.value)}
-                  placeholder="SELECT * FROM users WHERE id = :id"
-                  className="w-full px-3 py-2 border rounded-md font-mono text-sm h-40 bg-background text-foreground"
-                />
+                <div className="border border-primary rounded-md mt-1 overflow-hidden">
+                  <AceEditor
+                    mode="sql"
+                    theme="monokai"
+                    value={formData.sql_query}
+                    onChange={(value) => handleFieldChange('sql_query', value)}
+                    name="sql_query"
+                    fontSize={14}
+                    height="300px"
+                    width="100%"
+                    setOptions={{
+                      useWorker: false,
+                      showLineNumbers: true,
+                      tabSize: 2,
+                      enableBasicAutocompletion: true,
+                      enableLiveAutocompletion: true,
+                    }}
+                  />
+                </div>
 
                 {testError && (
                   <>
@@ -382,11 +434,11 @@ export default function ApiBuilderEditPage() {
                   <>
                     <div className="mt-4 border-t"></div>
                     <div className="mt-2 p-3 border rounded-md" style={{ backgroundColor: '#171717' }}>
-                      <p className="text-sm font-semibold text-white mb-3">请求参数值：</p>
-                      <div className="space-y-2">
+                      <p className="text-base font-semibold text-white mb-3">请求参数值：</p>
+                      <div className="space-y-3">
                         {extractedParams.map((param) => (
                           <div key={param.name} className="grid grid-cols-2 gap-2">
-                            <label className="text-sm text-gray-300 flex items-center">
+                            <label className="text-base text-gray-300 flex items-center">
                               {param.name}
                               <span className="text-red-400 ml-1">*</span>
                             </label>
@@ -395,7 +447,7 @@ export default function ApiBuilderEditPage() {
                               value={formData.parameterValues[param.name] || ''}
                               onChange={(e) => handleParameterValueChange(param.name, e.target.value)}
                               placeholder={`输入 ${param.name} 值`}
-                              className="h-8 text-sm"
+                              className="h-10 text-base"
                             />
                           </div>
                         ))}
@@ -409,40 +461,53 @@ export default function ApiBuilderEditPage() {
                     <div className="mt-4 border-t"></div>
                     <div className="mt-2 p-3 border rounded-md" style={{ backgroundColor: '#171717' }}>
                       <p className="text-sm font-semibold text-white mb-3">测试结果</p>
-                      <div className="text-sm text-gray-300 space-y-2">
-                        <p>总数据行数：<strong>{testResult.rowCount}</strong> | 显示：<strong>{Math.min(testResult.rowCount, 5)}</strong> 条</p>
-                        <p>返回列数：<strong>{testResult.columns?.length || 0}</strong></p>
-                      </div>
 
-                      {/* 显示查询结果数据表格 */}
-                      {Array.isArray(testResult.sample) && testResult.sample.length > 0 ? (
-                        <div className="mt-3 overflow-x-auto" style={{ minHeight: '280px' }}>
-                          <table className="w-full text-sm border-collapse">
-                            <thead>
-                              <tr style={{ backgroundColor: '#0f0f0f' }}>
-                                {testResult.columns?.map((col) => (
-                                  <th key={col.name} className="border px-3 py-3 text-left font-semibold text-white">
-                                    {col.name}
-                                  </th>
-                                ))}
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {testResult.sample.map((row, idx) => (
-                                <tr key={idx} style={{ backgroundColor: '#0a0a0a' }} className="hover:bg-gray-900">
-                                  {testResult.columns?.map((col) => (
-                                    <td key={col.name} className="border px-3 py-3 text-gray-300 max-w-xs truncate">
-                                      {String(row[col.name] ?? '-')}
-                                    </td>
+                      {testResult.operationType === 'SELECT' ? (
+                        <>
+                          <div className="text-sm text-gray-300 space-y-2 mb-3">
+                            <p>总数据行数：<strong>{testResult.rowCount}</strong> | 显示：<strong>{Math.min(testResult.rowCount, 5)}</strong> 条</p>
+                            <p>返回列数：<strong>{testResult.columns?.length || 0}</strong></p>
+                          </div>
+
+                          {/* 显示查询结果数据表格 */}
+                          {Array.isArray(testResult.sample) && testResult.sample.length > 0 ? (
+                            <div className="mt-3 overflow-x-auto" style={{ minHeight: '280px' }}>
+                              <table className="w-full text-sm border-collapse">
+                                <thead>
+                                  <tr style={{ backgroundColor: '#0f0f0f' }}>
+                                    {testResult.columns?.map((col) => (
+                                      <th key={col.name} className="border px-3 py-3 text-left font-semibold text-white">
+                                        {col.name}
+                                      </th>
+                                    ))}
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {testResult.sample.map((row, idx) => (
+                                    <tr key={idx} style={{ backgroundColor: '#0a0a0a' }} className="hover:bg-gray-900">
+                                      {testResult.columns?.map((col) => (
+                                        <td key={col.name} className="border px-3 py-3 text-gray-300 max-w-xs truncate">
+                                          {String(row[col.name] ?? '-')}
+                                        </td>
+                                      ))}
+                                    </tr>
                                   ))}
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
+                                </tbody>
+                              </table>
+                            </div>
+                          ) : (
+                            <div className="mt-3 p-3" style={{ backgroundColor: '#0f0f0f', minHeight: '280px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <p className="text-sm text-gray-300">暂无数据记录</p>
+                            </div>
+                          )}
+                        </>
                       ) : (
-                        <div className="mt-3 p-3" style={{ backgroundColor: '#0f0f0f', minHeight: '280px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <p className="text-sm text-gray-300">暂无数据记录</p>
+                        <div className="space-y-3">
+                          <div className="p-3" style={{ backgroundColor: '#0f0f0f', borderRadius: '4px' }}>
+                            <p className="text-sm text-green-400 font-semibold mb-2">✓ {testResult.operationType} 操作成功</p>
+                            <p className="text-sm text-gray-300">受影响行数：<strong className="text-white">{testResult.affectedRows}</strong></p>
+                            <p className="text-sm text-gray-400 mt-2">{testResult.message}</p>
+                          </div>
                         </div>
                       )}
                     </div>
@@ -479,7 +544,7 @@ export default function ApiBuilderEditPage() {
                     </div>
                     <div>
                       <span className="text-muted-foreground text-sm">版本:</span>
-                      <p className="font-medium">v{formData.version}</p>
+                      <p className="font-medium">V{formData.version}</p>
                     </div>
                     <div className="col-span-2">
                       <span className="text-muted-foreground text-sm">描述:</span>
@@ -509,18 +574,7 @@ export default function ApiBuilderEditPage() {
                   </div>
                 )}
 
-                <div className="border rounded-lg p-4 bg-green-50 border-green-200">
-                  <div className="flex items-start gap-2">
-                    <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <p className="font-semibold text-base text-green-900">检查完成</p>
-                      <p className="text-sm text-green-800 mt-1">
-                        所有必填项已完成，点击右上角"保存"按钮来更新该接口。
-                      </p>
-                    </div>
-                  </div>
                 </div>
-              </div>
             </TabsContent>
           </Tabs>
         </CardContent>

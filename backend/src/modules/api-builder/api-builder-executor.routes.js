@@ -39,39 +39,84 @@ const apiKeyMiddleware = async (req, res, next) => {
 router.use(apiKeyMiddleware);
 
 /**
- * 测试接口
- * POST /api/api-builder/:id/test
+ * 获取测试接口路由
+ * POST /api-builder/test/:id
  * 需要登录用户
  */
-router.post(
-  '/test/:id',
-  authenticate,
-  (req, res) => executorController.testInterface(req, res)
-);
+const getTestRoutes = () => {
+  const testRouter = express.Router();
+
+  testRouter.post(
+    '/test/:id',
+    authenticate,
+    (req, res) => executorController.testInterface(req, res)
+  );
+
+  return testRouter;
+};
 
 /**
- * 动态API端点
- * GET/POST/PUT/DELETE /api/custom/:endpoint?version=1
- * 不需要登录，但可能需要API密钥
+ * 可选的认证中间件
+ * 尝试进行认证，但不强制要求
+ * 让执行器根据接口的require_auth字段来决定是否真正需要认证
  */
-router.get(
-  '/custom/:endpoint',
-  (req, res) => executorController.executeCustomApi(req, res)
-);
+const optionalAuthenticate = (req, res, next) => {
+  // 如果提供了token，就进行认证
+  const token = req.headers.authorization?.replace('Bearer ', '');
+  if (token) {
+    // 调用authenticate中间件进行认证
+    authenticate(req, res, (err) => {
+      if (err) {
+        // 认证失败，但不阻止请求继续
+        // 让执行器在后面检查是否真正需要认证
+        logger.warn('Optional authentication failed:', err.message);
+      }
+      next();
+    });
+  } else {
+    // 没有token就继续，让执行器在后面处理
+    next();
+  }
+};
 
-router.post(
-  '/custom/:endpoint',
-  (req, res) => executorController.executeCustomApi(req, res)
-);
+/**
+ * 获取动态API路由
+ * GET/POST/PUT/DELETE /custom/*?version=1
+ * JWT token认证可选（如果接口设置了require_auth=true才强制要求）
+ * 支持多级路径，例如 /custom/users/active, /custom/orders/list 等
+ */
+const getCustomRoutes = () => {
+  const customRouter = express.Router();
 
-router.put(
-  '/custom/:endpoint',
-  (req, res) => executorController.executeCustomApi(req, res)
-);
+  // 应用可选的认证中间件（尝试认证，但不强制）
+  customRouter.use(optionalAuthenticate);
 
-router.delete(
-  '/custom/:endpoint',
-  (req, res) => executorController.executeCustomApi(req, res)
-);
+  customRouter.get(
+    '/custom/*',
+    (req, res) => executorController.executeCustomApi(req, res)
+  );
 
-module.exports = router;
+  customRouter.post(
+    '/custom/*',
+    (req, res) => executorController.executeCustomApi(req, res)
+  );
+
+  customRouter.put(
+    '/custom/*',
+    (req, res) => executorController.executeCustomApi(req, res)
+  );
+
+  customRouter.delete(
+    '/custom/*',
+    (req, res) => executorController.executeCustomApi(req, res)
+  );
+
+  return customRouter;
+};
+
+module.exports = {
+  getTestRoutes,
+  getCustomRoutes,
+  // 保持向后兼容性
+  default: router,
+};

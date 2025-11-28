@@ -78,9 +78,13 @@ router.use('/dictionaries', dictionaryRoutes);
 
 // API构建器路由（接口开发功能）
 const apiBuilderRoutes = require('../modules/api-builder/api-builder.routes');
-const apiBuilderExecutorRoutes = require('../modules/api-builder/api-builder-executor.routes');
+const apiBuilderKeysRoutes = require('../modules/api-builder/api-builder-keys.routes');
+const { getTestRoutes, getCustomRoutes } = require('../modules/api-builder/api-builder-executor.routes');
+// 密钥路由必须放在前面，避免被/:id参数化路由拦截
+router.use('/api-builder', apiBuilderKeysRoutes);
+router.use('/api-builder', getTestRoutes());
 router.use('/api-builder', apiBuilderRoutes);
-router.use('/api-builder', apiBuilderExecutorRoutes);
+router.use('/', getCustomRoutes());
 
 // 动态生成的模块路由将通过 dynamic-routes.js 自动加载
 

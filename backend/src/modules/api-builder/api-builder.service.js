@@ -8,7 +8,7 @@ class ApiBuilderService {
    * 创建接口
    */
   async createInterface(data, userId) {
-    const { name, description, sql_query, method, endpoint, version, parameters, require_auth, rate_limit } = data;
+    const { name, description, sql_query, method, endpoint, version, parameters, require_auth, rate_limit, api_key_id } = data;
 
     try {
       const interface_ = await db.ApiInterface.create({
@@ -21,6 +21,7 @@ class ApiBuilderService {
         parameters: parameters || null,
         require_auth: require_auth !== false,
         rate_limit: rate_limit || 1000,
+        api_key_id: api_key_id || null,
         created_by: userId,
       });
 
@@ -107,7 +108,7 @@ class ApiBuilderService {
   async updateInterface(id, data) {
     const interface_ = await this.getInterfaceById(id);
 
-    const { name, description, sql_query, method, endpoint, version, parameters, status, require_auth, rate_limit } = data;
+    const { name, description, sql_query, method, endpoint, version, parameters, status, require_auth, rate_limit, api_key_id } = data;
 
     try {
       await interface_.update({
@@ -121,6 +122,7 @@ class ApiBuilderService {
         status: status !== undefined ? status : interface_.status,
         require_auth: require_auth !== undefined ? require_auth : interface_.require_auth,
         rate_limit: rate_limit !== undefined ? rate_limit : interface_.rate_limit,
+        api_key_id: api_key_id !== undefined ? api_key_id : interface_.api_key_id,
       });
 
       logger.info(`Interface updated: ${id}`);
@@ -272,39 +274,196 @@ class ApiBuilderService {
   }
 
   /**
+   * 验证SQL是否安全（防止SQL注入）
+   */
+  validateSqlSafety(sql_query) {
+    const trimmedSql = sql_query.trim().toUpperCase();
+
+    // 检查操作类型
+    const operationType = this.getOperationType(trimmedSql);
+    if (!operationType) {
+      throw ApiError.badRequest('仅支持 SELECT、INSERT、UPDATE、DELETE 操作');
+    }
+
+    // 黑名单检查 - 禁止危险操作
+    const dangerousPatterns = [
+      /DROP\s+TABLE/i,
+      /DROP\s+DATABASE/i,
+      /TRUNCATE\s+TABLE/i,
+      /ALTER\s+TABLE/i,
+      /EXEC\s*\(/i,
+      /EXECUTE\s*\(/i,
+      /CREATE\s+TABLE/i,
+      /CREATE\s+DATABASE/i,
+      /CREATE\s+VIEW/i,
+      /GRANT\s+/i,
+      /REVOKE\s+/i,
+      /;[\s\n]*(DROP|DELETE|TRUNCATE|ALTER)/i, // 多语句检查
+    ];
+
+    for (const pattern of dangerousPatterns) {
+      if (pattern.test(sql_query)) {
+        throw ApiError.forbidden('不允许执行此操作，涉及危险SQL语句');
+      }
+    }
+
+    return operationType;
+  }
+
+  /**
+   * 获取SQL操作类型
+   */
+  getOperationType(trimmedSql) {
+    if (trimmedSql.startsWith('SELECT')) return 'SELECT';
+    if (trimmedSql.startsWith('INSERT')) return 'INSERT';
+    if (trimmedSql.startsWith('UPDATE')) return 'UPDATE';
+    if (trimmedSql.startsWith('DELETE')) return 'DELETE';
+    return null;
+  }
+
+  /**
+   * 验证参数安全性
+   */
+  validateParameters(parameters) {
+    if (!parameters || typeof parameters !== 'object') return;
+
+    for (const [key, value] of Object.entries(parameters)) {
+      // 检查参数名称只包含字母、数字、下划线
+      if (!/^[a-zA-Z0-9_]+$/.test(key)) {
+        throw ApiError.badRequest(`参数名无效: ${key}`);
+      }
+
+      // 检查参数值长度（防止超大值）
+      if (typeof value === 'string' && value.length > 10000) {
+        throw ApiError.badRequest(`参数值过长: ${key}`);
+      }
+    }
+  }
+
+  /**
    * 测试SQL查询
    */
   async testSql(sql_query, parameters = {}) {
     try {
-      // 验证SQL是否为SELECT语句
-      const trimmedSql = sql_query.trim().toUpperCase();
-      if (!trimmedSql.startsWith('SELECT')) {
-        throw ApiError.badRequest('仅支持SELECT查询');
+      if (!sql_query || !sql_query.trim()) {
+        throw ApiError.badRequest('SQL语句不能为空');
       }
 
-      // 使用原始SQL执行查询（Sequelize通过sequelize.query）
+      // 验证SQL安全性
+      const operationType = this.validateSqlSafety(sql_query);
+
+      // 验证参数安全性
+      this.validateParameters(parameters);
+
       const sequelize = db.sequelize;
-      const results = await sequelize.query(sql_query, {
+      const QueryTypes = require('sequelize').QueryTypes;
+
+      let queryType = QueryTypes.SELECT;
+      if (operationType === 'INSERT') queryType = QueryTypes.INSERT;
+      else if (operationType === 'UPDATE') queryType = QueryTypes.UPDATE;
+      else if (operationType === 'DELETE') queryType = QueryTypes.DELETE;
+
+      // 执行查询
+      const result = await sequelize.query(sql_query, {
         replacements: parameters,
-        type: require('sequelize').QueryTypes.SELECT,
+        type: queryType,
       });
 
-      // 提取列名信息
-      const columns = results && results.length > 0
-        ? Object.keys(results[0]).map(key => ({
-            name: key,
-            type: typeof results[0][key],
-          }))
-        : [];
+      // 根据操作类型返回不同的响应格式
+      if (operationType === 'SELECT') {
+        const columns = result && result.length > 0
+          ? Object.keys(result[0]).map(key => ({
+              name: key,
+              type: typeof result[0][key],
+            }))
+          : [];
 
-      return {
-        success: true,
-        columns,
-        rowCount: results ? results.length : 0,
-        sample: results ? results.slice(0, 5) : [], // 返回前5条数据作为示例
-      };
+        return {
+          success: true,
+          operationType: 'SELECT',
+          columns,
+          rowCount: result ? result.length : 0,
+          sample: result ? result.slice(0, 5) : [],
+        };
+      } else {
+        // INSERT, UPDATE, DELETE 的结果
+        return {
+          success: true,
+          operationType,
+          affectedRows: result[1] || 0, // Sequelize 返回 [result, affectedCount]
+          message: `${operationType} 操作成功`,
+        };
+      }
     } catch (error) {
       logger.error('Error testing SQL:', error);
+      if (error.statusCode) {
+        throw error;
+      }
+      throw ApiError.badRequest(`SQL执行失败: ${error.message}`);
+    }
+  }
+
+  /**
+   * 执行SQL查询（实际执行，不是测试）
+   */
+  async executeSql(sql_query, parameters = {}) {
+    try {
+      if (!sql_query || !sql_query.trim()) {
+        throw ApiError.badRequest('SQL语句不能为空');
+      }
+
+      // 验证SQL安全性
+      const operationType = this.validateSqlSafety(sql_query);
+
+      // 验证参数安全性
+      this.validateParameters(parameters);
+
+      const sequelize = db.sequelize;
+      const QueryTypes = require('sequelize').QueryTypes;
+
+      let queryType = QueryTypes.SELECT;
+      if (operationType === 'INSERT') queryType = QueryTypes.INSERT;
+      else if (operationType === 'UPDATE') queryType = QueryTypes.UPDATE;
+      else if (operationType === 'DELETE') queryType = QueryTypes.DELETE;
+
+      // 执行查询
+      const result = await sequelize.query(sql_query, {
+        replacements: parameters,
+        type: queryType,
+      });
+
+      // 记录SQL执行日志
+      logger.info(`SQL executed: ${operationType}`, {
+        affectedRows: result[1] || 0,
+        timestamp: new Date().toISOString(),
+      });
+
+      // 根据操作类型返回不同的响应格式
+      if (operationType === 'SELECT') {
+        const columns = result && result.length > 0
+          ? Object.keys(result[0]).map(key => ({
+              name: key,
+              type: typeof result[0][key],
+            }))
+          : [];
+
+        return {
+          success: true,
+          operationType: 'SELECT',
+          columns,
+          rowCount: result ? result.length : 0,
+          data: result || [],
+        };
+      } else {
+        return {
+          success: true,
+          operationType,
+          affectedRows: result[1] || 0,
+          message: `${operationType} 操作成功，受影响行数: ${result[1] || 0}`,
+        };
+      }
+    } catch (error) {
+      logger.error('Error executing SQL:', error);
       if (error.statusCode) {
         throw error;
       }

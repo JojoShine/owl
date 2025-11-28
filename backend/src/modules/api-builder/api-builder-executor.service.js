@@ -4,6 +4,18 @@ const { logger } = require('../../config/logger');
 
 class ApiBuilderExecutorService {
   /**
+   * 获取SQL操作类型
+   */
+  getOperationType(sql) {
+    const trimmed = sql.trim().toUpperCase();
+    if (trimmed.startsWith('SELECT')) return 'SELECT';
+    if (trimmed.startsWith('INSERT')) return 'INSERT';
+    if (trimmed.startsWith('UPDATE')) return 'UPDATE';
+    if (trimmed.startsWith('DELETE')) return 'DELETE';
+    return 'SELECT';
+  }
+
+  /**
    * 执行接口SQL查询
    * @param {Object} interface_ - 接口配置对象
    * @param {Object} params - 请求参数
@@ -30,15 +42,36 @@ class ApiBuilderExecutorService {
       // 替换SQL中的参数
       const sqlQuery = this.bindParameters(interface_.sql_query, params, interface_.parameters);
 
-      // 执行SQL查询（只允许SELECT）
-      const [rows] = await db.sequelize.query(sqlQuery, {
-        type: 'SELECT',
+      // 获取操作类型
+      const operationType = this.getOperationType(sqlQuery);
+
+      // 执行SQL查询
+      const QueryTypes = require('sequelize').QueryTypes;
+      let queryType = QueryTypes.SELECT;
+
+      if (operationType === 'INSERT') queryType = QueryTypes.INSERT;
+      else if (operationType === 'UPDATE') queryType = QueryTypes.UPDATE;
+      else if (operationType === 'DELETE') queryType = QueryTypes.DELETE;
+
+      const queryResult = await db.sequelize.query(sqlQuery, {
+        type: queryType,
       });
 
-      result = rows;
+      // 处理结果
+      if (operationType === 'SELECT') {
+        result = queryResult;
+      } else {
+        // INSERT, UPDATE, DELETE 返回受影响行数
+        result = {
+          operationType,
+          affectedRows: queryResult[1] || 0,
+          message: `${operationType} 操作成功，受影响行数: ${queryResult[1] || 0}`,
+        };
+      }
+
       responseCode = 200;
 
-      logger.info(`API executed successfully: ${interface_.endpoint} v${interface_.version}`);
+      logger.info(`API executed successfully: ${interface_.endpoint} v${interface_.version} - ${operationType}`);
     } catch (error) {
       responseCode = error.statusCode || 500;
       errorMessage = error.message || 'SQL execution failed';
@@ -47,7 +80,8 @@ class ApiBuilderExecutorService {
     } finally {
       // 异步记录日志（不阻塞响应）
       const responseTime = Date.now() - startTime;
-      this.logApiCall(interface_.id, null, 'SELECT', params, responseCode, responseTime, errorMessage, ipAddress);
+      const operationType = this.getOperationType(interface_.sql_query);
+      this.logApiCall(interface_.id, null, operationType, params, responseCode, responseTime, errorMessage, ipAddress);
     }
 
     return result;
@@ -76,15 +110,36 @@ class ApiBuilderExecutorService {
       // 替换SQL中的参数
       const sqlQuery = this.bindParameters(interface_.sql_query, params, interface_.parameters);
 
+      // 获取操作类型
+      const operationType = this.getOperationType(sqlQuery);
+
       // 执行SQL查询
-      const [rows] = await db.sequelize.query(sqlQuery, {
-        type: 'SELECT',
+      const QueryTypes = require('sequelize').QueryTypes;
+      let queryType = QueryTypes.SELECT;
+
+      if (operationType === 'INSERT') queryType = QueryTypes.INSERT;
+      else if (operationType === 'UPDATE') queryType = QueryTypes.UPDATE;
+      else if (operationType === 'DELETE') queryType = QueryTypes.DELETE;
+
+      const queryResult = await db.sequelize.query(sqlQuery, {
+        type: queryType,
       });
 
-      result = rows;
+      // 处理结果
+      if (operationType === 'SELECT') {
+        result = queryResult;
+      } else {
+        // INSERT, UPDATE, DELETE 返回受影响行数
+        result = {
+          operationType,
+          affectedRows: queryResult[1] || 0,
+          message: `${operationType} 操作成功，受影响行数: ${queryResult[1] || 0}`,
+        };
+      }
+
       responseCode = 200;
 
-      logger.info(`API test successful: ${interface_.endpoint} v${interface_.version}`);
+      logger.info(`API test successful: ${interface_.endpoint} v${interface_.version} - ${operationType}`);
     } catch (error) {
       responseCode = error.statusCode || 500;
       errorMessage = error.message || 'SQL execution failed';
@@ -93,7 +148,8 @@ class ApiBuilderExecutorService {
     } finally {
       // 异步记录日志
       const responseTime = Date.now() - startTime;
-      this.logApiCall(interface_.id, apiKeyId, 'SELECT', params, responseCode, responseTime, errorMessage, ipAddress);
+      const operationType = this.getOperationType(interface_.sql_query);
+      this.logApiCall(interface_.id, apiKeyId, operationType, params, responseCode, responseTime, errorMessage, ipAddress);
     }
 
     return result;
@@ -116,36 +172,70 @@ class ApiBuilderExecutorService {
         this.validateParameterType(requestParams[name], type, name);
       }
     }
+
+    // 特殊检查：limit 和 offset 必须是正整数
+    if (requestParams.limit !== undefined && requestParams.limit !== null) {
+      const limit = parseInt(requestParams.limit);
+      if (isNaN(limit) || limit <= 0) {
+        throw ApiError.badRequest('limit 参数必须是正整数');
+      }
+      // 强制转换为整数
+      requestParams.limit = limit;
+    }
+
+    if (requestParams.offset !== undefined && requestParams.offset !== null) {
+      const offset = parseInt(requestParams.offset);
+      if (isNaN(offset) || offset < 0) {
+        throw ApiError.badRequest('offset 参数必须是非负整数');
+      }
+      // 强制转换为整数
+      requestParams.offset = offset;
+    }
   }
 
   /**
    * 验证单个参数的类型
+   * 注：Sequelize 会自动进行类型转换，所以这里验证比较宽松
    */
   validateParameterType(value, expectedType, paramName) {
+    // 对于所有类型，只验证值不为空，Sequelize 会自动处理类型转换
+    // 这样可以兼容从 API 传来的各种数据格式
+    if (value === null || value === undefined || value === '') {
+      // 空值已在前面的 validateParameters 中检查过
+      return;
+    }
+
+    // 简单的格式验证，但不强制严格的类型匹配
     const normalizedType = expectedType.toLowerCase();
-    let valid = false;
 
     switch (normalizedType) {
-      case 'string':
-        valid = typeof value === 'string';
-        break;
       case 'number':
       case 'int':
       case 'integer':
-        valid = !isNaN(value) && (typeof value === 'number' || !isNaN(parseFloat(value)));
+        // 允许字符串数字通过，Sequelize 会转换
+        if (typeof value !== 'number' && typeof value !== 'string') {
+          throw ApiError.badRequest(`参数 ${paramName} 必须是数字或字符串`);
+        }
+        if (typeof value === 'string' && isNaN(value)) {
+          throw ApiError.badRequest(`参数 ${paramName} 不是有效的数字`);
+        }
         break;
       case 'boolean':
-        valid = typeof value === 'boolean' || value === 'true' || value === 'false';
+        // 允许布尔值、字符串 'true'/'false'
+        if (typeof value !== 'boolean' && typeof value !== 'string') {
+          throw ApiError.badRequest(`参数 ${paramName} 必须是布尔值`);
+        }
         break;
       case 'date':
-        valid = !isNaN(Date.parse(value));
+        // 验证是否可以解析为日期
+        if (isNaN(Date.parse(value))) {
+          throw ApiError.badRequest(`参数 ${paramName} 不是有效的日期格式`);
+        }
         break;
+      // 对于 string 类型，任何值都可以转换为字符串，所以不需要验证
       default:
-        valid = true;
-    }
-
-    if (!valid) {
-      throw ApiError.badRequest(`参数 ${paramName} 类型不正确，期望 ${expectedType}`);
+        // 其他类型也接受，让 Sequelize 处理
+        break;
     }
   }
 

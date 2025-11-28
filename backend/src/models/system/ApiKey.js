@@ -9,8 +9,8 @@ module.exports = (sequelize, DataTypes) => {
       },
       interface_id: {
         type: DataTypes.UUID,
-        allowNull: false,
-        comment: '关联的接口ID',
+        allowNull: true,
+        comment: '关联的接口ID（可选，null表示全局密钥）',
       },
       app_name: {
         type: DataTypes.STRING(255),
