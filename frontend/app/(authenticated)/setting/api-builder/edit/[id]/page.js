@@ -134,7 +134,7 @@ export default function ApiBuilderEditPage() {
 
     try {
       const formatted = formatSql(formData.sql_query, {
-        language: 'mysql',
+        language: 'postgresql',
         linesBetweenQueries: 2,
       });
       setFormData({ ...formData, sql_query: formatted });
