@@ -1,0 +1,1332 @@
+openapi: 3.0.0
+info:
+  title: 一卡通平台 第三方API文档
+  version: 1.0.0
+  description: 一卡通平台第三方系统接口集成文档，提供给外部系统集成使用
+  x-documentation:
+    overview: 本API提供三个主要接口：组织同步、用户同步和消费流水同步，支持第三方系统与一卡通平台的数据交互。必须按照指定顺序调用接口。
+    callSequence: |
+      **接口调用顺序（必须按此顺序调用）：**
+      1. **组织同步** → 同步组织结构（部门/商户）和门店（食堂），获取平台分配的组织ID和门店ID
+      2. **用户同步** → 同步用户信息并绑定到组织，获取平台分配的用户ID和卡ID
+      3. **消费流水同步** → 推送消费流水记录（使用前两步获取的平台ID）
+
+      **示例流程：**
+      - 组织同步返回树形结构，从 organizations[0].platformOrgId 获取根组织ID（部门或商户）
+      - 组织同步同时创建了门店记录，从 organizations[0].children[0].outlets[0].platformCanteenId 获取门店ID
+      - 用户同步时在 userBindingOrgId 字段传入根组织ID，以绑定用户到该部门/商户
+      - 用户同步返回 platformUserId 和 platformCardIds，用于后续消费流水推送
+      - 消费流水同步时使用 platformCanteenId、platformUserId、platformCardId 标识消费主体
+    authentication: 所有请求都需要进行签名验证，使用HMAC-SHA256算法。
+    signatureProcess:
+      step1: "参数准备 - 排除 sign 字段，按字段名ASCII升序排序"
+      step2: "字符串拼接 - 使用 key=value&key2=value2 格式拼接成字符串"
+      step3: "生成签名 - 使用 api_secret 作为密钥，对拼接字符串进行 HMAC-SHA256 哈希"
+      step4: "转换格式 - 将哈希结果转换为十六进制字符串作为签名值"
+    specialTypeHandling:
+      nullValues: "空值（null/undefined）不包含在签名字符串中。示例：{a: 1, b: null, c: 2} → 签名内容为 a=1&c=2"
+      simpleArrays: "简单数组（元素为基本类型）使用逗号分隔。示例：{facilities: ['WiFi', '空调']} → facilities=WiFi,空调"
+      nestedArrays: "嵌套数组（对象数组）递归展平。示例：{entityCards: [{no:'CARD_001', type:'1'}, {no:'CARD_002', type:'2'}]} → entityCards[0].no=CARD_001&entityCards[0].type=1&entityCards[1].no=CARD_002&entityCards[1].type=2"
+      multiLevelArrays: "多层嵌套数组也递归展平。示例：{organizations: [{children: [{outlets: [{id:'OUT1'}]}]}]} → organizations[0].children[0].outlets[0].id=OUT1"
+      objects: "对象递归展平为多个字段，每个嵌套字段使用点号连接。示例：{card: {no: '123', type: '1'}} → card.no=123&card.type=1"
+    errorCodes:
+      "403": "API_KEY无效或签名验证失败"
+      "400": "参数缺失或格式错误"
+      "408": "时间戳过期（超过5分钟）"
+      "422": "参数验证失败，详见errors字段"
+      "500": "服务器内部错误"
+    responseFormat: "所有成功响应都包含 success:true, message, data, timestamp 字段。所有错误响应都包含 success:false, message, timestamp 字段和可选的 errors 字段"
+  contact:
+    name: 平台技术团队
+    email: counttech@163.com
+  license:
+    name: MIT
+servers:
+  - url: http://localhost:3001
+    description: 开发环境
+  - url: https://api.example.com
+    description: 生产环境
+tags:
+  - name: 数据同步
+    description: |
+      一卡通平台数据同步接口集合，包括组织同步、用户同步和消费流水同步三个接口。
+
+      ⚠️ **重要：必须按照以下顺序调用接口**
+      1. **组织同步** - 同步组织结构（部门/商户/门店），获取平台分配的组织ID和门店ID
+      2. **用户同步** - 同步用户信息，需要传入第1步获取的organizationId作为userBindingOrgId
+      3. **消费流水同步** - 推送消费流水记录，需要传入第1步获取的platformCanteenId和第2步获取的platformUserId、platformCardId
+
+paths:
+  /api/public/sync/organization:
+    post:
+      summary: 组织数据同步（必须首先调用）
+      description: |
+        同步组织结构数据到一卡通平台，支持两种银行的组织结构。
+
+        ## 功能说明
+        - **招行（CITI）**：支持3层结构 - 部门 → 商户 → 门店（从顶级部门开始）
+        - **中行（BOC）**：支持2层结构 - 商户 → 门店（无部门层级）
+        - 支持树形结构数据同步
+        - 同步类型 FULL：清空旧数据，全量同步新数据
+        - 同步类型 ADD/UPDATE/DELETE：增量操作
+
+        ## 重要提示
+        🔴 **必须在其他接口之前调用此接口！**
+        - 返回树形结构，保持组织层级关系
+        - 从 organizations[0].platformOrgId 获取根组织ID（部门或商户）
+        - 从 organizations[0].children[0].platformOrgId 获取子组织ID（商户）
+        - 从 organizations[0].children[0].outlets[0].platformCanteenId 获取门店ID
+        - 在用户同步时将根组织ID作为 userBindingOrgId 传入，以绑定用户到相应部门/商户
+
+        ## 签名规则
+        **参数准备：** 排除 sign 字段，按字段名ASCII升序排序
+        **字符串拼接：** 使用 key=value&key2=value2 格式拼接
+        **特殊类型处理：**
+        - 空值（null/undefined）：不包含在签名中
+        - **多层嵌套数组**：递归展平，如 organizations[0].children[0].outlets[0].field=value
+        - 对象：使用点号分隔
+        **生成签名：** HMAC-SHA256(拼接字符串, api_secret)
+        **结果：** 十六进制字符串
+
+        ## 响应说明
+        - success: true/false 表示是否成功
+        - data.organizations：树形结构的组织数据，保持层级关系
+          - 每个组织节点包含 platformOrgId（平台分配的组织ID）
+          - 每个门店包含 platformCanteenId（平台分配的门店ID）
+        - data.summary：统计信息
+          - rootOrgsCreated：创建的根组织数量
+          - childOrgsCreated：创建的子组织数量
+          - canteensCreated：创建的门店数量
+      operationId: syncOrganization
+      tags:
+        - 数据同步
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrganizationSyncRequest'
+            examples:
+              example1:
+                summary: 招行3层结构示例
+                value:
+                  sourceSystem: CITI
+                  syncType: FULL
+                  organizations:
+                    - orgCode: CITI_DEPT_001
+                      orgName: 招行部门A
+                      orgType: DEPARTMENT
+                      contactPerson: 部门负责人
+                      contactPhone: "13800138000"
+                      children:
+                        - orgCode: CITI_MER_001
+                          orgName: 招行商户A
+                          orgType: MERCHANT
+                          contactPerson: 商户负责人
+                          contactPhone: "13800138001"
+                          outlets:
+                            - outletId: CITI_OUT_001
+                              outletName: 招行门店A-1
+                              canteenCode: CANTEEN_CITI_001
+                              canteenType: "1"
+                              canteenLevel: A
+                              address: 北京市朝阳区
+                              longitude: "116.3274"
+                              latitude: "39.9995"
+                              contactPerson: 门店负责人
+                              contactPhone: "13800138002"
+                              businessHours: "07:00-20:00"
+                              capacity: 500
+                              facilities:
+                                - 空调
+                                - WiFi
+                              paymentMethods:
+                                - CARD
+                                - QRCODE
+                              canteenStatus: "1"
+                  api_key: key_1769088648_65a62d16
+                  timestamp: 1769004614585
+                  sign: a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6
+              example2:
+                summary: 中行2层结构示例
+                value:
+                  sourceSystem: BOC
+                  syncType: FULL
+                  organizations:
+                    - orgCode: BOC_MER_001
+                      orgName: 中行商户A
+                      orgType: MERCHANT
+                      contactPerson: 商户负责人
+                      contactPhone: "13800138010"
+                      outlets:
+                        - outletId: BOC_OUT_001
+                          outletName: 中行门店A-1
+                          canteenCode: CANTEEN_BOC_001
+                          canteenType: "2"
+                          canteenLevel: B
+                          address: 上海市浦东新区
+                          longitude: "121.5273"
+                          latitude: "31.2304"
+                          contactPerson: 门店负责人
+                          contactPhone: "13800138011"
+                          businessHours: "08:00-20:00"
+                          capacity: 400
+                          facilities:
+                            - 空调
+                            - WiFi
+                          paymentMethods:
+                            - CARD
+                            - QRCODE
+                          canteenStatus: "1"
+                  api_key: key_1769088648_65a62d16
+                  timestamp: 1769004614585
+                  sign: b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7
+      responses:
+        "200":
+          description: 同步成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationSyncSuccessResponse'
+              example:
+                success: true
+                message: 组织同步成功
+                data:
+                  syncStatus: SUCCESS
+                  organizations:
+                    - orgCode: CITI_DEPT_001
+                      orgName: 招行部门A
+                      orgType: DEPARTMENT
+                      platformOrgId: 550e8400-e29b-41d4-a716-446655440000
+                      children:
+                        - orgCode: CITI_MER_001
+                          orgName: 招行商户A
+                          orgType: MERCHANT
+                          platformOrgId: 550e8400-e29b-41d4-a716-446655440001
+                          outlets:
+                            - outletId: CITI_OUT_001
+                              outletName: 招行门店A-1
+                              canteenCode: CANTEEN_CITI_001
+                              platformCanteenId: 550e8400-e29b-41d4-a716-446655440002
+                      outlets: []
+                  summary:
+                    rootOrgsCreated: 1
+                    childOrgsCreated: 1
+                    canteensCreated: 1
+                timestamp: "2025-01-21T10:30:00.123Z"
+        "400":
+          description: 参数错误（如必填字段缺失或格式不正确）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                message: sourceSystem 必须是 CITI 或 BOC
+                timestamp: "2025-01-21T10:30:00.123Z"
+        "422":
+          description: 验证失败（详细错误信息在errors字段）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        "403":
+          description: 签名验证失败或API密钥无效
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "408":
+          description: 请求时间戳过期（超过5分钟）或无效
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "500":
+          description: 服务器错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/public/sync/user:
+    post:
+      summary: 用户数据同步
+      description: |
+        同步用户信息和实体卡数据到一卡通平台。
+
+        ## 功能说明
+        - 支持创建新用户或更新现有用户
+        - 支持同步多张实体卡信息
+        - 同步类型 FULL：创建新用户或完整更新现有用户
+        - 同步类型 UPDATE：仅更新现有用户信息
+
+        ## 签名规则
+        **参数准备：** 排除 sign 字段，按字段名ASCII升序排序
+        **字符串拼接：** 使用 key=value&key2=value2 格式拼接
+        **特殊类型处理：**
+        - 空值（null/undefined）：不包含在签名中
+        - 数组：用逗号分隔
+          - entityCards 数组：按顺序扁平化，entityCards[0].entityCardNo=CARD_001&entityCards[0].entityCardType=1&...
+        - 对象：使用点号分隔
+        **生成签名：** HMAC-SHA256(拼接字符串, api_secret)
+        **结果：** 十六进制字符串
+
+        ## 实体卡说明
+        - entityCards 是可选的数组，如果用户没有实体卡可以传空数组或不传此字段
+        - 每张卡必填字段：entityCardNo、entityCardType、status
+        - 可选字段：dayConsumeCeiling（日消费限额）、cardBalance（卡余额）、cardIssueDate（发卡日期）、cardExpireDate（卡有效期）、lossReportTime（挂失时间）
+
+        ## 用户绑定组织说明
+        - userBindingOrgId 是必填字段，用于绑定用户到组织
+        - 必须使用组织同步接口返回的 platformOrgId（根组织ID）
+        - 招行用户绑定到部门，中行用户绑定到商户
+
+        ## 响应说明
+        - success: true/false 表示是否成功
+        - data.platformUserId：平台分配的用户ID
+        - data.platformCardIds：平台分配的卡片ID列表（与entityCards顺序对应）
+        - syncStatus：同步状态（SUCCESS/FAILED）
+      operationId: syncUser
+      tags:
+        - 数据同步
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserSyncRequest'
+            examples:
+              example1:
+                summary: 用户同步示例
+                value:
+                  canteenCode: GOV
+                  userId: user_001
+                  userName: 张三
+                  userMobile: "13800138000"
+                  isStaff: "Y"
+                  userOtherId: EMP_001
+                  userStatus: "1"
+                  entityCards:
+                    - entityCardNo: CARD_001
+                      entityCardType: "1"
+                      status: "N"
+                      dayConsumeCeiling: 100.00
+                      cardBalance: 500.00
+                      cardIssueDate: "2025-01-21"
+                      cardExpireDate: "2026-01-20"
+                  syncType: FULL
+                  syncTime: "2025-01-21T10:30:00Z"
+                  api_key: key_1769003492_46571cdf
+                  timestamp: 1769004614585
+                  sign: b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7
+      responses:
+        "200":
+          description: 同步成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserSyncSuccessResponse'
+              example:
+                success: true
+                message: 用户同步成功
+                data:
+                  platformUserId: 550e8400-e29b-41d4-a716-446655440001
+                  platformCardIds:
+                    - 550e8400-e29b-41d4-a716-446655440002
+                  syncStatus: SUCCESS
+                timestamp: "2025-01-21T10:30:00.123Z"
+        "400":
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                message: 用户姓名不能为空
+                timestamp: "2025-01-21T10:30:00.123Z"
+        "422":
+          description: 验证失败
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+              example:
+                success: false
+                message: Validation failed
+                errors:
+                  - context:
+                      key: userName
+                    message: 用户姓名不能为空
+                timestamp: "2025-01-21T10:30:00.123Z"
+        "403":
+          description: 签名验证失败或API密钥无效
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                message: 签名验证失败
+                timestamp: "2025-01-21T10:30:00.123Z"
+        "408":
+          description: 请求时间戳过期（超过5分钟）或无效
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                message: 请求时间戳过期或无效（允许时间差≤300秒）
+                timestamp: "2025-01-21T10:30:00.123Z"
+        "500":
+          description: 服务器错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                message: 服务器内部错误
+                timestamp: "2025-01-21T10:30:00.123Z"
+
+  /api/public/sync/consumption-transaction:
+    post:
+      summary: 消费流水同步
+      description: |
+        同步消费流水记录到一卡通平台。
+
+        ## 功能说明
+        - 支持批量推送消费流水（1-100条）
+        - 支持幂等性：重复推送相同流水不会重复创建
+        - 单条失败不影响其他记录
+        - 返回每条流水的处理结果
+
+        ## 前置条件
+        🔴 **必须先完成组织同步和用户同步！**
+        - 需要使用组织同步返回的 platformCanteenId（门店ID）
+        - 需要使用用户同步返回的 platformUserId（用户ID）
+        - 需要使用用户同步返回的 platformCardId（卡ID）
+
+        ## 签名规则
+        **参数准备：** 排除 sign 字段，按字段名ASCII升序排序
+        **字符串拼接：** 使用 key=value&key2=value2 格式拼接
+        **特殊类型处理：**
+        - 空值（null/undefined）：不包含在签名中
+        - **transactions 数组**：递归展平，如 transactions[0].sourceTransactionId=TXN_001&transactions[0].platformCanteenId=xxx&...
+        - **dishItems 数组**：递归展平，如 transactions[0].dishItems[0].dishName=红烧肉&transactions[0].dishItems[0].quantity=1&...
+        - 对象：使用点号分隔
+        **生成签名：** HMAC-SHA256(拼接字符串, api_secret)
+        **结果：** 十六进制字符串
+
+        ## 响应说明
+        - success: true/false 表示是否成功
+        - data.syncStatus：整体同步状态（SUCCESS/PARTIAL_SUCCESS/FAILED）
+        - data.totalCount：总流水数
+        - data.successCount：成功数
+        - data.failedCount：失败数
+        - data.duplicateCount：重复数（幂等性）
+        - data.results：每条流水的处理结果数组
+      operationId: syncConsumptionTransaction
+      tags:
+        - 数据同步
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConsumptionTransactionSyncRequest'
+            examples:
+              example1:
+                summary: 消费流水同步示例
+                value:
+                  sourceSystem: CITI
+                  transactions:
+                    - sourceTransactionId: TXN_20260124_001
+                      platformCanteenId: 550e8400-e29b-41d4-a716-446655440002
+                      platformUserId: 550e8400-e29b-41d4-a716-446655440001
+                      platformCardId: 550e8400-e29b-41d4-a716-446655440003
+                      transactionType: CONSUME
+                      transactionAmount: 25.50
+                      balanceBefore: 500.00
+                      balanceAfter: 474.50
+                      transactionTime: "2026-01-24T12:30:00Z"
+                      merchantName: 测试食堂一楼
+                      terminalId: TERM_001
+                      posId: POS_001
+                      mealType: LUNCH
+                      dishItems:
+                        - dishName: 红烧肉
+                          quantity: 1
+                          unitPrice: 15.00
+                          amount: 15.00
+                        - dishName: 米饭
+                          quantity: 1
+                          unitPrice: 2.00
+                          amount: 2.00
+                        - dishName: 青菜
+                          quantity: 1
+                          unitPrice: 3.50
+                          amount: 3.50
+                      discountAmount: 0.00
+                      subsidyAmount: 5.00
+                      status: SUCCESS
+                      remark: 午餐消费
+                    - sourceTransactionId: TXN_20260124_002
+                      platformCanteenId: 550e8400-e29b-41d4-a716-446655440002
+                      platformUserId: 550e8400-e29b-41d4-a716-446655440001
+                      platformCardId: 550e8400-e29b-41d4-a716-446655440003
+                      transactionType: CONSUME
+                      transactionAmount: 18.00
+                      balanceBefore: 474.50
+                      balanceAfter: 456.50
+                      transactionTime: "2026-01-24T18:30:00Z"
+                      merchantName: 测试食堂二楼
+                      terminalId: TERM_002
+                      posId: POS_002
+                      mealType: DINNER
+                      dishItems:
+                        - dishName: 炒饭
+                          quantity: 1
+                          unitPrice: 12.00
+                          amount: 12.00
+                        - dishName: 汤
+                          quantity: 1
+                          unitPrice: 3.00
+                          amount: 3.00
+                      discountAmount: 2.00
+                      subsidyAmount: 0.00
+                      status: SUCCESS
+                      remark: 晚餐消费
+                  syncTime: "2026-01-24T20:00:00Z"
+                  api_key: key_1769088648_65a62d16
+                  timestamp: 1769233096578
+                  sign: a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6
+      responses:
+        "200":
+          description: 同步成功（包括部分成功）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsumptionTransactionSyncSuccessResponse'
+              example:
+                success: true
+                message: 消费流水同步成功
+                data:
+                  syncStatus: SUCCESS
+                  totalCount: 2
+                  successCount: 2
+                  failedCount: 0
+                  duplicateCount: 0
+                  results:
+                    - sourceTransactionId: TXN_20260124_001
+                      platformTransactionId: 7205280c-b9bd-4036-862e-80e1037c7838
+                      status: SUCCESS
+                      message: 同步成功
+                    - sourceTransactionId: TXN_20260124_002
+                      platformTransactionId: 5a525146-9c6b-47aa-9629-8761809811f1
+                      status: SUCCESS
+                      message: 同步成功
+                timestamp: "2026-01-24T20:00:00.123Z"
+        "400":
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                message: sourceSystem 必须是 CITI 或 BOC
+                timestamp: "2026-01-24T20:00:00.123Z"
+        "422":
+          description: 验证失败
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        "403":
+          description: 签名验证失败或API密钥无效
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "408":
+          description: 请求时间戳过期（超过5分钟）或无效
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "500":
+          description: 服务器错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    # 组织同步请求
+    OrganizationSyncRequest:
+      type: object
+      required:
+        - sourceSystem
+        - syncType
+        - organizations
+        - api_key
+        - timestamp
+        - sign
+      properties:
+        sourceSystem:
+          type: string
+          enum:
+            - CITI
+            - BOC
+          description: "来源系统：CITI=招行，BOC=中行"
+        syncType:
+          type: string
+          enum:
+            - FULL
+            - ADD
+            - UPDATE
+            - DELETE
+          description: "同步类型：FULL=全量，ADD=新增，UPDATE=更新，DELETE=删除"
+        organizations:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/Organization'
+          description: 组织树形数据
+        api_key:
+          type: string
+          description: API密钥标识（平台分配）
+        timestamp:
+          type: integer
+          description: 毫秒级时间戳
+        sign:
+          type: string
+          description: HMAC-SHA256签名（十六进制）
+
+    # 组织对象
+    Organization:
+      type: object
+      required:
+        - orgCode
+        - orgName
+        - orgType
+      properties:
+        orgCode:
+          type: string
+          maxLength: 100
+          description: 组织代码（唯一标识）
+        orgName:
+          type: string
+          maxLength: 200
+          description: 组织名称
+        orgType:
+          type: string
+          enum:
+            - DEPARTMENT
+            - MERCHANT
+            - OUTLET
+          description: "组织类型：DEPARTMENT=部门，MERCHANT=商户，OUTLET=门店"
+        contactPerson:
+          type: string
+          maxLength: 100
+          nullable: true
+          description: 联系人（可选）
+        contactPhone:
+          type: string
+          maxLength: 20
+          nullable: true
+          description: 联系电话（可选）
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/Organization'
+          nullable: true
+          description: 子组织（仅DEPARTMENT可有，可选）
+        outlets:
+          type: array
+          items:
+            $ref: '#/components/schemas/Outlet'
+          nullable: true
+          description: 门店列表（MERCHANT或DEPARTMENT的子级，可选）
+        address:
+          type: string
+          maxLength: 500
+          nullable: true
+          description: 地址（可选）
+        businessHours:
+          type: string
+          maxLength: 100
+          nullable: true
+          description: 营业时间（可选）
+        capacity:
+          type: integer
+          nullable: true
+          description: 容纳人数（可选）
+        facilities:
+          type: array
+          items:
+            type: string
+          nullable: true
+          description: 设施列表（可选）
+        paymentMethods:
+          type: array
+          items:
+            type: string
+          nullable: true
+          description: 支付方式（可选）
+
+    # 门店对象
+    Outlet:
+      type: object
+      required:
+        - outletId
+        - outletName
+        - canteenCode
+        - canteenType
+      properties:
+        outletId:
+          type: string
+          maxLength: 100
+          description: 门店ID（唯一标识）
+        outletName:
+          type: string
+          maxLength: 200
+          description: 门店名称
+        canteenCode:
+          type: string
+          maxLength: 50
+          description: 食堂编码（唯一标识，作为 ha_ykt_canteens 表的 canteen_code）
+        canteenType:
+          type: string
+          enum:
+            - "1"
+            - "2"
+            - "3"
+          description: "食堂类型（必填）：1=机关，2=企业，3=学校"
+        canteenLevel:
+          type: string
+          enum:
+            - A
+            - B
+            - C
+          nullable: true
+          description: "食堂等级（可选）：A=优秀，B=良好，C=合格"
+        address:
+          type: string
+          maxLength: 500
+          nullable: true
+          description: 地址（可选）
+        longitude:
+          type: string
+          maxLength: 50
+          nullable: true
+          description: 经度（可选）
+        latitude:
+          type: string
+          maxLength: 50
+          nullable: true
+          description: 纬度（可选）
+        contactPerson:
+          type: string
+          maxLength: 100
+          nullable: true
+          description: 联系人（可选）
+        contactPhone:
+          type: string
+          maxLength: 20
+          nullable: true
+          description: 联系电话（可选）
+        businessHours:
+          type: string
+          maxLength: 100
+          nullable: true
+          description: 营业时间（如：07:00-20:00，可选）
+        capacity:
+          type: integer
+          nullable: true
+          description: 容纳人数（人，可选）
+        facilities:
+          type: array
+          items:
+            type: string
+          nullable: true
+          description: "设施列表（可选），例如：['空调', 'WiFi', '停车场']"
+        paymentMethods:
+          type: array
+          items:
+            type: string
+          nullable: true
+          description: "支付方式（可选），例如：['CARD', 'QRCODE']"
+        canteenStatus:
+          type: string
+          enum:
+            - "1"
+            - "2"
+            - "3"
+          nullable: true
+          description: "食堂状态（可选）：1=正常营业，2=暂停营业，3=已下线"
+
+    # 组织同步成功响应
+    OrganizationSyncSuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+          description: 响应成功标志
+        message:
+          type: string
+          example: 组织同步成功
+          description: 响应消息
+        data:
+          type: object
+          properties:
+            syncStatus:
+              type: string
+              enum:
+                - SUCCESS
+              description: 同步状态
+            organizations:
+              type: array
+              items:
+                $ref: '#/components/schemas/OrganizationResult'
+              description: 树形结构的组织数据（保持层级关系）
+            summary:
+              type: object
+              properties:
+                rootOrgsCreated:
+                  type: integer
+                  description: 创建的根组织数量
+                childOrgsCreated:
+                  type: integer
+                  description: 创建的子组织数量
+                canteensCreated:
+                  type: integer
+                  description: 创建的门店数量
+              description: 统计信息
+        timestamp:
+          type: string
+          format: date-time
+          description: 响应时间戳
+
+    # 组织结果对象（返回结构）
+    OrganizationResult:
+      type: object
+      properties:
+        orgCode:
+          type: string
+          description: 组织代码
+        orgName:
+          type: string
+          description: 组织名称
+        orgType:
+          type: string
+          enum:
+            - DEPARTMENT
+            - MERCHANT
+          description: 组织类型
+        platformOrgId:
+          type: string
+          format: uuid
+          description: 平台分配的组织ID
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrganizationResult'
+          description: 子组织列表（递归结构）
+        outlets:
+          type: array
+          items:
+            $ref: '#/components/schemas/OutletResult'
+          description: 门店列表
+
+    # 门店结果对象（返回结构）
+    OutletResult:
+      type: object
+      properties:
+        outletId:
+          type: string
+          description: 门店ID
+        outletName:
+          type: string
+          description: 门店名称
+        canteenCode:
+          type: string
+          description: 食堂编码
+        platformCanteenId:
+          type: string
+          format: uuid
+          description: 平台分配的门店ID
+
+    # 用户同步请求
+    UserSyncRequest:
+      type: object
+      required:
+        - canteenCode
+        - userId
+        - userName
+        - isStaff
+        - userStatus
+        - userBindingOrgId
+        - syncType
+        - syncTime
+        - api_key
+        - timestamp
+        - sign
+      properties:
+        canteenCode:
+          type: string
+          maxLength: 50
+          description: 食堂编码
+        userId:
+          type: string
+          maxLength: 100
+          description: 用户ID（食堂系统内的唯一标识）
+        userName:
+          type: string
+          maxLength: 100
+          description: 用户姓名
+        userMobile:
+          type: string
+          maxLength: 20
+          nullable: true
+          description: 手机号（可选）
+        isStaff:
+          type: string
+          enum:
+            - "Y"
+            - "N"
+          description: "是否职工：Y=是，N=否"
+        userOtherId:
+          type: string
+          maxLength: 100
+          nullable: true
+          description: 职工编号（可选）
+        userStatus:
+          type: string
+          enum:
+            - "1"
+            - "2"
+            - "3"
+          description: "用户状态：1=正常，2=冻结，3=注销"
+        userBindingOrgId:
+          type: string
+          format: uuid
+          description: |
+            用户绑定的组织ID（必填）
+            - 来自组织同步接口返回的 organizations[0].platformOrgId（根组织ID）
+            - 用于绑定用户到对应的部门（招行）或商户（中行）
+            - 调用方必须从组织同步接口获取此值后再调用用户同步接口
+        entityCards:
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/EntityCard'
+          description: 实体卡列表（可选，一对多关系）。如果用户没有实体卡，可以传空数组或不传此字段
+        syncType:
+          type: string
+          enum:
+            - FULL
+            - UPDATE
+          description: "同步类型：FULL=全量同步，UPDATE=更新"
+        syncTime:
+          type: string
+          format: date-time
+          description: 同步时间（ISO 8601格式）
+        api_key:
+          type: string
+          description: API密钥标识（平台分配）
+        timestamp:
+          type: integer
+          description: 毫秒级时间戳
+        sign:
+          type: string
+          description: HMAC-SHA256签名（十六进制）
+
+    # 实体卡
+    EntityCard:
+      type: object
+      required:
+        - entityCardNo
+        - entityCardType
+        - status
+      properties:
+        entityCardNo:
+          type: string
+          maxLength: 50
+          description: 卡号
+        entityCardType:
+          type: string
+          enum:
+            - "1"
+            - "2"
+            - "3"
+          description: "卡类型：1=普通，2=临时，3=VIP"
+        status:
+          type: string
+          enum:
+            - "Y"
+            - "N"
+          description: "挂失状态：Y=挂失，N=正常"
+        dayConsumeCeiling:
+          type: number
+          format: double
+          nullable: true
+          description: 日消费限额（可选）
+        cardBalance:
+          type: number
+          format: double
+          nullable: true
+          description: 卡余额（可选）
+        cardIssueDate:
+          type: string
+          format: date
+          nullable: true
+          description: 发卡日期（YYYY-MM-DD，可选）
+        cardExpireDate:
+          type: string
+          format: date
+          nullable: true
+          description: 卡有效期（YYYY-MM-DD，可选）
+        lossReportTime:
+          type: string
+          format: date-time
+          nullable: true
+          description: 挂失时间（可选）
+
+    # 用户同步成功响应
+    UserSyncSuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+          description: 响应成功标志
+        message:
+          type: string
+          example: 用户同步成功
+          description: 响应消息
+        data:
+          type: object
+          properties:
+            platformUserId:
+              type: string
+              description: 平台分配的用户ID
+            platformCardIds:
+              type: array
+              items:
+                type: string
+              description: 平台分配的卡片ID列表（与entityCards对应）
+            syncStatus:
+              type: string
+              enum:
+                - SUCCESS
+              description: 同步状态
+        timestamp:
+          type: string
+          format: date-time
+          description: 响应时间戳
+
+    # 消费流水同步请求
+    ConsumptionTransactionSyncRequest:
+      type: object
+      required:
+        - sourceSystem
+        - transactions
+        - syncTime
+        - api_key
+        - timestamp
+        - sign
+      properties:
+        sourceSystem:
+          type: string
+          enum:
+            - CITI
+            - BOC
+          description: "来源系统：CITI=招行，BOC=中行"
+        transactions:
+          type: array
+          minItems: 1
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/ConsumptionTransaction'
+          description: 消费流水数组（1-100条）
+        syncTime:
+          type: string
+          format: date-time
+          description: 同步时间（ISO 8601格式）
+        api_key:
+          type: string
+          description: API密钥标识（平台分配）
+        timestamp:
+          type: integer
+          description: 毫秒级时间戳
+        sign:
+          type: string
+          description: HMAC-SHA256签名（十六进制）
+
+    # 消费流水对象
+    ConsumptionTransaction:
+      type: object
+      required:
+        - sourceTransactionId
+        - platformCanteenId
+        - platformUserId
+        - platformCardId
+        - transactionType
+        - transactionAmount
+        - transactionTime
+      properties:
+        sourceTransactionId:
+          type: string
+          maxLength: 100
+          description: 来源系统的流水ID（唯一标识）
+        platformCanteenId:
+          type: string
+          format: uuid
+          description: 平台门店ID（来自组织同步接口返回）
+        platformUserId:
+          type: string
+          format: uuid
+          description: 平台用户ID（来自用户同步接口返回）
+        platformCardId:
+          type: string
+          format: uuid
+          description: 平台卡ID（来自用户同步接口返回）
+        transactionType:
+          type: string
+          enum:
+            - CONSUME
+            - REFUND
+            - RECHARGE
+          description: "交易类型：CONSUME=消费，REFUND=退款，RECHARGE=充值"
+        transactionAmount:
+          type: number
+          format: double
+          description: 交易金额
+        balanceBefore:
+          type: number
+          format: double
+          nullable: true
+          description: 交易前余额（可选）
+        balanceAfter:
+          type: number
+          format: double
+          nullable: true
+          description: 交易后余额（可选）
+        transactionTime:
+          type: string
+          format: date-time
+          description: 交易时间（ISO 8601格式）
+        merchantName:
+          type: string
+          maxLength: 200
+          nullable: true
+          description: 商户名称（可选）
+        terminalId:
+          type: string
+          maxLength: 50
+          nullable: true
+          description: 终端ID（可选）
+        posId:
+          type: string
+          maxLength: 50
+          nullable: true
+          description: POS机ID（可选）
+        mealType:
+          type: string
+          enum:
+            - BREAKFAST
+            - LUNCH
+            - DINNER
+            - SNACK
+          nullable: true
+          description: "餐别（可选）：BREAKFAST=早餐，LUNCH=午餐，DINNER=晚餐，SNACK=小吃"
+        dishItems:
+          type: array
+          items:
+            $ref: '#/components/schemas/DishItem'
+          nullable: true
+          description: 菜品明细（可选）
+        discountAmount:
+          type: number
+          format: double
+          nullable: true
+          description: 优惠金额（可选，默认0.00）
+        subsidyAmount:
+          type: number
+          format: double
+          nullable: true
+          description: 补贴金额（可选，默认0.00）
+        status:
+          type: string
+          enum:
+            - SUCCESS
+            - FAILED
+            - REFUNDED
+          nullable: true
+          description: "状态（可选，默认SUCCESS）：SUCCESS=成功，FAILED=失败，REFUNDED=已退款"
+        remark:
+          type: string
+          maxLength: 500
+          nullable: true
+          description: 备注（可选）
+
+    # 菜品明细对象
+    DishItem:
+      type: object
+      required:
+        - dishName
+        - quantity
+        - unitPrice
+        - amount
+      properties:
+        dishName:
+          type: string
+          maxLength: 200
+          description: 菜品名称
+        quantity:
+          type: integer
+          description: 数量
+        unitPrice:
+          type: number
+          format: double
+          description: 单价
+        amount:
+          type: number
+          format: double
+          description: 小计金额
+
+    # 消费流水同步成功响应
+    ConsumptionTransactionSyncSuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+          description: 响应成功标志
+        message:
+          type: string
+          example: 消费流水同步成功
+          description: 响应消息
+        data:
+          type: object
+          properties:
+            syncStatus:
+              type: string
+              enum:
+                - SUCCESS
+                - PARTIAL_SUCCESS
+                - FAILED
+              description: "同步状态：SUCCESS=全部成功，PARTIAL_SUCCESS=部分成功，FAILED=全部失败"
+            totalCount:
+              type: integer
+              description: 总流水数
+            successCount:
+              type: integer
+              description: 成功数
+            failedCount:
+              type: integer
+              description: 失败数
+            duplicateCount:
+              type: integer
+              description: 重复数（幂等性）
+            results:
+              type: array
+              items:
+                $ref: '#/components/schemas/TransactionResult'
+              description: 每条流水的处理结果
+        timestamp:
+          type: string
+          format: date-time
+          description: 响应时间戳
+
+    # 流水处理结果对象
+    TransactionResult:
+      type: object
+      properties:
+        sourceTransactionId:
+          type: string
+          description: 来源系统的流水ID
+        platformTransactionId:
+          type: string
+          format: uuid
+          nullable: true
+          description: 平台分配的流水ID（成功或重复时返回）
+        status:
+          type: string
+          enum:
+            - SUCCESS
+            - DUPLICATE
+            - FAILED
+          description: "处理状态：SUCCESS=成功，DUPLICATE=重复，FAILED=失败"
+        message:
+          type: string
+          description: 处理消息
+
+    # 错误响应
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+          description: 响应成功标志
+        message:
+          type: string
+          description: 错误消息
+        timestamp:
+          type: string
+          format: date-time
+          description: 响应时间戳
+
+    # 验证错误响应
+    ValidationErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+          description: 响应成功标志
+        message:
+          type: string
+          description: 错误消息
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              context:
+                type: object
+                properties:
+                  key:
+                    type: string
+                    description: 出错字段名
+              message:
+                type: string
+                description: 字段错误信息
+          description: 详细的验证错误列表
+        timestamp:
+          type: string
+          format: date-time
+          description: 响应时间戳
+
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: api_key
+      description: API密钥标识
+
+    SignatureAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: HMAC-SHA256
+      description: HMAC-SHA256签名验证
+
+security:
+  - ApiKeyAuth: []
+  - SignatureAuth: []

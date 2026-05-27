@@ -1,0 +1,219 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { DatePicker } from '@/components/ui/date-picker';
+import { thirdPartyKeysApi } from '@/lib/api';
+import { toast } from 'sonner';
+
+// 表单验证规则
+const keySchema = z.object({
+  client_name: z.string().min(2, '客户端名称至少2个字符').max(255, '客户端名称最多255个字符'),
+  description: z.string().max(500, '描述最多500个字符').optional(),
+  expires_at: z.string().optional(),
+  remark: z.string().max(500, '备注最多500个字符').optional(),
+  status: z.enum(['active', 'inactive']).optional(),
+});
+
+export default function KeyFormDialog({ open, onOpenChange, editingKey, onSuccess }) {
+  const isEdit = !!editingKey;
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    setValue,
+    watch,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(keySchema),
+    defaultValues: {
+      client_name: '',
+      description: '',
+      expires_at: '',
+      remark: '',
+      status: 'active',
+    },
+  });
+
+  // 当key变化时，更新表单
+  useEffect(() => {
+    if (editingKey && open) {
+      reset({
+        client_name: editingKey.client_name || '',
+        description: editingKey.description || '',
+        expires_at: editingKey.expires_at ? new Date(editingKey.expires_at).toISOString().split('T')[0] : '',
+        remark: editingKey.remark || '',
+        status: editingKey.status || 'active',
+      });
+    } else if (!editingKey) {
+      reset({
+        client_name: '',
+        description: '',
+        expires_at: '',
+        remark: '',
+        status: 'active',
+      });
+    }
+  }, [editingKey, open, reset]);
+
+  const onSubmit = async (data) => {
+    try {
+      setIsSubmitting(true);
+      const submitData = {
+        client_name: data.client_name,
+        description: data.description || '',
+        remark: data.remark || '',
+      };
+
+      // 新增时才需要传expires_at
+      if (!isEdit && data.expires_at) {
+        submitData.expires_at = new Date(data.expires_at).toISOString();
+      }
+
+      let response;
+      if (isEdit) {
+        response = await thirdPartyKeysApi.updateKey(editingKey.id, submitData);
+      } else {
+        response = await thirdPartyKeysApi.createKey(submitData);
+      }
+
+      toast.success(isEdit ? '更新密钥成功' : '创建密钥成功');
+      onSuccess?.(response.data); // 传递响应数据
+      onOpenChange(false);
+      reset();
+    } catch (error) {
+      console.error('保存密钥失败:', error);
+      const errorMessage = error.response?.data?.message || error.message || '保存失败';
+      toast.error(errorMessage);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const statusValue = watch('status');
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[500px]">
+        <DialogHeader>
+          <DialogTitle>{isEdit ? '编辑API密钥' : '创建API密钥'}</DialogTitle>
+          <DialogDescription>
+            {isEdit ? '修改API密钥信息' : '填写新API密钥的基本信息'}
+          </DialogDescription>
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          {/* 客户端名称 */}
+          <div className="space-y-2">
+            <Label htmlFor="client_name">
+              客户端名称 <span className="text-red-500">*</span>
+            </Label>
+            <Input
+              id="client_name"
+              {...register('client_name')}
+              placeholder="请输入客户端名称，如：食堂系统、用户同步"
+            />
+            {errors.client_name && (
+              <p className="text-sm text-red-500">{errors.client_name.message}</p>
+            )}
+          </div>
+
+          {/* 描述 */}
+          <div className="space-y-2">
+            <Label htmlFor="description">描述</Label>
+            <Input
+              id="description"
+              {...register('description')}
+              placeholder="请输入密钥描述"
+            />
+            {errors.description && (
+              <p className="text-sm text-red-500">{errors.description.message}</p>
+            )}
+          </div>
+
+          {/* 过期时间 */}
+          {!isEdit && (
+            <div className="space-y-2">
+              <Label htmlFor="expires_at">过期时间</Label>
+              <DatePicker
+                value={watch('expires_at')}
+                onChange={(e) => setValue('expires_at', e.target.value)}
+                placeholder="选择过期时间（可选）"
+              />
+              {errors.expires_at && (
+                <p className="text-sm text-red-500">{errors.expires_at.message}</p>
+              )}
+            </div>
+          )}
+
+          {/* 备注 */}
+          <div className="space-y-2">
+            <Label htmlFor="remark">备注</Label>
+            <Input
+              id="remark"
+              {...register('remark')}
+              placeholder="请输入备注信息"
+            />
+            {errors.remark && (
+              <p className="text-sm text-red-500">{errors.remark.message}</p>
+            )}
+          </div>
+
+          {/* 状态 */}
+          {isEdit && (
+            <div className="space-y-2">
+              <Label>状态</Label>
+              <Select
+                value={statusValue}
+                onValueChange={(value) => setValue('status', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="选择状态" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">启用</SelectItem>
+                  <SelectItem value="inactive">禁用</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+            >
+              取消
+            </Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? '保存中...' : '保存'}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
