@@ -1,4 +1,4 @@
-import publicAxios from '../utils/public-client';
+import publicAxios from '../../utils/public-client';
 
 export const captchaApi = {
   // 获取验证码

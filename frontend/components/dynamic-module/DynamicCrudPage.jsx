@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Progress } from '@/components/ui/progress';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
-import axios from '@/lib/utils/http-client-modules';
+import axios from '@/lib/utils/module-client';
 import { usePermission } from '@/lib/hooks/usePermission';
 import { DynamicFilters } from './DynamicFilters';
 import { DynamicTable } from './DynamicTable';

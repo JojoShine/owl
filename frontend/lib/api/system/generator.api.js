@@ -1,4 +1,4 @@
-import axios from '../utils/http-client';
+import axios from '../../utils/http-client';
 
 export const generatorApi = {
   // 获取数据库表列表

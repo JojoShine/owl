@@ -70,6 +70,11 @@ export const SocketProvider = ({ children }) => {
       setIsReconnecting(false);
       setConnectionError(null);
       reconnectAttemptsRef.current = 0;
+
+      // 将 socket 实例挂载到 window，供其他地方使用
+      if (typeof window !== 'undefined') {
+        window.__socketInstance = newSocket;
+      }
     });
 
     // 连接错误

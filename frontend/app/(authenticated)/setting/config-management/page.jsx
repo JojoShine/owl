@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import SystemInfoTab from '@/components/system-config/SystemInfoTab';
-import { systemConfigApi } from '@/lib/api/system-config.api';
+import { systemConfigApi } from '@/lib/api';
 import { Loading } from '@/components/ui/loading';
 
 export default function ConfigManagementPage() {

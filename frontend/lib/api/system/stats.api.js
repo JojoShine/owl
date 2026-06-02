@@ -1,4 +1,4 @@
-import axios from '../utils/http-client';
+import axios from '../../utils/http-client';
 
 export const statsApi = {
   // 获取首页仪表板统计数据

@@ -1,4 +1,4 @@
-import axios from '../utils/http-client';
+import axios from '../../utils/http-client';
 
 // 通知API
 export const notificationApi = {

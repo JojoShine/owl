@@ -39,6 +39,7 @@ db.ApiKey = require('./system/ApiKey')(sequelize, Sequelize.DataTypes);
 db.WatermarkConfig = require('./system/WatermarkConfig')(sequelize, Sequelize.DataTypes);
 db.SystemConfig = require('./system/SystemConfig')(sequelize, Sequelize.DataTypes);
 db.DashboardWidget = require('./system/DashboardWidget')(sequelize, Sequelize.DataTypes);
+db.SensitiveField = require('./system/SensitiveField')(sequelize, Sequelize.DataTypes);
 
 // ========== Monitor Models ==========
 // 监控告警相关模型

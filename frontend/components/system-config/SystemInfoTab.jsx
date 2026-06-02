@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import ImageUploader from './ImageUploader';
-import { systemConfigApi } from '@/lib/api/system-config.api';
+import { systemConfigApi } from '@/lib/api';
 import { toast } from 'sonner';
 
 export default function SystemInfoTab({ config, onUpdate }) {

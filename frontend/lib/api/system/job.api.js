@@ -1,4 +1,4 @@
-import axios from '../utils/http-client';
+import axios from '../../utils/http-client';
 
 export const jobApi = {
   // 获取任务列表

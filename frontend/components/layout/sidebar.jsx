@@ -11,7 +11,7 @@ import { menuApi } from '@/lib/api';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { useSocket } from '@/contexts/SocketContext';
 import { useColorTheme } from '@/lib/utils/theme';
-import { systemConfigApi } from '@/lib/api/system-config.api';
+import { systemConfigApi } from '@/lib/api';
 import { getApiBaseUrl } from '@/lib/utils/http-client';
 
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';

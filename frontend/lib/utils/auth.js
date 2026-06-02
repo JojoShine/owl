@@ -47,15 +47,16 @@ export const AuthProvider = ({ children }) => {
 
   // 监听WebSocket事件（被踢出通知）
   useEffect(() => {
-    if (!user) return;
+    if (!user || typeof window === 'undefined') return;
 
     const handleSessionKicked = (data) => {
       console.warn('Session kicked:', data);
 
-      // 显示通知
+      // 显示更友好的通知
       toast.error(
-        `账户被登出 - 设备: ${data.newLogin.device}, 位置: ${data.newLogin.location}, 时间: ${data.newLogin.time}`,
+        '账户在其他设备登录',
         {
+          description: `设备: ${data.newLogin.device}\n位置: ${data.newLogin.location}\n时间: ${data.newLogin.time}`,
           duration: 10000,
         }
       );
@@ -66,23 +67,17 @@ export const AuthProvider = ({ children }) => {
       }, 3000);
     };
 
-    // 监听WebSocket连接建立事件
-    const handleSocketConnect = () => {
-      // console.log('WebSocket connected, registering user session listener');
-      // WebSocket连接时，服务端应该注册用户的socket连接
-    };
-
-    // 尝试从window获取socket实例（假设有全局WebSocket连接）
-    if (typeof window !== 'undefined' && window.socket) {
-      window.socket.on('session:kicked', handleSessionKicked);
-      window.socket.on('connect', handleSocketConnect);
+    // 使用 SocketContext 的 socket 实例
+    const socket = window.socket || (typeof window !== 'undefined' && window.__socketInstance);
+    
+    if (socket) {
+      socket.on('session:kicked', handleSessionKicked);
 
       return () => {
-        window.socket.off('session:kicked', handleSessionKicked);
-        window.socket.off('connect', handleSocketConnect);
+        socket.off('session:kicked', handleSessionKicked);
       };
     }
-  }, [user, router]);
+  }, [user]);
 
   // 登录
   const login = async (credentials) => {

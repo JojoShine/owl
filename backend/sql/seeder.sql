@@ -119,15 +119,15 @@ INSERT INTO public."owl_menus" ("id", "parent_id", "name", "path", "component", 
 INSERT INTO public."owl_menus" ("id", "parent_id", "name", "path", "component", "icon", "type", "visible", "sort", "status", "permission_code", "menu_type", "created_at", "updated_at") VALUES ('7dbae11a-93a0-4825-bb80-e1a8120de300', NULL, '概览', '/dashboard', NULL, 'LayoutDashboard', 'menu', true, 0, 'active', NULL, 'business', '"2025-10-28T00:43:06.737Z"', '"2025-10-28T00:43:06.737Z"');
 INSERT INTO public."owl_menus" ("id", "parent_id", "name", "path", "component", "icon", "type", "visible", "sort", "status", "permission_code", "menu_type", "created_at", "updated_at") VALUES ('fcca17f1-a067-40bb-8315-948a4371b5ed', NULL, '日志管理', '/logs', NULL, 'FileText', 'menu', true, 10, 'active', 'log:read', 'system', '"2025-10-28T00:43:06.737Z"', '"2025-10-28T00:43:06.737Z"');
 -- Child menus - these reference parent menus inserted above
-INSERT INTO public."owl_menus" ("id", "parent_id", "name", "path", "component", "icon", "type", "visible", "sort", "status", "permission_code", "menu_type", "created_at", "updated_at") VALUES ('31aa61d5-711f-43ec-ba19-01035c393a58', '0e734687-5eb8-472f-a138-ed35ce17556a', '角色管理', '/setting/roles', 'RolesPage', 'Shield', 'menu', true, 2, 'active', 'role:read', 'system', '"2025-10-28T00:43:06.737Z"', '"2025-10-28T00:43:06.737Z"');
+INSERT INTO public."owl_menus" ("id", "parent_id", "name", "path", "component", "icon", "type", "visible", "sort", "status", "permission_code", "menu_type", "created_at", "updated_at") VALUES ('31aa61d5-711f-43ec-ba19-01035c393a58', '0e734687-5eb8-472f-a138-ed35ce17556a', '角色管理', '/setting/roles', 'RolesPage', 'Users', 'menu', true, 2, 'active', 'role:read', 'system', '"2025-10-28T00:43:06.737Z"', '"2025-10-28T00:43:06.737Z"');
 INSERT INTO public."owl_menus" ("id", "parent_id", "name", "path", "component", "icon", "type", "visible", "sort", "status", "permission_code", "menu_type", "created_at", "updated_at") VALUES ('6ae5d75e-3020-4f69-aaa9-df75474c0921', '0e734687-5eb8-472f-a138-ed35ce17556a', '通知设置', '/setting/notification-settings', NULL, 'Settings', 'menu', true, 85, 'active', NULL, 'system', '"2025-10-28T00:43:06.737Z"', '"2025-10-28T00:43:06.737Z"');
 INSERT INTO public."owl_menus" ("id", "parent_id", "name", "path", "component", "icon", "type", "visible", "sort", "status", "permission_code", "menu_type", "created_at", "updated_at") VALUES ('6f6f4f29-38bc-44fd-89b3-c82203678c13', '0e734687-5eb8-472f-a138-ed35ce17556a', '接口开发', '/setting/api-builder', '', 'Key', 'menu', true, 7, 'active', 'user:read', 'system', '"2025-11-27T02:46:53.914Z"', '"2025-11-27T02:47:08.756Z"');
 INSERT INTO public."owl_menus" ("id", "parent_id", "name", "path", "component", "icon", "type", "visible", "sort", "status", "permission_code", "menu_type", "created_at", "updated_at") VALUES ('7896701f-ca95-4293-bda5-2a7281090ef8', '0e734687-5eb8-472f-a138-ed35ce17556a', '部门管理', '/setting/departments', 'DepartmentsPage', 'Building2', 'menu', true, 5, 'active', 'department:read', 'system', '"2025-10-28T00:43:06.737Z"', '"2025-10-28T00:43:06.737Z"');
 INSERT INTO public."owl_menus" ("id", "parent_id", "name", "path", "component", "icon", "type", "visible", "sort", "status", "permission_code", "menu_type", "created_at", "updated_at") VALUES ('05a7bb9b-bf96-4ce9-b510-bf0d068acd5d', '51785958-3437-4938-b77d-ce7cf2d9782b', '监控概览', '/monitor', NULL, 'BarChart3', 'menu', true, 1, 'active', 'monitor:read', 'system', '"2025-10-28T00:43:06.737Z"', '"2025-10-28T00:43:06.737Z"');
 INSERT INTO public."owl_menus" ("id", "parent_id", "name", "path", "component", "icon", "type", "visible", "sort", "status", "permission_code", "menu_type", "created_at", "updated_at") VALUES ('8075b442-90e6-4c91-9b2c-8fc8051ac337', '51785958-3437-4938-b77d-ce7cf2d9782b', '告警管理', '/monitor/alerts', NULL, 'Bell', 'menu', true, 3, 'active', 'monitor:update', 'system', '"2025-10-28T00:43:06.737Z"', '"2025-10-28T00:43:06.737Z"');
 INSERT INTO public."owl_menus" ("id", "parent_id", "name", "path", "component", "icon", "type", "visible", "sort", "status", "permission_code", "menu_type", "created_at", "updated_at") VALUES ('cfa8dc2d-0554-4999-8f2b-98077bcebbc3', '51785958-3437-4938-b77d-ce7cf2d9782b', '接口监控', '/monitor/apis', NULL, 'Network', 'menu', true, 2, 'active', 'monitor:update', 'system', '"2025-10-28T00:43:06.737Z"', '"2025-10-28T00:43:06.737Z"');
-INSERT INTO public."owl_menus" ("id", "parent_id", "name", "path", "component", "icon", "type", "visible", "sort", "status", "permission_code", "menu_type", "created_at", "updated_at") VALUES ('9289f417-0496-4d7f-839a-7b1198eaa0fd', '0e734687-5eb8-472f-a138-ed35ce17556a', '权限管理', '/setting/permissions', 'PermissionsPage', 'Key', 'menu', true, 3, 'active', 'permission:read', 'system', '"2025-10-28T00:43:06.737Z"', '"2025-10-28T00:43:06.737Z"');
-INSERT INTO public."owl_menus" ("id", "parent_id", "name", "path", "component", "icon", "type", "visible", "sort", "status", "permission_code", "menu_type", "created_at", "updated_at") VALUES ('a12f7314-1f9e-44e1-bc7a-8b81aa41d870', '0e734687-5eb8-472f-a138-ed35ce17556a', '用户管理', '/setting/users', 'UsersPage', 'Users', 'menu', true, 1, 'active', 'user:read', 'system', '"2025-10-28T00:43:06.737Z"', '"2025-10-28T00:43:06.737Z"');
+INSERT INTO public."owl_menus" ("id", "parent_id", "name", "path", "component", "icon", "type", "visible", "sort", "status", "permission_code", "menu_type", "created_at", "updated_at") VALUES ('9289f417-0496-4d7f-839a-7b1198eaa0fd', '0e734687-5eb8-472f-a138-ed35ce17556a', '权限管理', '/setting/permissions', 'PermissionsPage', 'Shield', 'menu', true, 3, 'active', 'permission:read', 'system', '"2025-10-28T00:43:06.737Z"', '"2025-10-28T00:43:06.737Z"');
+INSERT INTO public."owl_menus" ("id", "parent_id", "name", "path", "component", "icon", "type", "visible", "sort", "status", "permission_code", "menu_type", "created_at", "updated_at") VALUES ('a12f7314-1f9e-44e1-bc7a-8b81aa41d870', '0e734687-5eb8-472f-a138-ed35ce17556a', '用户管理', '/setting/users', 'UsersPage', 'UserCircle', 'menu', true, 1, 'active', 'user:read', 'system', '"2025-10-28T00:43:06.737Z"', '"2025-10-28T00:43:06.737Z"');
 INSERT INTO public."owl_menus" ("id", "parent_id", "name", "path", "component", "icon", "type", "visible", "sort", "status", "permission_code", "menu_type", "created_at", "updated_at") VALUES ('d9126103-db5f-43b2-8964-503b65b76983', '0e734687-5eb8-472f-a138-ed35ce17556a', '菜单管理', '/setting/menus', 'MenusPage', 'MenuIcon', 'menu', true, 4, 'active', 'menu:read', 'system', '"2025-10-28T00:43:06.737Z"', '"2025-10-28T00:43:06.737Z"');
 INSERT INTO public."owl_menus" ("id", "parent_id", "name", "path", "component", "icon", "type", "visible", "sort", "status", "permission_code", "menu_type", "created_at", "updated_at") VALUES ('eeeeeeee-ffff-0000-1111-222222222222', '0e734687-5eb8-472f-a138-ed35ce17556a', '水印设置', '/setting/watermark-settings', NULL, 'Waves', 'menu', true, 8, 'active', 'watermark:update', 'system', '"2025-12-10T06:07:13.302Z"', '"2025-12-10T06:07:13.302Z"');
 INSERT INTO public."owl_menus" ("id", "parent_id", "name", "path", "component", "icon", "type", "visible", "sort", "status", "permission_code", "menu_type", "created_at", "updated_at") VALUES ('f98825d5-2161-4952-ac09-e3c21f7047d7', '0e734687-5eb8-472f-a138-ed35ce17556a', '代码生成器', '/generator', '', 'Code', 'menu', true, 99, 'active', 'generator:read', 'system', '"2025-11-24T02:31:56.976Z"', '"2025-11-24T02:32:23.939Z"');
@@ -375,20 +375,18 @@ INSERT INTO public."owl_watermark_config" ("id", "enabled", "lines", "font_size"
 
 -- ============================================
 -- Table: folders
--- Records: 3
+-- Records: 0 - No initial data needed
 -- ============================================
 ALTER SEQUENCE IF EXISTS owl_folders_id_seq RESTART;
-INSERT INTO public."owl_folders" ("id", "name", "parent_id", "created_by", "created_at", "updated_at", "inherit_permissions") VALUES ('737b2b61-277a-4432-9ad0-eb4648a2713f', 'Windows', NULL, '61976ffe-b6bb-4be2-8ffa-a223315f4e36', '"2025-11-17T13:05:46.666Z"', '"2025-11-17T13:05:46.666Z"', true);
-INSERT INTO public."owl_folders" ("id", "name", "parent_id", "created_by", "created_at", "updated_at", "inherit_permissions") VALUES ('cf7e3a24-6c2c-4e5e-9708-f3a2fd1c1a59', 'Software', NULL, '61976ffe-b6bb-4be2-8ffa-a223315f4e36', '"2025-11-17T13:05:40.514Z"', '"2025-11-17T13:05:40.514Z"', true);
-INSERT INTO public."owl_folders" ("id", "name", "parent_id", "created_by", "created_at", "updated_at", "inherit_permissions") VALUES ('d001471f-d795-474b-ac2a-cf01ccd74899', 'test', NULL, '99e2337b-8676-4414-b71e-d5aff2008616', '"2025-11-24T05:56:29.245Z"', '"2025-11-24T05:56:29.245Z"', true);
+-- No initial folder data - folders will be created by users
 
 
 -- ============================================
 -- Table: files
--- Records: 1
+-- Records: 0 - No initial data needed
 -- ============================================
 ALTER SEQUENCE IF EXISTS owl_files_id_seq RESTART;
-INSERT INTO public."owl_files" ("id", "filename", "original_name", "mime_type", "size", "path", "bucket", "folder_id", "uploaded_by", "created_at", "updated_at", "inherit_permissions") VALUES ('e3e6778e-d62a-4a03-80aa-397c4ddd368b', '52a69475-9412-4b8f-bef2-a3ca29362088.jpg', '三塔.jpg', 'image/jpeg', '61480', 'users/99e2337b-8676-4414-b71e-d5aff2008616/2025/11/24/52a69475-9412-4b8f-bef2-a3ca29362088.jpg', 'owl', NULL, '99e2337b-8676-4414-b71e-d5aff2008616', '"2025-11-24T03:46:03.353Z"', '"2025-11-25T00:58:57.914Z"', true);
+-- No initial file data - files will be uploaded by users
 
 
 -- file_permissions: Empty
@@ -468,7 +466,7 @@ INSERT INTO public."owl_email_templates" ("id", "name", "subject", "content", "v
 -- Records: 1
 -- ============================================
 ALTER SEQUENCE IF EXISTS owl_api_keys_id_seq RESTART;
-INSERT INTO public."owl_api_keys" ("id", "interface_id", "app_name", "api_key", "api_secret", "status", "expires_at", "last_used_at", "created_by", "created_at", "updated_at") VALUES ('06870ba4-2d33-49a6-ac44-a880df470c5b', NULL, 'myapp', '18e72f9c9a98d9320e9fd027db4249acc3af16ca097b1fd2c09a9940a1176711', '27125a29d6021dab8da65b8f83e61a30e01b971d3525608fec06be15ec222bbc', 'active', '"2025-12-01T02:48:42.905Z"', '"2025-11-27T19:33:23.347Z"', '99e2337b-8676-4414-b71e-d5aff2008616', '"2025-11-28T02:48:42.911Z"', '"2025-11-28T03:33:23.349Z"');
+INSERT INTO public."owl_api_keys" ("id", "interface_id", "app_name", "api_key", "api_secret", "status", "expires_at", "last_used_at", "created_by", "created_at", "updated_at") VALUES ('06870ba4-2d33-49a6-ac44-a880df470c5b', NULL, 'myapp', '18e72f9c9a98d9320e9fd027db4249acc3af16ca097b1fd2c09a9940a1176711', '27125a29d6021dab8da65b8f83e61a30e01b971d3525608fec06be15ec222bbc', 'active', NOW() + INTERVAL '30 days', NULL, '99e2337b-8676-4414-b71e-d5aff2008616', NOW(), NOW());
 
 
 -- ============================================
@@ -607,28 +605,7 @@ INSERT INTO public."owl_generation_history" ("id", "module_id", "table_name", "m
 INSERT INTO public."owl_generation_history" ("id", "module_id", "table_name", "module_name", "action", "files_generated", "created_by", "created_at", "success", "error_message", "operation_type", "generated_by") VALUES ('4c5e59a2-d83f-48de-ba46-1ff6c88259cb', NULL, 'test_products', 'TestProducts', NULL, NULL, NULL, '"2025-10-28T01:13:03.526Z"', true, NULL, 'create', '99e2337b-8676-4414-b71e-d5aff2008616');
 
 -- Now insert with correct codes
--- thirty-party-key insert
-INSERT INTO public."owl_permissions" ("id", "name", "code", "resource", "action", "description", "category", "created_at", "updated_at") VALUES
-('4073eab6-da4a-4cb6-934b-55e57fffc52d', '查看第三方密钥', 'third-party-keys:read', 'third-party-keys', 'read', '查看第三方API密钥列表', '系统管理', now(), now()),
-('e1ca8397-7494-414f-a716-16381094ca47', '创建第三方密钥', 'third-party-keys:create', 'third-party-keys', 'create', '创建新的第三方API密钥', '系统管理', now(), now()),
-('64d2e0e5-fe3c-4269-9c9c-b01eaadcdc97', '编辑第三方密钥', 'third-party-keys:update', 'third-party-keys', 'update', '编辑第三方API密钥信息', '系统管理', now(), now()),
-('69ba2d39-f501-4ae3-bf67-8583e769f9de', '删除第三方密钥', 'third-party-keys:delete', 'third-party-keys', 'delete', '删除第三方API密钥', '系统管理', now(), now());
-
-INSERT INTO public."owl_menus" ("id", "parent_id", "name", "path", "component", "icon", "type", "visible", "sort", "status", "permission_code", "menu_type", "created_at", "updated_at") VALUES
-    ('87d186d7-f482-4eaf-9bf1-1edbf08cc969', '0e734687-5eb8-472f-a138-ed35ce17556a', '第三方密钥', '/setting/third-party-keys', 'ThirdPartyKeysPage', 'Key', 'menu', true, 6, 'active', 'third-party-keys:read', 'system', now(), now());
-
-INSERT INTO public."owl_role_permissions" ("id", "role_id", "permission_id", "created_at") VALUES
--- Super admin role
-('1f5c1ce0-0f56-4928-8015-491b2d21044d', '5bbddbca-0ace-4641-8a5b-8882a648ca49', '4073eab6-da4a-4cb6-934b-55e57fffc52d', now()),
-('2b0ee2bd-6d24-4508-ae28-47744ccecdc7', '5bbddbca-0ace-4641-8a5b-8882a648ca49', 'e1ca8397-7494-414f-a716-16381094ca47', now()),
-('ef082956-6d3f-421e-98a6-3978d20ae714', '5bbddbca-0ace-4641-8a5b-8882a648ca49', '64d2e0e5-fe3c-4269-9c9c-b01eaadcdc97', now()),
-('841d31bd-26cf-41f2-83c4-a8f9bff67d2a', '5bbddbca-0ace-4641-8a5b-8882a648ca49', '69ba2d39-f501-4ae3-bf67-8583e769f9de', now()),
--- Admin role
-('d9b90488-32c9-4d5a-999a-11600656b1d2', '6b81e3c2-ec0c-40f3-8e00-ec54f1b41345', '4073eab6-da4a-4cb6-934b-55e57fffc52d', now()),
-('339eb880-67d6-44cc-b764-2888b6d62515', '6b81e3c2-ec0c-40f3-8e00-ec54f1b41345', 'e1ca8397-7494-414f-a716-16381094ca47', now()),
-('b31ebcaf-3023-4c8f-a61e-a1358874d4b4', '6b81e3c2-ec0c-40f3-8e00-ec54f1b41345', '64d2e0e5-fe3c-4269-9c9c-b01eaadcdc97', now()),
-('82e4b8d3-be16-4366-a9be-38af1897a74f', '6b81e3c2-ec0c-40f3-8e00-ec54f1b41345', '69ba2d39-f501-4ae3-bf67-8583e769f9de', now());
-
+-- thirty-party-key insert - REMOVED: This menu does not exist in the general platform
 
 -- Re-enable foreign key constraints
 SET CONSTRAINTS ALL IMMEDIATE;
@@ -654,5 +631,58 @@ INSERT INTO owl_dashboard_widgets (id, title, widget_type, chart_type, sql_query
 (10, '在线用户趋势', 'chart', 'area', 'SELECT TO_CHAR(DATE_TRUNC(''hour'', last_login_at), ''HH24:MI'') AS time, COUNT(*) AS "在线用户" FROM owl_users WHERE last_login_at >= NOW() - INTERVAL ''12 hours'' GROUP BY DATE_TRUNC(''hour'', last_login_at) ORDER BY DATE_TRUNC(''hour'', last_login_at)', 'time', '在线用户', NULL, 10, true, now(), now()),
 (11, '访问趋势', 'chart', 'area', 'SELECT TO_CHAR(DATE_TRUNC(''day'', last_login_at), ''MM-DD'') AS date, COUNT(*) AS visits FROM owl_users WHERE last_login_at >= NOW() - INTERVAL ''7 days'' GROUP BY DATE_TRUNC(''day'', last_login_at) ORDER BY DATE_TRUNC(''day'', last_login_at)', 'date', 'visits', NULL, 11, true, now(), now())
 ON CONFLICT (id) DO NOTHING;
+
+
+-- ============================================
+-- 敏感字段配置初始化数据
+-- ============================================
+
+INSERT INTO owl_sensitive_fields (table_name, field_name, mask_type, description, is_active) VALUES
+-- 用户表敏感字段
+('owl_users', 'phone', 'phone', '用户手机号', true),
+('owl_users', 'email', 'email', '用户邮箱', true),
+('owl_users', 'id_card', 'id_card', '身份证号', true)
+ON CONFLICT (table_name, field_name) DO NOTHING;
+
+
+-- ============================================
+-- 数据访问管理相关菜单
+-- ============================================
+
+-- 数据访问管理菜单（放在系统管理下）
+INSERT INTO public."owl_menus" ("id", "parent_id", "name", "path", "component", "icon", "type", "visible", "sort", "status", "permission_code", "menu_type", "created_at", "updated_at")
+VALUES ('7f3e9a2b-4c1d-4e8f-9b5a-6d2c8e1f0a3b', '0e734687-5eb8-472f-a138-ed35ce17556a', '数据访问管理', '/setting/sensitive-fields', 'SensitiveFieldsPage', 'ShieldCheck', 'menu', true, 88, 'active', 'sensitive-field:read', 'system', now(), now())
+ON CONFLICT (id) DO NOTHING;
+
+
+-- ============================================
+-- 数据访问管理相关权限
+-- ============================================
+
+-- 敏感字段管理权限
+INSERT INTO public."owl_permissions" ("id", "name", "code", "resource", "action", "description", "category", "created_at", "updated_at") VALUES
+('a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d', '查看敏感字段', 'sensitive-field:read', 'sensitive-field', 'read', '查看敏感字段配置列表和详情', '数据安全', now(), now()),
+('b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e', '创建敏感字段', 'sensitive-field:create', 'sensitive-field', 'create', '创建新的敏感字段配置', '数据安全', now(), now()),
+('c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f', '更新敏感字段', 'sensitive-field:update', 'sensitive-field', 'update', '更新敏感字段配置', '数据安全', now(), now()),
+('d4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a', '删除敏感字段', 'sensitive-field:delete', 'sensitive-field', 'delete', '删除敏感字段配置', '数据安全', now(), now());
+
+
+-- ============================================
+-- 超级管理员绑定数据访问管理权限
+-- ============================================
+
+INSERT INTO public."owl_role_permissions" ("id", "role_id", "permission_id", "created_at") VALUES
+('b8c9d0e1-f2a3-4b4c-5d6e-7f8a9b0c1d2e', '5bbddbca-0ace-4641-8a5b-8882a648ca49', 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d', now()),
+('c9d0e1f2-a3b4-4c5d-6e7f-8a9b0c1d2e3f', '5bbddbca-0ace-4641-8a5b-8882a648ca49', 'b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e', now()),
+('d0e1f2a3-b4c5-4d6e-7f8a-9b0c1d2e3f4a', '5bbddbca-0ace-4641-8a5b-8882a648ca49', 'c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f', now()),
+('e1f2a3b4-c5d6-4e7f-8a9b-0c1d2e3f4a5b', '5bbddbca-0ace-4641-8a5b-8882a648ca49', 'd4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a', now());
+
+
+-- ============================================
+-- 超级管理员绑定数据访问管理菜单
+-- ============================================
+
+INSERT INTO public."owl_role_menus" ("id", "role_id", "menu_id", "created_at") VALUES
+('c5d6e7f8-a9b0-4c1d-2e3f-4a5b6c7d8e9f', '5bbddbca-0ace-4641-8a5b-8882a648ca49', '7f3e9a2b-4c1d-4e8f-9b5a-6d2c8e1f0a3b', now());
 
 COMMIT;

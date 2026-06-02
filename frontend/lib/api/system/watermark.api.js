@@ -1,4 +1,4 @@
-import axios from '../utils/http-client';
+import axios from '../../utils/http-client';
 
 export const watermarkApi = {
   // 获取水印配置（原始配置）

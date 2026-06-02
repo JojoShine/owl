@@ -1,4 +1,4 @@
-import axios from '../utils/http-client';
+import axios from '../../utils/http-client';
 
 export const apiBuilderApi = {
   // 获取接口列表

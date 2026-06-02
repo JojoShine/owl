@@ -5,7 +5,7 @@ import { RefreshCw } from 'lucide-react';
 import { Input } from './input';
 import { Button } from './button';
 import { Label } from './label';
-import { captchaApi } from '@/lib/api/captcha.api';
+import { captchaApi } from '@/lib/api';
 
 /**
  * 验证码输入组件

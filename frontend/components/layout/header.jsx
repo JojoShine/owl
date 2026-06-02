@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { User, LogOut } from 'lucide-react';
-import { systemConfigApi } from '@/lib/api/system-config.api';
+import { systemConfigApi } from '@/lib/api';
 
 export default function Header() {
   const { user, logout } = useAuth();

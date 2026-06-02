@@ -14,8 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ThemeToggle } from '@/components/layout/theme/theme-toggle';
-import { authApi } from '@/lib/api';
-import { systemConfigApi } from '@/lib/api/system-config.api';
+import { authApi, systemConfigApi } from '@/lib/api';
 import { getApiBaseUrl } from '@/lib/utils/http-client';
 
 // 表单验证规则

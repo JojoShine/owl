@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import DashboardCard from '@/components/dashboard/DashboardCard';
-import { dashboardWidgetApi } from '@/lib/api/dashboard-widget.api';
+import { dashboardWidgetApi } from '@/lib/api';
 
 export default function DashboardPage() {
   const [widgets, setWidgets] = useState([]);

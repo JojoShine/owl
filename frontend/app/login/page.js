@@ -16,9 +16,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ThemeToggle } from '@/components/layout/theme/theme-toggle';
-import { authApi, monitorApi } from '@/lib/api';
+import { authApi, monitorApi, systemConfigApi } from '@/lib/api';
 import { useAuth } from '@/lib/utils/auth';
-import { systemConfigApi } from '@/lib/api/system-config.api';
 import { getApiBaseUrl } from '@/lib/utils/http-client';
 
 // 表单验证规则

@@ -1,4 +1,4 @@
-import axios from '../utils/http-client';
+import axios from '../../utils/http-client';
 
 export const thirdPartyKeysApi = {
   // 获取第三方API密钥列表
