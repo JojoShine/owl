@@ -44,6 +44,14 @@ class LogService {
   }
 
   /**
+   * 获取数据库访问日志
+   */
+  async getDatabaseAccessLogs(query) {
+    const logDir = path.join(__dirname, '../../../../logs/database-access');
+    return await readLogs(logDir, query);
+  }
+
+  /**
    * 获取日志统计信息
    */
   async getStats(type, startDate, endDate) {
@@ -53,6 +61,7 @@ class LogService {
       system: path.join(__dirname, '../../../../logs/system'),
       access: path.join(__dirname, '../../../../logs/access'),
       error: path.join(__dirname, '../../../../logs/error'),
+      database: path.join(__dirname, '../../../../logs/database-access'),
     };
 
     if (type && logDirs[type]) {
@@ -79,6 +88,7 @@ class LogService {
       system: path.join(__dirname, '../../../../logs/system'),
       access: path.join(__dirname, '../../../../logs/access'),
       error: path.join(__dirname, '../../../../logs/error'),
+      database: path.join(__dirname, '../../../../logs/database-access'),
     };
 
     if (!logDirs[type]) {
@@ -163,6 +173,13 @@ class LogService {
         { key: 'message', label: '错误消息' },
         { key: 'stack', label: '堆栈' },
         { key: 'url', label: 'URL' },
+      ],
+      database: [
+        { key: 'type', label: '数据库类型' },
+        { key: 'action', label: '操作类型' },
+        { key: 'key', label: '键' },
+        { key: 'table_name', label: '表名' },
+        { key: 'user_id', label: '用户ID' },
       ],
     };
 

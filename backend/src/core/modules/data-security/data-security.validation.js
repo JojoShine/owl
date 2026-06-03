@@ -62,6 +62,34 @@ const permissionCheckSchema = Joi.object({
   field_name: Joi.string().required().messages({
     'any.required': '字段名为必填项'
   }),
+  record_id: Joi.string().uuid().required().messages({
+    'string.guid': '记录ID格式不正确',
+    'any.required': '记录ID为必填项'
+  }),
+});
+
+/**
+ * 明文访问申请验证规则
+ */
+const plainAccessRequestSchema = Joi.object({
+  table_name: Joi.string().max(100).required().messages({
+    'any.required': '表名为必填项'
+  }),
+  field_name: Joi.string().max(100).required().messages({
+    'any.required': '字段名为必填项'
+  }),
+  record_id: Joi.string().uuid().required().messages({
+    'string.guid': '记录ID格式不正确',
+    'any.required': '记录ID为必填项'
+  }),
+  reason: Joi.string().max(500).required().messages({
+    'any.required': '申请理由为必填项',
+    'string.max': '申请理由最多500个字符'
+  }),
+  password: Joi.string().required().min(6).messages({
+    'any.required': '密码为必填项',
+    'string.min': '密码至少6位'
+  }),
 });
 
 module.exports = {
@@ -123,6 +151,11 @@ module.exports = {
   // 密码验证
   validatePassword: {
     body: passwordValidationSchema,
+  },
+
+  // 明文访问申请验证
+  requestPlainAccess: {
+    body: plainAccessRequestSchema,
   },
 
   // 权限检查验证

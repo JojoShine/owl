@@ -96,6 +96,11 @@ function matchesFilters(log, filters = {}) {
     return false;
   }
 
+  // 数据库类型过滤（数据库日志）
+  if (filters.dbType && log.type !== filters.dbType) {
+    return false;
+  }
+
   return true;
 }
 
@@ -212,6 +217,7 @@ async function readLogs(logDir, query = {}) {
     status,
     username,
     action,
+    dbType,
     page = 1,
     limit = 50,
   } = query;
@@ -230,6 +236,7 @@ async function readLogs(logDir, query = {}) {
       status,
       username,
       action,
+      dbType,
     });
     allLogs = allLogs.concat(logs);
   }

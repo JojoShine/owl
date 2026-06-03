@@ -4,9 +4,10 @@ const path = require('path');
 
 const { combine, timestamp, printf, colorize, errors } = winston.format;
 
-// 自定义日志格式
-const logFormat = printf(({ level, message, timestamp, stack }) => {
-  return `${timestamp} [${level}]: ${stack || message}`;
+// 自定义日志格式（支持元数据）
+const logFormat = printf(({ level, message, timestamp, stack, ...metadata }) => {
+  const metaStr = Object.keys(metadata).length > 0 ? ' ' + JSON.stringify(metadata) : '';
+  return `${timestamp} [${level}]: ${stack || message}${metaStr}`;
 });
 
 // 操作日志传输器
@@ -50,6 +51,15 @@ const loginTransport = new DailyRotateFile({
   filename: path.join(__dirname, '../../logs/login/login-%DATE%.log'),
   datePattern: 'YYYY-MM-DD',
   maxSize: '20m',
+  maxFiles: '30d',
+  level: 'info',
+});
+
+// 数据库访问日志传输器（Redis + PostgreSQL）
+const databaseAccessTransport = new DailyRotateFile({
+  filename: path.join(__dirname, '../../logs/database-access/database-access-%DATE%.log'),
+  datePattern: 'YYYY-MM-DD',
+  maxSize: '50m',
   maxFiles: '30d',
   level: 'info',
 });
@@ -103,9 +113,19 @@ const loginLogger = winston.createLogger({
   transports: [loginTransport],
 });
 
+// 数据库访问日志logger（统一记录Redis和PostgreSQL访问）
+const databaseAccessLogger = winston.createLogger({
+  format: combine(
+    timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+    logFormat
+  ),
+  transports: [databaseAccessTransport],
+});
+
 module.exports = {
   logger,
   operationLogger,
   accessLogger,
   loginLogger,
+  databaseAccessLogger,
 };

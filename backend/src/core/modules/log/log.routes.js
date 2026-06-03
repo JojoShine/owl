@@ -15,6 +15,7 @@ router.get('/logins', checkPermission('log', 'read'), validate(logValidation.que
 router.get('/system', checkPermission('log', 'read'), validate(logValidation.queryLogs), logController.getSystemLogs);
 router.get('/access', checkPermission('log', 'read'), validate(logValidation.queryLogs), logController.getAccessLogs);
 router.get('/errors', checkPermission('log', 'read'), validate(logValidation.queryLogs), logController.getErrorLogs);
+router.get('/database', checkPermission('log', 'read'), validate(logValidation.queryLogs), logController.getDatabaseAccessLogs);
 
 // 获取统计信息
 router.get('/stats', checkPermission('log', 'read'), validate(logValidation.queryStats), logController.getStats);

@@ -11,13 +11,14 @@ module.exports = (sequelize, DataTypes) => {
     },
     table_name: {
       type: DataTypes.STRING(100),
-      allowNull: false,
-      comment: '表名'
+      allowNull: true,
+      comment: '表名（可选，仅用于文档说明）'
     },
     field_name: {
       type: DataTypes.STRING(100),
       allowNull: false,
-      comment: '字段名'
+      unique: true,
+      comment: '字段名（全局唯一）'
     },
     mask_type: {
       type: DataTypes.ENUM('phone', 'email', 'id_card', 'bank_card', 'name', 'address', 'custom'),
@@ -47,14 +48,11 @@ module.exports = (sequelize, DataTypes) => {
     underscored: true,
     indexes: [
       {
-        fields: ['table_name']
-      },
-      {
         fields: ['is_active']
       },
       {
         unique: true,
-        fields: ['table_name', 'field_name']
+        fields: ['field_name']
       }
     ]
   });

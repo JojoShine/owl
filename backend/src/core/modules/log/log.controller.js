@@ -68,6 +68,19 @@ class LogController {
   }
 
   /**
+   * 获取数据库访问日志
+   * GET /api/logs/database
+   */
+  async getDatabaseAccessLogs(req, res, next) {
+    try {
+      const result = await logService.getDatabaseAccessLogs(req.query);
+      success(res, result, '获取数据库访问日志成功');
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
    * 获取日志统计
    * GET /api/logs/stats
    */

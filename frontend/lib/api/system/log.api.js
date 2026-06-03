@@ -16,6 +16,9 @@ export const logApi = {
   // 获取错误日志
   getErrorLogs: (params) => axios.get('/logs/errors', { params }),
 
+  // 获取数据库访问日志
+  getDatabaseAccessLogs: (params) => axios.get('/logs/database', { params }),
+
   // 获取日志统计
   getLogStats: (params) => axios.get('/logs/stats', { params }),
 

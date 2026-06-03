@@ -1,9 +1,21 @@
 const { Sequelize } = require('sequelize');
 const config = require('../config/database');
-const { logger } = require('../config/logger');
+const { logger, databaseAccessLogger } = require('../config/logger');
 
 const env = process.env.NODE_ENV || 'development';
 const dbConfig = config[env];
+
+// 处理 logging 配置
+let loggingConfig = false;
+if (dbConfig.logging) {
+  // 如果配置的是函数，直接使用（如 pgLogging）
+  if (typeof dbConfig.logging === 'function') {
+    loggingConfig = dbConfig.logging;
+  } else {
+    // 否则使用默认的 debug 日志
+    loggingConfig = (msg) => logger.debug(msg);
+  }
+}
 
 const sequelize = new Sequelize(
   dbConfig.database,
@@ -13,7 +25,7 @@ const sequelize = new Sequelize(
     host: dbConfig.host,
     port: dbConfig.port,
     dialect: dbConfig.dialect,
-    logging: dbConfig.logging ? (msg) => logger.debug(msg) : false,
+    logging: loggingConfig,
     pool: dbConfig.pool,
     timezone: '+08:00', // 设置时区为中国标准时间（UTC+8）
   }

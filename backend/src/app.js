@@ -13,6 +13,7 @@ const {
   accessLogMiddleware,
   operationLogMiddleware,
 } = require('./middlewares/requestLogger');
+const dataMaskingMiddleware = require('./middlewares/dataMasking');
 
 const app = express();
 
@@ -36,6 +37,9 @@ app.use(express.urlencoded({ extended: true }));
 // 日志中间件
 app.use(accessLogMiddleware);
 app.use(operationLogMiddleware);
+
+// 数据脱敏中间件（在路由之前注册，拦截所有响应）
+app.use(dataMaskingMiddleware());
 
 // 限流（排除特定接口）
 const isProduction = process.env.NODE_ENV === 'production';

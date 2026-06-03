@@ -1,7 +1,7 @@
 const { Op } = require('sequelize');
 const db = require('../../../models');
 const ApiError = require('../../../utils/ApiError');
-const { logger, sensitiveDataLogger } = require('../../../config/logger');
+const { logger, operationLogger } = require('../../../config/logger');
 
 class DataSecurityService {
   /**
@@ -178,13 +178,15 @@ class DataSecurityService {
 
     if (!isValid) {
       // 记录审计日志
-      sensitiveDataLogger.info('密码验证失败', {
+      logger.info(JSON.stringify({
+        type: 'sensitive_data_access',
+        action: 'password_verify_failed',
         user_id: userId,
         username: user.username,
         ip_address: reqInfo.ipAddress,
         user_agent: reqInfo.userAgent,
-        action: 'password_validation_failed'
-      });
+        timestamp: new Date().toISOString(),
+      }));
 
       throw ApiError.unauthorized('密码错误');
     }

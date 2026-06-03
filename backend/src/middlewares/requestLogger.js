@@ -11,6 +11,22 @@ const accessLogMiddleware = morgan(
   }
 );
 
+// 过滤敏感字段的函数
+const filterSensitiveData = (obj) => {
+  if (!obj || typeof obj !== 'object') return obj;
+  
+  const sensitiveFields = ['password', 'pwd', 'passwd', 'secret', 'token', 'access_token', 'refresh_token'];
+  const filtered = { ...obj };
+  
+  sensitiveFields.forEach(field => {
+    if (filtered[field]) {
+      filtered[field] = '***FILTERED***';
+    }
+  });
+  
+  return filtered;
+};
+
 // 操作日志中间件
 const operationLogMiddleware = (req, res, next) => {
   // 记录操作日志（POST, PUT, DELETE请求）
@@ -27,7 +43,7 @@ const operationLogMiddleware = (req, res, next) => {
           url: req.originalUrl,
           ip: req.ip,
           userAgent: req.get('user-agent'),
-          body: req.body,
+          body: filterSensitiveData(req.body),  // 过滤敏感字段
           timestamp: new Date().toISOString(),
         })
       );

@@ -1,10 +1,12 @@
-const { logger, sensitiveDataLogger } = require('../config/logger');
+const { logger, operationLogger } = require('../config/logger');
 const db = require('../models');
 const { maskValue } = require('../utils/mask.util');
+const plainAccessService = require('../core/modules/data-security/plain-access.service');
 
 /**
  * 数据脱敏中间件
  * 自动拦截响应数据，对敏感字段进行脱敏处理
+ * 支持基于用户权限的明文返回（记录级别）
  */
 const dataMaskingMiddleware = () => {
   return async (req, res, next) => {
@@ -13,7 +15,7 @@ const dataMaskingMiddleware = () => {
 
     // 重写 json 方法
     res.json = function(data) {
-      // 如果是成功响应且包含数据
+      // 检查是否为成功响应且包含数据
       if (data && data.success && data.data) {
         handleDataMasking(req, res, data, originalJson);
       } else {
@@ -27,11 +29,36 @@ const dataMaskingMiddleware = () => {
 };
 
 /**
- * 处理数据脱敏
+ * 将 Sequelize Model 实例转换为纯 JSON 对象
+ */
+function toPlainObject(obj) {
+  if (!obj || typeof obj !== 'object') return obj;
+  
+  // 检测 Sequelize Model 实例
+  if (typeof obj.toJSON === 'function') {
+    return obj.toJSON();
+  }
+  
+  // 处理数组
+  if (Array.isArray(obj)) {
+    return obj.map(item => toPlainObject(item));
+  }
+  
+  // 处理普通对象
+  const plainObj = {};
+  for (const key in obj) {
+    if (obj.hasOwnProperty(key)) {
+      plainObj[key] = toPlainObject(obj[key]);
+    }
+  }
+  return plainObj;
+}
+
+/**
+ * 处理数据脱敏（支持多种响应格式）
  */
 async function handleDataMasking(req, res, responseData, originalJson) {
   try {
-    const { data } = responseData;
     const userId = req.user?.id;
     
     // 如果没有用户信息，直接返回（公开接口）
@@ -40,17 +67,8 @@ async function handleDataMasking(req, res, responseData, originalJson) {
       return;
     }
 
-    // 检测表名（从请求路径中提取）
-    const tableName = detectTableName(req);
-    
-    if (!tableName) {
-      // 无法检测表名，直接返回
-      originalJson.call(res, responseData);
-      return;
-    }
-
-    // 获取该表的敏感字段配置
-    const sensitiveFields = await getSensitiveFields(tableName);
+    // 获取所有敏感字段配置（基于字段名全局匹配）
+    const sensitiveFields = await getAllSensitiveFields();
     
     if (sensitiveFields.length === 0) {
       // 没有敏感字段，直接返回
@@ -58,11 +76,42 @@ async function handleDataMasking(req, res, responseData, originalJson) {
       return;
     }
 
-    // 执行脱敏
-    const maskedData = maskData(data, sensitiveFields);
-    
-    // 记录访问日志
-    logAccess(req, userId, tableName, sensitiveFields);
+    let dataToMask = responseData.data;
+    let maskedData;
+    let matchedFields = [];
+
+    // 先将 Sequelize Model 实例转换为纯 JSON 对象，以便后续判断结构
+    const plainData = toPlainObject(dataToMask);
+
+    // 处理不同的响应格式
+    if (Array.isArray(plainData)) {
+      // 格式1: data 直接是数组
+      const result = await maskDataWithTracking(plainData, sensitiveFields, userId);
+      maskedData = result.maskedData;
+      matchedFields = result.matchedFields;
+    } else if (plainData && plainData.items) {
+      // 格式2: data.items 是数组（paginated 和 list 响应）
+      const result = await maskDataWithTracking(plainData.items, sensitiveFields, userId);
+      maskedData = {
+        ...plainData,
+        items: result.maskedData
+      };
+      matchedFields = result.matchedFields;
+    } else if (plainData && typeof plainData === 'object') {
+      // 格式3: data 是单个对象
+      const result = await maskDataWithTracking(plainData, sensitiveFields, userId);
+      maskedData = result.maskedData;
+      matchedFields = result.matchedFields;
+    } else {
+      // 其他格式，直接返回
+      originalJson.call(res, responseData);
+      return;
+    }
+
+    // 仅当有实际匹配的字段时才记录日志
+    if (matchedFields.length > 0) {
+      logAccess(req, userId, matchedFields, req.path);
+    }
 
     // 返回脱敏后的数据
     responseData.data = maskedData;
@@ -76,33 +125,12 @@ async function handleDataMasking(req, res, responseData, originalJson) {
 }
 
 /**
- * 检测表名
- * 从请求路径中提取表名，例如：
- * /api/system/users -> owl_users
- * /api/system/roles -> owl_roles
+ * 获取所有启用的敏感字段配置（基于字段名全局匹配）
  */
-function detectTableName(req) {
-  const path = req.path;
-  
-  // 匹配 /api/system/{resource} 格式
-  const match = path.match(/\/api\/system\/([a-z]+)/i);
-  if (match && match[1]) {
-    const resource = match[1];
-    // 转换为表名格式
-    return `owl_${resource}`;
-  }
-  
-  return null;
-}
-
-/**
- * 获取敏感字段配置
- */
-async function getSensitiveFields(tableName) {
-  // 从数据库查询
+async function getAllSensitiveFields() {
+  // 从数据库查询所有启用的敏感字段
   const fields = await db.SensitiveField.findAll({
     where: {
-      table_name: tableName,
       is_active: true
     },
     attributes: ['field_name', 'mask_type', 'mask_rule']
@@ -116,60 +144,125 @@ async function getSensitiveFields(tableName) {
 }
 
 /**
- * 对数据进行脱敏处理
+ * 对数据进行脱敏处理，并跟踪实际匹配的字段（去重）
  */
-function maskData(data, sensitiveFields) {
-  if (!data) return data;
+async function maskDataWithTracking(data, sensitiveFields, userId) {
+  const matchedFieldsMap = new Map(); // 使用 Map 去重
+  
+  if (!data) return { maskedData: data, matchedFields: [] };
 
   // 处理数组
   if (Array.isArray(data)) {
-    return data.map(item => maskObject(item, sensitiveFields));
+    const maskedItems = await Promise.all(
+      data.map(async (item) => {
+        const { maskedObj, matched } = await maskObjectWithTracking(item, sensitiveFields, userId);
+        // 合并匹配字段，去重
+        matched.forEach(field => {
+          const key = `${field.field_name}_${field.mask_type}`;
+          if (!matchedFieldsMap.has(key)) {
+            matchedFieldsMap.set(key, field);
+          }
+        });
+        return maskedObj;
+      })
+    );
+    return { 
+      maskedData: maskedItems, 
+      matchedFields: Array.from(matchedFieldsMap.values()) 
+    };
   }
 
   // 处理对象
-  return maskObject(data, sensitiveFields);
-}
-
-/**
- * 对单个对象进行脱敏
- */
-function maskObject(obj, sensitiveFields) {
-  if (!obj || typeof obj !== 'object') return obj;
-
-  const maskedObj = { ...obj };
-
-  sensitiveFields.forEach(field => {
-    const fieldName = field.field_name;
-    
-    // 如果字段存在且不为空，执行脱敏
-    if (maskedObj.hasOwnProperty(fieldName) && maskedObj[fieldName] != null) {
-      maskedObj[fieldName] = maskValue(
-        maskedObj[fieldName],
-        field.mask_type,
-        field.mask_rule
-      );
+  const { maskedObj, matched } = await maskObjectWithTracking(data, sensitiveFields, userId);
+  matched.forEach(field => {
+    const key = `${field.field_name}_${field.mask_type}`;
+    if (!matchedFieldsMap.has(key)) {
+      matchedFieldsMap.set(key, field);
     }
   });
-
-  return maskedObj;
+  
+  return { 
+    maskedData: maskedObj, 
+    matchedFields: Array.from(matchedFieldsMap.values()) 
+  };
 }
 
 /**
- * 记录访问日志
+ * 对单个对象进行脱敏，检查记录级别权限
  */
-function logAccess(req, userId, tableName, sensitiveFields) {
-  sensitiveFields.forEach(field => {
-    sensitiveDataLogger.info('敏感数据访问', {
-      user_id: userId,
-      username: req.user?.username,
-      table_name: tableName,
-      field_name: field.field_name,
-      access_type: 'masked',
-      ip_address: req.ip,
-      user_agent: req.get('user-agent'),
-      action: 'view_masked_data'
-    });
+async function maskObjectWithTracking(obj, sensitiveFields, userId) {
+  if (!obj || typeof obj !== 'object') return { maskedObj: obj, matched: [] };
+
+  const maskedObj = { ...obj };
+  const matched = [];
+
+  // 尝试获取记录ID（常见的ID字段名）
+  const recordId = obj.id || obj.uuid || obj._id || null;
+
+  for (const field of sensitiveFields) {
+    const fieldName = field.field_name;
+    
+    if (maskedObj.hasOwnProperty(fieldName) && maskedObj[fieldName] != null) {
+      // 只有当有recordId时才检查权限
+      let hasPermission = false;
+      
+      if (recordId) {
+        // 检查用户是否有该记录的明文访问权限
+        const permissionCheck = await plainAccessService.checkPlainAccessPermission(
+          userId, 
+          '*', 
+          fieldName,
+          recordId
+        );
+        hasPermission = permissionCheck.hasPermission;
+      }
+      
+      if (hasPermission) {
+        // 有权限，保留明文
+        matched.push({
+          field_name: fieldName,
+          mask_type: 'plain',
+          access_level: 'record',
+          record_id: recordId,
+          original_value: String(maskedObj[fieldName]).substring(0, 10) + '...',
+        });
+      } else {
+        // 没有权限，执行脱敏
+        maskedObj[fieldName] = maskValue(
+          maskedObj[fieldName],
+          field.mask_type,
+          field.mask_rule
+        );
+        matched.push({
+          field_name: fieldName,
+          mask_type: field.mask_type,
+          access_level: 'masked',
+          record_id: recordId,
+          original_value: String(maskedObj[fieldName]).substring(0, 10) + '...',
+        });
+      }
+    }
+  }
+
+  return { maskedObj, matched };
+}
+
+/**
+ * 记录访问日志（按请求维度记录，去重并统计）
+ */
+function logAccess(req, userId, matchedFields, requestPath) {
+  if (matchedFields.length === 0) return;
+  
+  // 统计每个字段的脱敏类型和出现次数
+  const fieldStats = {};
+  matchedFields.forEach(field => {
+    const key = `${field.field_name}(${field.mask_type})`;
+    fieldStats[key] = (fieldStats[key] || 0) + 1;
   });
+  
+  // 不记录批量脱敏日志，避免冗余
+  // 敏感数据的关键操作（明文访问授权、密码验证）已在 plain-access.service.js 中记录
+  // 接口请求本身也会被 operation 日志记录
 }
 
 module.exports = dataMaskingMiddleware;

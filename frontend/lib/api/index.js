@@ -18,6 +18,7 @@ import * as dashboardWidgetModule from './system/dashboard-widget.api';
 import * as systemConfigModule from './system/system-config.api';
 import * as captchaModule from './system/captcha.api';
 import * as sensitiveFieldModule from './system/sensitive-field.api';
+import * as dataAccessModule from './system/data-access.api';
 import * as dashboardModule from './system/dashboard.api';
 import * as monitorModule from './system/monitor.api';
 import * as generatorModule from './system/generator.api';
@@ -59,6 +60,7 @@ export const dashboardWidgetApi = dashboardWidgetModule.dashboardWidgetApi;
 export const systemConfigApi = systemConfigModule.systemConfigApi;
 export const captchaApi = captchaModule.captchaApi;
 export const sensitiveFieldApi = sensitiveFieldModule.sensitiveFieldApi;
+export const dataAccessApi = dataAccessModule.dataAccessApi;
 
 // 默认导出（用于向后兼容）
 export default {
@@ -104,4 +106,5 @@ export default {
   systemConfigApi,
   captchaApi,
   sensitiveFieldApi,
+  dataAccessApi,
 };

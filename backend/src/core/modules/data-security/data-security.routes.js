@@ -97,6 +97,18 @@ router.post(
 );
 
 /**
+ * @route POST /api/system/data-security/request-plain-access
+ * @desc 申请明文访问权限
+ * @access Private
+ */
+router.post(
+  "/request-plain-access",
+  authenticate,
+  validate(validation.requestPlainAccess),
+  dataSecurityController.requestPlainAccess,
+);
+
+/**
  * @route GET /api/system/data-security/check-permission
  * @desc 检查明文访问权限
  * @access Private

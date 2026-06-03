@@ -1,4 +1,5 @@
 const dataSecurityService = require('./data-security.service');
+const plainAccessService = require('./plain-access.service');
 const { success, paginated } = require('../../../utils/response');
 
 class DataSecurityController {
@@ -114,18 +115,36 @@ class DataSecurityController {
   }
 
   /**
+   * 申请明文访问权限
+   * POST /api/system/data-security/request-plain-access
+   */
+  async requestPlainAccess(req, res, next) {
+    try {
+      const userId = req.user.id;
+      const result = await plainAccessService.requestPlainAccess(userId, req.body, {
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+      });
+      success(res, result, '申请成功');
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
    * 检查明文访问权限
    * GET /api/system/data-security/check-permission
    */
   async checkPlainAccessPermission(req, res, next) {
     try {
-      const { table_name, field_name } = req.query;
+      const { table_name, field_name, record_id } = req.query;
       const userId = req.user.id;
 
-      const result = await dataSecurityService.checkPlainAccessPermission(
+      const result = await plainAccessService.checkPlainAccessPermission(
         userId,
         table_name,
-        field_name
+        field_name,
+        record_id
       );
 
       success(res, result);
