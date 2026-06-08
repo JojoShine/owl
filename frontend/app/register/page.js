@@ -13,8 +13,9 @@ import { PasswordInput } from '@/components/ui/password-input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ThemeToggle } from '@/components/layout/theme/theme-toggle';
-import { authApi, systemConfigApi } from '@/lib/api';
+import { authApi, systemConfigApi, smsAuthApi } from '@/lib/api';
 import { getApiBaseUrl } from '@/lib/utils/http-client';
 
 // 表单验证规则

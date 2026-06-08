@@ -86,6 +86,8 @@ drop table if exists owl_system_configs cascade;
 
 drop table if exists owl_third_party_api_keys cascade;
 
+drop table if exists owl_user_third_party_accounts cascade;
+
 create type enum_owl_departments_status as enum ('active', 'inactive');
 
 create type enum_owl_email_logs_status as enum ('pending', 'sent', 'failed');
@@ -1318,7 +1320,7 @@ create table if not exists owl_users
     primary key,
     username      varchar(50)                                 not null,
     email         varchar(100)                                not null,
-    password      varchar(255)                                not null,
+    password      varchar(255),
     real_name     varchar(50),
     phone         varchar(20),
     avatar        varchar(255),
@@ -1342,7 +1344,7 @@ comment on column owl_users.username is '用户名，唯一索引';
 
 comment on column owl_users.email is '邮箱地址，唯一索引';
 
-comment on column owl_users.password is '密码，bcrypt加密存储';
+comment on column owl_users.password is '密码，bcrypt加密存储（可为空，支持无密码登录）';
 
 comment on column owl_users.real_name is '真实姓名';
 

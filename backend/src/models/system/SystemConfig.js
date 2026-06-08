@@ -39,6 +39,16 @@ module.exports = (sequelize, DataTypes) => {
       defaultValue: true,
       comment: '是否开放用户注册',
     },
+    login_method: {
+      type: DataTypes.ENUM('password', 'sms', 'both'),
+      defaultValue: 'both',
+      comment: '登录方式：password账密|sms短信|both两者都支持',
+    },
+    registration_method: {
+      type: DataTypes.ENUM('password', 'sms', 'both'),
+      defaultValue: 'both',
+      comment: '注册方式：password账密|sms短信|both两者都支持',
+    },
     login_layout: {
       type: DataTypes.ENUM('center', 'left-image', 'right-image'),
       defaultValue: 'center',

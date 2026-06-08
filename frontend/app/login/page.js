@@ -15,16 +15,18 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ThemeToggle } from '@/components/layout/theme/theme-toggle';
+import SmsLoginForm from '@/components/auth/sms-login-form';
 import { authApi, monitorApi, systemConfigApi } from '@/lib/api';
 import { useAuth } from '@/lib/utils/auth';
 import { getApiBaseUrl } from '@/lib/utils/http-client';
 
-// 表单验证规则
+// 表单验证规则 - 只做最基本的非空检查
 const loginSchema = z.object({
-  username: z.string().min(1, '请输入用户名或邮箱'),
-  password: z.string().min(6, '密码至少6个字符'),
-  captchaCode: z.string().min(1, '请输入计算结果').max(3, '计算结果不能超过3位').regex(/^-?\d+$/, '请输入有效的数字'),
+  username: z.string(),
+  password: z.string(),
+  captchaCode: z.string(),
 });
 
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
@@ -43,16 +45,19 @@ function LoginForm() {
   const [logoUrl, setLogoUrl] = useState(`${basePath}/logo.png`);
   const [loginBgUrl, setLoginBgUrl] = useState('');
   const [registrationEnabled, setRegistrationEnabled] = useState(true);
+  const [loginMethod, setLoginMethod] = useState('both'); // 登录方式：password|sms|both
   const [loginLayout, setLoginLayout] = useState('center');
+  const [loginTab, setLoginTab] = useState('sms'); // 默认短信登录
   const captchaInputRef = useRef(null);
 
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isValid },
     setValue,
   } = useForm({
     resolver: zodResolver(loginSchema),
+    mode: 'onBlur', // 失焦时验证，避免输入过程中频繁提示
   });
 
   // 获取系统状态和配置
@@ -69,6 +74,7 @@ function LoginForm() {
           setShowTechStack(configResponse.data?.show_tech_stack ?? true);
           setSystemName(configResponse.data?.system_name || 'Owl管理平台');
           setRegistrationEnabled(configResponse.data?.registration_enabled ?? true);
+          setLoginMethod(configResponse.data?.login_method || 'both');
           setLoginLayout(configResponse.data?.login_layout || 'center');
           // 处理 logo - 如果是相对路径，补全为完整 URL
           if (configResponse.data?.logo_url) {
@@ -85,6 +91,13 @@ function LoginForm() {
               ? bgUrl
               : `${getApiBaseUrl()}${bgUrl}`;
             setLoginBgUrl(fullUrl);
+          }
+          
+          // 根据配置的登录方式设置默认Tab
+          if (configResponse.data?.login_method === 'password') {
+            setLoginTab('password');
+          } else if (configResponse.data?.login_method === 'sms') {
+            setLoginTab('sms');
           }
         }
       } catch (error) {
@@ -181,59 +194,88 @@ function LoginForm() {
             </AlertDescription>
           </Alert>
         )}
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          {error && (
-            <div className="p-3 text-sm text-red-500 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded">
-              {error}
-            </div>
+        
+        {/* 登录方式Tab切换 */}
+        <Tabs value={loginTab} onValueChange={setLoginTab} className="w-full">
+          {/* 根据配置显示Tab */}
+          {loginMethod === 'both' && (
+            <TabsList className="grid w-full grid-cols-2 mb-6">
+              <TabsTrigger value="sms">短信登录</TabsTrigger>
+              <TabsTrigger value="password">密码登录</TabsTrigger>
+            </TabsList>
           )}
-          <div className="space-y-2.5">
-            <Label htmlFor="username">用户名或邮箱</Label>
-            <Input
-              id="username"
-              type="text"
-              placeholder="请输入用户名或邮箱"
-              {...register('username')}
-              disabled={isLoading}
-            />
-            {errors.username && (
-              <p className="text-sm text-red-500">{errors.username.message}</p>
-            )}
-          </div>
-          <div className="space-y-2.5">
-            <Label htmlFor="password">密码</Label>
-            <PasswordInput
-              id="password"
-              placeholder="请输入密码"
-              {...register('password')}
-              disabled={isLoading}
-            />
-            {errors.password && (
-              <p className="text-sm text-red-500">{errors.password.message}</p>
-            )}
-          </div>
-          <CaptchaInput
-            ref={captchaInputRef}
-            onCaptchaChange={handleCaptchaChange}
-            error={errors.captchaCode?.message}
-            disabled={isLoading}
-          />
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={isLoading || !captchaId}
-          >
-            {isLoading ? '登录中...' : !captchaId ? '加载中...' : '登录'}
-          </Button>
-        </form>
-        {registrationEnabled && (
-          <div className="mt-4 text-center text-sm">
-            <span className="text-muted-foreground">还没有账号？</span>
-            <Link href="/register" className="text-primary hover:underline ml-1">
-              立即注册
-            </Link>
-          </div>
-        )}
+          
+          {/* 短信登录 */}
+          {(loginMethod === 'sms' || loginMethod === 'both') && (
+            <TabsContent value="sms">
+              <SmsLoginForm onSuccess={() => {
+                const redirectPath = searchParams.get('redirect') || '/dashboard';
+                // 使用 window.location 强制刷新页面，让 AuthProvider 重新初始化
+                window.location.href = redirectPath;
+              }} />
+            </TabsContent>
+          )}
+          
+          {/* 密码登录 */}
+          {(loginMethod === 'password' || loginMethod === 'both') && (
+            <TabsContent value="password">
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                {error && (
+                  <div className="p-3 text-sm text-red-500 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded">
+                    {error}
+                  </div>
+                )}
+                <div className="space-y-2.5">
+                  <Label htmlFor="username">用户名或邮箱</Label>
+                  <Input
+                    id="username"
+                    type="text"
+                    placeholder="请输入用户名或邮箱"
+                    {...register('username')}
+                    disabled={isLoading}
+                  />
+                  {errors.username && (
+                    <p className="text-sm text-red-500">{errors.username.message}</p>
+                  )}
+                </div>
+                <div className="space-y-2.5">
+                  <Label htmlFor="password">密码</Label>
+                  <PasswordInput
+                    id="password"
+                    placeholder="请输入密码"
+                    showStrength={true}
+                    {...register('password')}
+                    disabled={isLoading}
+                  />
+                  {errors.password && (
+                    <p className="text-sm text-red-500">{errors.password.message}</p>
+                  )}
+                </div>
+                <CaptchaInput
+                  ref={captchaInputRef}
+                  onCaptchaChange={handleCaptchaChange}
+                  error={errors.captchaCode?.message}
+                  disabled={isLoading}
+                />
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={isLoading || !captchaId || !isValid}
+                >
+                  {isLoading ? '登录中...' : !captchaId ? '加载中...' : '登录'}
+                </Button>
+              </form>
+              {registrationEnabled && (
+                <div className="mt-4 text-center text-sm">
+                  <span className="text-muted-foreground">还没有账号？</span>
+                  <Link href="/register" className="text-primary hover:underline ml-1">
+                    立即注册
+                  </Link>
+                </div>
+              )}
+            </TabsContent>
+          )}
+        </Tabs>
       </CardContent>
     </Card>
   );

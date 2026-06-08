@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const authController = require('./auth.controller');
+const smsRoutes = require('./sms.routes');
 const { authenticate } = require('../../../middlewares/auth');
 const validate = require('../../../middlewares/validate');
 const authValidation = require('./auth.validation');
@@ -82,5 +83,8 @@ router.post(
   authenticate,
   authController.logout
 );
+
+// SMS认证路由
+router.use('/sms', smsRoutes);
 
 module.exports = router;

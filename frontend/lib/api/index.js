@@ -2,6 +2,7 @@
 
 // 系统管理相关（统一从 system 文件夹导入）
 import * as authModule from './system/auth.api';
+import * as smsModule from './system/sms.api';
 import * as userModule from './system/user.api';
 import * as roleModule from './system/role.api';
 import * as permissionModule from './system/permission.api';
@@ -25,8 +26,9 @@ import * as generatorModule from './system/generator.api';
 import * as statsModule from './system/stats.api';
 import * as fileManagerModule from './system/file-manager.api';
 
-// 导出认证相关 API
+// 认证相关
 export const authApi = authModule.authApi;
+export const smsAuthApi = smsModule.smsAuthApi;
 
 // 导出文件管理相关 API
 export const { folderApi, fileApi, fileShareApi } = fileManagerModule;
@@ -66,6 +68,7 @@ export const dataAccessApi = dataAccessModule.dataAccessApi;
 export default {
   // 认证相关
   authApi,
+  smsAuthApi,
   
   // 文件管理相关
   folderApi,

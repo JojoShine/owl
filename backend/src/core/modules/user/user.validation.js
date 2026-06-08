@@ -52,19 +52,19 @@ const createUser = {
     password: Joi.string()
       .min(6)
       .max(50)
-      .required()
+      .allow(null, '')
       .messages({
         'string.min': '密码至少6个字符',
-        'any.required': '密码是必填项',
       }),
     real_name: Joi.string()
       .max(50)
       .allow(null, ''),
     phone: Joi.string()
       .pattern(/^1[3-9]\d{9}$/)
-      .allow(null, '')
+      .required()
       .messages({
         'string.pattern.base': '请提供有效的手机号码',
+        'any.required': '手机号是必填项',
       }),
     status: Joi.string()
       .valid('active', 'inactive', 'banned')

@@ -12,6 +12,13 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import ImageUploader from './ImageUploader';
 import { systemConfigApi } from '@/lib/api';
 import { toast } from 'sonner';
@@ -24,6 +31,8 @@ export default function SystemInfoTab({ config, onUpdate }) {
     login_bg_url: config?.login_bg_url || '',
     show_tech_stack: config?.show_tech_stack ?? true,
     registration_enabled: config?.registration_enabled ?? true,
+    login_method: config?.login_method || 'both',
+    registration_method: config?.registration_method || 'both',
     login_layout: config?.login_layout || 'center',
   });
 
@@ -88,13 +97,14 @@ export default function SystemInfoTab({ config, onUpdate }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* 基本信息 */}
+      {/* 基本信息和登录注册配置 */}
       <Card>
         <CardHeader>
-          <CardTitle>基本信息</CardTitle>
-          <CardDescription>配置系统名称和公司信息</CardDescription>
+          <CardTitle>基本配置</CardTitle>
+          <CardDescription>系统信息、登录注册方式等基础配置</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* 系统名称和公司信息 */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="company_name">公司名称</Label>
@@ -121,34 +131,84 @@ export default function SystemInfoTab({ config, onUpdate }) {
             </div>
           </div>
 
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label>技术栈信息展示</Label>
-              <p className="text-sm text-muted-foreground">
-                是否在页面底部显示技术栈信息
-              </p>
+          {/* 开关配置 */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex items-center justify-between p-3 border rounded-lg">
+              <div className="space-y-0.5">
+                <Label>技术栈展示</Label>
+                <p className="text-xs text-muted-foreground">
+                  页面底部显示技术栈
+                </p>
+              </div>
+              <Switch
+                checked={formData.show_tech_stack}
+                onCheckedChange={(checked) =>
+                  setFormData({ ...formData, show_tech_stack: checked })
+                }
+              />
             </div>
-            <Switch
-              checked={formData.show_tech_stack}
-              onCheckedChange={(checked) =>
-                setFormData({ ...formData, show_tech_stack: checked })
-              }
-            />
+
+            <div className="flex items-center justify-between p-3 border rounded-lg">
+              <div className="space-y-0.5">
+                <Label>开放注册</Label>
+                <p className="text-xs text-muted-foreground">
+                  登录页显示注册入口
+                </p>
+              </div>
+              <Switch
+                checked={formData.registration_enabled}
+                onCheckedChange={(checked) =>
+                  setFormData({ ...formData, registration_enabled: checked })
+                }
+              />
+            </div>
           </div>
 
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label>开放用户注册</Label>
-              <p className="text-sm text-muted-foreground">
-                是否在登录页显示注册入口
+          {/* 登录和注册方式 */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="login_method">登录方式</Label>
+              <Select
+                value={formData.login_method}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, login_method: value })
+                }
+              >
+                <SelectTrigger id="login_method">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="password">仅账号密码</SelectItem>
+                  <SelectItem value="sms">仅短信验证码</SelectItem>
+                  <SelectItem value="both">两者都支持</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                设置用户登录系统的方式
               </p>
             </div>
-            <Switch
-              checked={formData.registration_enabled}
-              onCheckedChange={(checked) =>
-                setFormData({ ...formData, registration_enabled: checked })
-              }
-            />
+
+            <div className="space-y-2">
+              <Label htmlFor="registration_method">注册方式</Label>
+              <Select
+                value={formData.registration_method}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, registration_method: value })
+                }
+              >
+                <SelectTrigger id="registration_method">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="password">仅账号密码</SelectItem>
+                  <SelectItem value="sms">仅短信验证码</SelectItem>
+                  <SelectItem value="both">两者都支持</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                需开启"开放注册"才生效
+              </p>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -186,7 +246,7 @@ export default function SystemInfoTab({ config, onUpdate }) {
       <Card>
         <CardHeader>
           <CardTitle>登录页布局</CardTitle>
-          <CardDescription>选择登录页的展示布局，左右布局时登录区域占 2/3，图片占 1/3</CardDescription>
+          <CardDescription>选择登录页的展示布局（左右布局时登录区域占 2/3，图片占 1/3）</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-3 gap-4">
