@@ -1,4 +1,15 @@
 const path = require('path');
+const fs = require('fs');
+
+// 根据 NODE_ENV 加载对应的环境文件
+const env = process.env.NODE_ENV || 'development';
+const envFile = env === 'production' ? '.env.production' : '.env.local';
+
+if (fs.existsSync(envFile)) {
+  require('dotenv').config({ path: envFile });
+} else if (fs.existsSync('.env')) {
+  require('dotenv').config();
+}
 
 module.exports = {
   'config': path.resolve('src/config', 'database.js'),
