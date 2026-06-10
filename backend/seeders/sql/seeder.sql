@@ -2116,9 +2116,9 @@ VALUES
 ('82b6db22-4165-431b-a6a0-44daa44dadbe', '存储概览', 'chart', 'bar',
  'SELECT CASE WHEN mime_type LIKE ''image/%'' OR mime_type LIKE ''video/%'' OR mime_type LIKE ''audio/%'' THEN ''媒体'' WHEN mime_type LIKE ''%pdf%'' OR mime_type LIKE ''%word%'' OR mime_type LIKE ''%text%'' THEN ''文档'' ELSE ''其他'' END AS name, ROUND(SUM(size) / 1073741824.0, 2) AS value FROM owl_files GROUP BY 1',
  'name', 'value', 'GB', 8, true, now(), now()),
-('0071640c-9a40-4eec-8158-1852bcae2597', '操作统计', 'chart', 'bar',
- 'SELECT action AS name, COUNT(*) AS value FROM owl_operation_logs GROUP BY action ORDER BY value DESC LIMIT 6', 'name',
- 'value', '次', 9, true, now(), now()),
+('0071640c-9a40-4eec-8158-1852bcae2597', '部门用户分布', 'chart', 'bar',
+ 'SELECT d.name AS name, COUNT(u.id) AS value FROM owl_departments d LEFT JOIN owl_users u ON d.id = u.department_id WHERE d.id IS NOT NULL GROUP BY d.name ORDER BY value DESC LIMIT 6', 'name',
+ 'value', '人', 9, true, now(), now()),
 ('77a0bb2a-42f0-4694-998d-532419a1ffc8', '在线用户趋势', 'chart', 'area',
  'SELECT TO_CHAR(DATE_TRUNC(''hour'', last_login_at), ''HH24:MI'') AS time, COUNT(*) AS "在线用户" FROM owl_users WHERE last_login_at >= NOW() - INTERVAL ''12 hours'' GROUP BY DATE_TRUNC(''hour'', last_login_at) ORDER BY DATE_TRUNC(''hour'', last_login_at)',
  'time', '在线用户', NULL, 10, true, now(), now()),
@@ -2191,12 +2191,17 @@ VALUES ('b8c9d0e1-f2a3-4b4c-5d6e-7f8a9b0c1d2e', '5bbddbca-0ace-4641-8a5b-8882a64
 
 
 -- ============================================
--- 超级管理员绑定数据访问管理菜单
+-- 超级管理员绑定数据访问管理菜单和概览配置菜单
 -- ============================================
 
 INSERT INTO public."owl_role_menus" ("id", "role_id", "menu_id", "created_at")
 VALUES ('c5d6e7f8-a9b0-4c1d-2e3f-4a5b6c7d8e9f', '5bbddbca-0ace-4641-8a5b-8882a648ca49',
         '7f3e9a2b-4c1d-4e8f-9b5a-6d2c8e1f0a3b', now());
+
+-- 超级管理员绑定概览配置菜单
+INSERT INTO public."owl_role_menus" ("id", "role_id", "menu_id", "created_at")
+VALUES ('a1b2c3d4-e5f6-7890-abcd-ef1234567890', '5bbddbca-0ace-4641-8a5b-8882a648ca49',
+        '3e2aa45a-e1e3-4708-934c-f9f5d9681fd1', now());
 
 
 -- ============================================

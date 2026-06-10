@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useMemo } from 'react'
 import * as echarts from 'echarts'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useTheme } from 'next-themes'
@@ -34,7 +34,7 @@ const getTailwindColor = (variable) => {
  * 使用 ECharts 图表库，支持多种图表类型
  * Modes: 'line', 'bar', 'area', 'pie'
  */
-export default function DashboardCard({
+function DashboardCard({
   title,
   data,
   mode = 'line',
@@ -46,6 +46,12 @@ export default function DashboardCard({
   const { theme } = useTheme()
   const chartRef = useRef(null)
   const chartInstance = useRef(null)
+
+  // 序列化数据为字符串，用于依赖比较
+  const dataString = useMemo(() => {
+    if (!data || data.length === 0) return ''
+    return JSON.stringify(data)
+  }, [data])
 
   useEffect(() => {
     if (!data || data.length === 0 || !chartRef.current) return
@@ -189,6 +195,9 @@ export default function DashboardCard({
               borderRadius: [8, 8, 0, 0],
               color: lineColor,
             },
+            emphasis: {
+              disabled: true,
+            },
           },
         ],
       }
@@ -239,7 +248,7 @@ export default function DashboardCard({
         chartInstance.current = null
       }
     }
-  }, [data, mode, dataKey, xKey, theme])
+  }, [dataString, mode, dataKey, xKey, theme])
 
   // 处理窗口大小变化
   useEffect(() => {
@@ -284,3 +293,5 @@ export default function DashboardCard({
     </Card>
   )
 }
+
+export default DashboardCard

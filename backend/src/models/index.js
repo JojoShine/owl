@@ -45,7 +45,6 @@ db.Folder = require('./system/Folder')(sequelize, Sequelize.DataTypes);
 db.File = require('./system/File')(sequelize, Sequelize.DataTypes);
 db.FileShare = require('./system/FileShare')(sequelize, Sequelize.DataTypes);
 db.FilePermission = require('./system/FilePermission')(sequelize, Sequelize.DataTypes);
-db.Attachment = require('./system/Attachment')(sequelize, Sequelize.DataTypes);
 db.Dictionary = require('./system/Dictionary')(sequelize, Sequelize.DataTypes);
 db.ApiInterface = require('./system/ApiInterface')(sequelize, Sequelize.DataTypes);
 db.ApiKey = require('./system/ApiKey')(sequelize, Sequelize.DataTypes);

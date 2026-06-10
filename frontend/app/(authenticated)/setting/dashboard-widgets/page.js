@@ -66,6 +66,7 @@ export default function DashboardWidgetsPage() {
   const [sqlQuery, setSqlQuery] = useState('');
   const [enabled, setEnabled] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState(null);
   const [helpOpen, setHelpOpen] = useState(false);
 
