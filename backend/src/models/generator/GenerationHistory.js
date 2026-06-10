@@ -46,11 +46,23 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: true,
       comment: '操作人',
     },
+    created_by: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      comment: '创建者ID',
+    },
+    updated_by: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      comment: '最后更新者ID',
+    },
+    deleted_by: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      comment: '删除者ID（用于软删除）',
+    },
   }, {
     tableName: 'owl_generation_history',
-    timestamps: true,
-    underscored: true,
-    updatedAt: false, // 历史记录不需要 updated_at
   });
 
   GenerationHistory.associate = (models) => {

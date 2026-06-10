@@ -9,7 +9,8 @@ CREATE TABLE owl_sensitive_fields (
     description character varying(255),
     is_active boolean NOT NULL DEFAULT true,
     created_at timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP
+    updated_at timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted_at timestamp with time zone
 );
 
 COMMENT ON TABLE owl_sensitive_fields IS '敏感字段配置表';
@@ -23,6 +24,7 @@ COMMENT ON COLUMN owl_sensitive_fields.description IS '字段描述';
 COMMENT ON COLUMN owl_sensitive_fields.is_active IS '是否启用';
 COMMENT ON COLUMN owl_sensitive_fields.created_at IS '创建时间';
 COMMENT ON COLUMN owl_sensitive_fields.updated_at IS '更新时间';
+COMMENT ON COLUMN owl_sensitive_fields.deleted_at IS '软删除时间';
 
 DROP INDEX IF EXISTS idx_owl_sensitive_fields_is_active CASCADE;
 DROP INDEX IF EXISTS idx_owl_sensitive_fields_table_name CASCADE;

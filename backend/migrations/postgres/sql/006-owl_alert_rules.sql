@@ -10,6 +10,7 @@ CREATE TABLE owl_alert_rules (
     enabled boolean DEFAULT true,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    deleted_at timestamp with time zone,
     metric_name character varying(50) NOT NULL,
     level character varying(20) DEFAULT 'warning'::character varying,
     alert_enabled boolean NOT NULL DEFAULT false,
@@ -29,6 +30,7 @@ COMMENT ON COLUMN owl_alert_rules.duration IS '持续时间（秒）';
 COMMENT ON COLUMN owl_alert_rules.enabled IS '是否启用';
 COMMENT ON COLUMN owl_alert_rules.created_at IS '创建时间';
 COMMENT ON COLUMN owl_alert_rules.updated_at IS '更新时间';
+COMMENT ON COLUMN owl_alert_rules.deleted_at IS '软删除时间';
 COMMENT ON COLUMN owl_alert_rules.metric_name IS '监控指标名称';
 COMMENT ON COLUMN owl_alert_rules.level IS '告警级别：info, warning, error, critical';
 COMMENT ON COLUMN owl_alert_rules.alert_enabled IS '是否启用邮件告警';

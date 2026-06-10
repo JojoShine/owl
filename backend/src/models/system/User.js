@@ -57,11 +57,29 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: true,
       comment: '所属部门ID',
     },
+    created_by: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      comment: '创建者ID',
+    },
+    updated_by: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      comment: '最后更新者ID',
+    },
+    deleted_by: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      comment: '删除者ID（用于软删除）',
+    },
+    access_level: {
+      type: DataTypes.STRING(50),
+      defaultValue: 'SELF',
+      allowNull: false,
+      comment: '数据访问权限级别：ALL-所有数据，DEPARTMENT-本部门，DEPARTMENT_CHILDREN-本部门及下级，SELF-本人',
+    },
   }, {
     tableName: 'owl_users',
-    timestamps: true,
-    paranoid: true, // 软删除
-    underscored: true, // 自动将createdAt转为created_at
     hooks: {
       beforeCreate: async (user) => {
         if (user.password) {

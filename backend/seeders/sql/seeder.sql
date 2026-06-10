@@ -318,7 +318,7 @@ VALUES ('88feb135-7e32-4950-ad65-d6194347d08c', 'manager', 'manager@example.com'
 INSERT INTO public."owl_users" ("id", "username", "email", "password", "real_name", "phone", "avatar", "status",
                                 "last_login_at", "last_login_ip", "created_at", "updated_at", "deleted_at",
                                 "department_id")
-VALUES ('89093b76-8a32-426c-b5e5-5ca34ec136b9', 'ceshi', '1135059331@qq.com',
+VALUES ('89093b76-8a32-426c-b5e5-5ca34ec136b9', 'user', '1135059331@qq.com',
         '$2a$10$KqZQorlS8AFULntBYAyOyexNIxP4XiyOy4lwkgXZ77/kfEuaK9X8W', '普通用户', '13800138002', NULL, 'active',
         '"2025-11-18T08:27:20.197Z"', NULL, '"2025-11-18T08:26:43.790Z"', '"2025-11-18T08:32:02.697Z"', NULL, NULL);
 INSERT INTO public."owl_users" ("id", "username", "email", "password", "real_name", "phone", "avatar", "status",

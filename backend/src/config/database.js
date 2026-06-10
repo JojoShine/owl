@@ -6,12 +6,12 @@ const { databaseAccessLogger } = require('./logger');
 const pgLogging = (sql, timing) => {
   // 开发环境记录所有SQL，生产环境只记录慢查询（超过100ms）
   const shouldLog = process.env.NODE_ENV === 'development' || (typeof timing === 'number' && timing > 100);
-  
+
   if (shouldLog && sql) {
     try {
       // 只处理数字类型的 timing
       const timingValue = typeof timing === 'number' ? `${timing}ms` : 'N/A';
-      
+
       databaseAccessLogger.info(JSON.stringify({
         type: 'postgresql',
         action: 'query',
@@ -25,7 +25,20 @@ const pgLogging = (sql, timing) => {
   }
 };
 
+// Sequelize 全局配置
+// 所有 Model 都会继承这些配置
+const globalSequelizeConfig = {
+  timestamps: true,        // 自动添加 created_at, updated_at
+  paranoid: true,          // 自动添加 deleted_at，启用逻辑删除
+  underscored: true,       // 自动转换为蛇形命名（camelCase -> snake_case）
+  charset: 'utf8mb4',      // 支持 emoji 和其他 Unicode 字符
+  collate: 'utf8mb4_unicode_ci',
+};
+
 module.exports = {
+  // 全局 Sequelize 配置（导出供 models/index.js 使用）
+  globalSequelizeConfig,
+
   development: {
     username: process.env.DB_USER || 'postgres',
     password: process.env.DB_PASSWORD || 'postgres',

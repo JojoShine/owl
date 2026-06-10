@@ -15,6 +15,7 @@ CREATE TABLE owl_system_configs (
     created_by uuid,
     created_at timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted_at timestamp with time zone,
     login_layout character varying(20) NOT NULL DEFAULT 'center'::character varying,
     login_method character varying(10) DEFAULT 'both'::character varying,
     registration_method character varying(10) DEFAULT 'both'::character varying
@@ -36,6 +37,7 @@ COMMENT ON COLUMN owl_system_configs.primary_color IS '主题色';
 COMMENT ON COLUMN owl_system_configs.created_by IS '创建者ID';
 COMMENT ON COLUMN owl_system_configs.created_at IS '创建时间';
 COMMENT ON COLUMN owl_system_configs.updated_at IS '更新时间';
+COMMENT ON COLUMN owl_system_configs.deleted_at IS '软删除时间';
 COMMENT ON COLUMN owl_system_configs.login_layout IS '登录页面布局方式：center居中|left-image左侧图片|right-image右侧图片';
 COMMENT ON COLUMN owl_system_configs.login_method IS '登录方式：password账密|sms短信|both两者都支持';
 COMMENT ON COLUMN owl_system_configs.registration_method IS '注册方式：password账密|sms短信|both两者都支持';

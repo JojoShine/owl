@@ -14,6 +14,7 @@ CREATE TABLE owl_menus (
     permission_code character varying(50),
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    deleted_at timestamp with time zone,
     menu_type character varying(20) DEFAULT 'business'::character varying
 );
 
@@ -32,6 +33,7 @@ COMMENT ON COLUMN owl_menus.status IS '菜单状态：active-启用，inactive-�
 COMMENT ON COLUMN owl_menus.permission_code IS '关联的权限代码';
 COMMENT ON COLUMN owl_menus.created_at IS '创建时间';
 COMMENT ON COLUMN owl_menus.updated_at IS '更新时间';
+COMMENT ON COLUMN owl_menus.deleted_at IS '软删除时间';
 COMMENT ON COLUMN owl_menus.menu_type IS '菜单类型：business-业务菜单（上方），system-系统菜单（下方，分割线下）';
 
 DROP INDEX IF EXISTS idx_owl_menus_parent_id CASCADE;

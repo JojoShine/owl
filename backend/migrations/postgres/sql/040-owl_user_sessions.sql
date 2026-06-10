@@ -11,7 +11,8 @@ CREATE TABLE owl_user_sessions (
     kicked_at timestamp with time zone,
     status enum_owl_user_sessions_status DEFAULT 'active'::enum_owl_user_sessions_status,
     created_at timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP
+    updated_at timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted_at timestamp with time zone
 );
 
 COMMENT ON TABLE owl_user_sessions IS '用户会话表 - 用于单设备登录控制';
@@ -27,6 +28,7 @@ COMMENT ON COLUMN owl_user_sessions.kicked_at IS '被踢出时间';
 COMMENT ON COLUMN owl_user_sessions.status IS '会话状态：active-活跃，kicked-已踢出，expired-已过期';
 COMMENT ON COLUMN owl_user_sessions.created_at IS '创建时间';
 COMMENT ON COLUMN owl_user_sessions.updated_at IS '更新时间';
+COMMENT ON COLUMN owl_user_sessions.deleted_at IS '软删除时间';
 
 DROP INDEX IF EXISTS idx_owl_user_sessions_token CASCADE;
 DROP INDEX IF EXISTS idx_owl_user_sessions_user_id_status CASCADE;

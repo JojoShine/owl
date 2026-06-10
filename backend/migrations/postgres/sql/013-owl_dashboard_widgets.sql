@@ -13,7 +13,8 @@ CREATE TABLE owl_dashboard_widgets (
     enabled boolean NOT NULL DEFAULT true,
     created_by uuid,
     created_at timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP
+    updated_at timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted_at timestamp with time zone
 );
 
 COMMENT ON TABLE owl_dashboard_widgets IS '概览自定义 Widget 配置表';
@@ -22,3 +23,4 @@ COMMENT ON COLUMN owl_dashboard_widgets.widget_type IS 'metric=数字指标, cha
 COMMENT ON COLUMN owl_dashboard_widgets.chart_type IS 'line/bar/area/pie';
 COMMENT ON COLUMN owl_dashboard_widgets.x_key IS '图表 X 轴字段名';
 COMMENT ON COLUMN owl_dashboard_widgets.data_key IS '图表数值字段名';
+COMMENT ON COLUMN owl_dashboard_widgets.deleted_at IS '软删除时间';

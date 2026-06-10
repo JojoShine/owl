@@ -1,251 +1,115 @@
-# 数据库初始化系统优化 - Migration & Seeder
+# 数据访问权限系统 - 实现规划
 
----
+## 1. 概述
 
-## 📋 任务概述
+实现基于 `createdBy` 字段的细粒度数据访问权限控制（DAC - Data Access Control），支持四种权限级别：
+- **ALL** (所有数据)
+- **DEPARTMENT** (本部门)
+- **DEPARTMENT_CHILDREN** (本部门及下级)
+- **SELF** (本人数据)
 
-迁移到 **Sequelize Migration + Seeder** 系统，支持通过 npm 命令一键初始化数据库，为后续切换数据库类型留下控件。
+## 2. 简化架构设计
 
-## 🎯 需求分析
-
-### 当前问题
-1. schema.sql 是一个巨大的单文件，每次修改都要编辑整个文件
-2. seeder.sql 同样是大单文件，不易维护
-3. 无法通过 npm 命令一键初始化
-4. 表结构变更难以追踪和版本管理
-
-### 解决方案
-- 使用 Sequelize Migration 管理数据库结构（CREATE TABLE、修改字段等）
-- 使用 Sequelize Seeder 管理初始数据
-- 每次修改只需创建新的 migration 文件（增量变更）
-- 支持通过 npm 命令快速初始化/重置
-- 为未来切换数据库类型（如 MySQL、SQLite）提供控制权
-
-## 📝 实现步骤
-
-### ✅ 任务 1: 创建 Sequelize 基础配置
-- [ ] 创建 `.sequelizerc` 配置文件
-- [ ] 创建 `config/database.js`（数据库连接配置）
-- [ ] 初始化 `migrations/` 和 `seeders/` 目录
-- [ ] 验证 Sequelize CLI 可用
-
-### ✅ 任务 2: 创建初始 Migration
-- [ ] 将 schema.sql 转换为 `migrations/20250609000000-initial-schema.js`
-- [ ] 包含所有表结构、索引、触发器、Enum 类型
-- [ ] 确保执行顺序正确（处理依赖关系）
-
-### ✅ 任务 3: 创建 Seeders（按依赖顺序）
-- [ ] `seeders/20250609000001-seed-departments.js` (部门)
-- [ ] `seeders/20250609000002-seed-roles.js` (角色)
-- [ ] `seeders/20250609000003-seed-permissions.js` (权限)
-- [ ] `seeders/20250609000004-seed-menus.js` (菜单)
-- [ ] `seeders/20250609000005-seed-users.js` (用户)
-- [ ] `seeders/20250609000006-seed-role-permissions.js` (角色权限关联)
-- [ ] `seeders/20250609000007-seed-role-menus.js` (角色菜单关联)
-- [ ] `seeders/20250609000008-seed-other-data.js` (其他初始数据)
-
-### ✅ 任务 4: 更新 package.json scripts
-- [ ] 更新 `db:init` → `sequelize db:migrate && sequelize db:seed:all`
-- [ ] 添加 `db:reset` → 完整重置数据库
-- [ ] 添加 `db:undo` → 撤销最后一个 migration
-- [ ] 保留其他相关命令
-
-### ✅ 任务 5: 测试和验证
-- [ ] 测试 `npm run db:init` 命令
-- [ ] 测试 `npm run db:reset` 命令
-- [ ] 验证数据完整性
-- [ ] 检查外键关系
-
-### ✅ 任务 6: 文档和后续
-- [ ] 更新 README（新增使用 Migration 的说明）
-- [ ] 记录如何创建新的 migration（供后续使用）
-- [ ] 备份原 schema.sql 和 seeder.sql
-
-## 🔄 使用流程（优化后）
-
-### 初始化数据库
-```bash
-npm run db:init
+### 2.1 核心思路
+```
+权限检查流程：
+User Request 
+  ↓
+Route + Permission Check (RBAC - 是否有操作权限)
+  ↓
+Service Layer + Data Filter (DAC - 基于 createdBy 过滤数据)
+  ↓
+Database Query
+  ↓
+Response
 ```
 
-### 重置数据库
-```bash
-npm run db:reset
+### 2.2 关键设计
+- `created_by` 存储**用户ID**
+- `access_level` 绑定到**用户**（not 角色）
+- DAC 过滤只比对用户ID，与 RBAC 独立
+
+## 3. 数据库设计
+
+### 3.1 为所有表添加三个审计字段
+
+```sql
+created_by uuid,               -- 创建者ID
+updated_by uuid,               -- 最后更新者ID
+deleted_by uuid,               -- 删除者ID (用于软删除)
 ```
 
-### 添加新表或修改表结构
-```bash
-npx sequelize-cli migration:create --name add-new-table
-# 编辑生成的 migration 文件
-npm run db:migrate
+### 3.2 在 owl_users 表添加 access_level
+
+```sql
+ALTER TABLE owl_users ADD COLUMN access_level VARCHAR(50) DEFAULT 'SELF';
+-- 可选值：ALL, DEPARTMENT, DEPARTMENT_CHILDREN, SELF
 ```
 
-### 仅重新 seed 数据
-```bash
-npx sequelize-cli db:seed:undo:all
-npx sequelize-cli db:seed:all
+## 4. 实现步骤
+
+### Phase 1: 数据库结构优化 (Database) ⏳
+- [ ] 创建 migration：为所有表添加 created_by, updated_by, deleted_by 字段
+- [ ] 创建 migration：为 owl_users 表添加 access_level 字段
+- [ ] 为 created_by 字段添加索引
+- [ ] 更新 seeder.sql 初始化脚本，包含新字段
+
+### Phase 2: Sequelize 集成 (Model) ⏳
+- [ ] 创建 audit-fields.hook.js Hook 插件
+- [ ] 修改 models/index.js 应用 Hook 到所有模型
+- [ ] 在所有模型定义中添加字段定义
+
+### Phase 3: DAC 工具实现 (Utilities) ⏳
+- [ ] 创建 data-access-control.js 工具类
+- [ ] 创建 extract-user-data 中间件
+- [ ] 编写单元测试
+
+### Phase 4: Service 层改造 (Service) ⏳
+- [ ] 修改所有 Service 的 list/find/detail 方法，添加 DAC 过滤
+- [ ] 更新 create/update/destroy 方法，确保 userId 被正确传入
+- [ ] 更新相应的 Service 单元测试
+
+### Phase 5: 控制器和路由 (Controller) ⏳
+- [ ] 修改所有 Controller 使用 DAC
+- [ ] 应用 extract-user-data 中间件
+- [ ] 更新相应的 API 文档
+
+### Phase 6: 初始数据配置 (Seeder) ⏳
+- [ ] 更新 seeder.sql 为初始用户配置 access_level
+- [ ] 为初始数据填充 created_by（使用超级管理员 ID）
+- [ ] 测试 npm run db:init 是否成功
+
+## 5. 关键信息
+
+- 超级管理员 ID：`99e2337b-8676-4414-b71e-d5aff2008616` (username: admin)
+- Manager ID：`88feb135-7e32-4950-ad65-d6194347d08c` (username: manager)
+- User ID：`89093b76-8a32-426c-b5e5-5ca34ec136b9` (username: user)
+
+初始配置：
+```sql
+UPDATE owl_users SET access_level = 'ALL' WHERE username = 'admin';
+UPDATE owl_users SET access_level = 'DEPARTMENT_CHILDREN' WHERE username = 'manager';
+UPDATE owl_users SET access_level = 'SELF' WHERE username = 'user';
 ```
 
-## ✅ 完成标准
+## 实现进度
 
-- [x] Migration 和 Seeder 文件全部创建
-- [x] package.json 中有对应的 npm 命令
-- [x] npm run db:init 执行成功
-- [x] 数据库结构和数据完整
-- [x] 外键关系正确
-- [x] 为未来切换数据库类型提供了基础
+- [x] Phase 1: 数据库结构优化
+  - [x] Migration 添加三个 By 字段到所有表
+  - [x] Migration 为 owl_users 添加 access_level 字段
+  - [x] Seeder 初始化 created_by 和 access_level
+  - [x] 为 created_by 字段创建索引
 
----
+- [x] Phase 2: Sequelize 集成
+  - [x] 在 database.js 中统一配置 timestamps, paranoid, underscored
+  - [x] 为所有 Model 添加三个 By 字段定义
+  - [x] 为 User 模型添加 access_level 字段定义
+  - [x] 创建审计字段 Hook (audit-fields.hook.js)
+  - [x] 在 models/index.js 应用 Hook 和全局配置
+  - [x] 移除所有 Model 中重复的时间戳配置
+  - [x] 标准化所有 Model 表结构
 
-## 📊 实现进度
-
-- [x] 任务 1: Sequelize 配置 (100%)
-- [x] 任务 2: 初始 Migration (100%)
-- [x] 任务 3: Seeders (100%)
-- [x] 任务 4: package.json 更新 (100%)
-- [x] 任务 5: 测试验证 (100%)
-- [x] 任务 6: 文档完善 (100%)
-
----
-
-## ✅ 完成总结
-
-### 实现内容
-
-**核心改进：** 从单个巨大 SQL 文件迁移到细粒度的 Sequelize Migration & Seeder 系统
-
-#### 1. Migration 系统
-- ✅ 创建 `migrations/20250609000000-initial-schema.js` - 主 migration 文件
-- ✅ 创建 `migrations/postgres/sql/` 目录 - 细粒度 SQL 文件
-  - `001-enums.sql` - 所有 ENUM 类型定义
-  - `002-043-*.sql` - 42 个表的完整 DDL（含中文注释、索引）
-  - `999-triggers-and-functions.sql` - 触发器和函数定义
-
-#### 2. Seeder 系统
-- ✅ 创建 `seeders/20250609000001-seed-initial-data.js` - 主 seeder 文件
-- ✅ 创建 `seeders/sql/` 目录 - 初始数据 SQL 文件
-  - 22 个 SQL 文件，包含 615 条初始数据记录
-  - 按表依赖关系排序
-
-#### 3. NPM Scripts 更新
-```bash
-npm run db:migrate       # 执行所有 migration
-npm run db:seed         # 执行所有 seeder
-npm run db:init         # 一键初始化：migrate + seed
-npm run db:reset        # 完整重置：undo all + migrate + seed
-npm run db:seed:undo    # 撤销所有 seeder
-```
-
-#### 4. 辅助脚本
-- ✅ `scripts/export-migrations-from-db.js` - 从数据库导出 migration SQL
-- ✅ `scripts/export-seeders-from-db.js` - 从数据库导出初始数据 SQL
-
-### 核心优势
-
-1. **灵活的增量更新**
-   - 每次修改只需创建新的 migration 文件
-   - 无需编辑整个 schema.sql
-   - 历史记录清晰可追踪
-
-2. **完整的数据库描述**
-   - 所有表结构包含中文注释
-   - 所有字段包含中文注释
-   - 所有索引、约束完整保留
-
-3. **为未来扩展预留控制权**
-   - 架构支持多数据库（PostgreSQL/MySQL/SQLite）
-   - 只需添加 `migrations/mysql/sql/` 目录
-   - 通过配置文件切换数据库类型
-
-4. **运维友好**
-   - 一键初始化数据库：`npm run db:init`
-   - 自动处理外键依赖关系
-   - 幂等性设计（重复执行不出错）
-
-### 使用流程
-
-#### 初始化新数据库
-```bash
-npm run db:init
-```
-
-#### 添加新表或修改表结构
-```bash
-# 1. 从数据库导出新的 migration
-node scripts/export-migrations-from-db.js
-
-# 2. 提交新的 migration 文件到 git
-git add migrations/postgres/sql/
-
-# 3. 其他开发者执行
-npm run db:migrate
-```
-
-#### 重置数据库
-```bash
-npm run db:reset
-```
-
----
-
-## 📌 文件清单
-
-### Migration 系统
-```
-backend/
-├── migrations/
-│   ├── 20250609000000-initial-schema.js      # Migration 主文件
-│   ├── postgres/
-│   │   └── sql/
-│   │       ├── 001-enums.sql                 # 20 个 ENUM 类型
-│   │       ├── 002-043-*.sql                 # 42 个表的 DDL
-│   │       └── 999-triggers-and-functions.sql
-│   └── (旧 SQL 文件已备份在 sql/ 目录)
-```
-
-### Seeder 系统
-```
-backend/
-├── seeders/
-│   ├── 20250609000001-seed-initial-data.js   # Seeder 主文件
-│   └── sql/
-│       ├── 001-*.sql                         # 22 个 SQL 文件
-│       └── ...                               # 615 条初始数据
-```
-
-### 辅助脚本
-```
-backend/
-└── scripts/
-    ├── export-migrations-from-db.js          # 导出 migration
-    └── export-seeders-from-db.js             # 导出 seeder
-```
-
----
-
-## 🔄 后续工作
-
-### 短期
-1. 测试 `npm run db:init` 完整流程
-2. 测试 `npm run db:reset` 回滚流程
-3. 验证数据完整性和外键关系
-
-### 中期
-1. 为 MySQL 创建 migration 文件
-2. 为 SQLite 创建 migration 文件
-3. 配置自动化构建脚本支持多数据库选择
-
-### 长期
-1. 建立 migration 变更流程文档
-2. 设置 CI/CD 流程自动测试 migration
-3. 实施数据库版本管理策略
-
----
-
-## 📌 关键设计
-
-1. **版本管理**：每个 migration 文件都有时间戳前缀，git 自动追踪版本
-2. **团队协作**：新增表结构通过 git 提交新的 migration 文件
-3. **数据库切换**：Sequelize 支持多种数据库，只需改 database.js 配置
-4. **向后兼容**：原 schema.sql 和 seeder.sql 保留作为参考/备份
-5. **增量升级**：后续修改只需创建新 migration，无需编辑历史文件
+- [ ] Phase 3: DAC 工具实现
+- [ ] Phase 4: Service 层改造
+- [ ] Phase 5: 控制器和路由
+- [ ] Phase 6: 初始数据配置

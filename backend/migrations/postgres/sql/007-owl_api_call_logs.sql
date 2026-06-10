@@ -10,7 +10,9 @@ CREATE TABLE owl_api_call_logs (
     response_time integer,
     error_message character varying(500),
     ip_address character varying(45),
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    deleted_at timestamp with time zone
 );
 
 COMMENT ON TABLE owl_api_call_logs IS '接口调用日志表';
@@ -25,6 +27,8 @@ COMMENT ON COLUMN owl_api_call_logs.response_time IS '响应时间（毫秒）';
 COMMENT ON COLUMN owl_api_call_logs.error_message IS '错误信息';
 COMMENT ON COLUMN owl_api_call_logs.ip_address IS '请求来源IP';
 COMMENT ON COLUMN owl_api_call_logs.created_at IS '创建时间';
+COMMENT ON COLUMN owl_api_call_logs.updated_at IS '更新时间';
+COMMENT ON COLUMN owl_api_call_logs.deleted_at IS '软删除时间';
 
 DROP INDEX IF EXISTS idx_owl_api_call_logs_api_key_id CASCADE;
 DROP INDEX IF EXISTS idx_owl_api_call_logs_created_at CASCADE;

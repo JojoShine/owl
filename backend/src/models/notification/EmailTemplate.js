@@ -48,12 +48,23 @@ module.exports = (sequelize, DataTypes) => {
       defaultValue: 'GENERAL_NOTIFICATION',
       comment: '模版类型：API_MONITOR_ALERT, SYSTEM_ALERT, GENERAL_NOTIFICATION（已废弃，使用 tags 代替）',
     },
+    created_by: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      comment: '创建者ID',
+    },
+    updated_by: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      comment: '最后更新者ID',
+    },
+    deleted_by: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      comment: '删除者ID（用于软删除）',
+    },
   }, {
     tableName: 'owl_email_templates',
-    timestamps: true,
-    createdAt: 'created_at',
-    updatedAt: 'updated_at',
-    underscored: true,
   });
 
   EmailTemplate.associate = (models) => {

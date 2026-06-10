@@ -7,6 +7,8 @@ CREATE TABLE owl_alert_history (
     level character varying(20) DEFAULT 'warning'::character varying,
     status character varying(20) DEFAULT 'pending'::character varying,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    deleted_at timestamp with time zone,
     resolved_at timestamp with time zone
 );
 
@@ -24,16 +26,8 @@ DROP INDEX IF EXISTS idx_owl_alert_history_created_at CASCADE;
 DROP INDEX IF EXISTS idx_owl_alert_history_level CASCADE;
 DROP INDEX IF EXISTS idx_owl_alert_history_rule_id CASCADE;
 DROP INDEX IF EXISTS idx_owl_alert_history_status CASCADE;
-DROP INDEX IF EXISTS owl_alert_history_created_at CASCADE;
-DROP INDEX IF EXISTS owl_alert_history_level CASCADE;
-DROP INDEX IF EXISTS owl_alert_history_rule_id CASCADE;
-DROP INDEX IF EXISTS owl_alert_history_status CASCADE;
 
 CREATE INDEX idx_owl_alert_history_created_at ON owl_alert_history (created_at);
 CREATE INDEX idx_owl_alert_history_level ON owl_alert_history (level);
 CREATE INDEX idx_owl_alert_history_rule_id ON owl_alert_history (rule_id);
 CREATE INDEX idx_owl_alert_history_status ON owl_alert_history (status);
-CREATE INDEX owl_alert_history_created_at ON owl_alert_history (created_at);
-CREATE INDEX owl_alert_history_level ON owl_alert_history (level);
-CREATE INDEX owl_alert_history_rule_id ON owl_alert_history (rule_id);
-CREATE INDEX owl_alert_history_status ON owl_alert_history (status);

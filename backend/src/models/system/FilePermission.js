@@ -45,6 +45,21 @@ module.exports = (sequelize) => {
         allowNull: true,
         comment: '授权人ID',
       },
+      created_by: {
+        type: DataTypes.UUID,
+        allowNull: true,
+        comment: '创建者ID',
+      },
+      updated_by: {
+        type: DataTypes.UUID,
+        allowNull: true,
+        comment: '最后更新者ID',
+      },
+      deleted_by: {
+        type: DataTypes.UUID,
+        allowNull: true,
+        comment: '删除者ID（用于软删除）',
+      },
       created_at: {
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW,
@@ -58,10 +73,6 @@ module.exports = (sequelize) => {
     },
     {
       tableName: 'owl_file_permissions',
-      timestamps: true,
-      underscored: true,
-      createdAt: 'created_at',
-      updatedAt: 'updated_at',
     }
   );
 

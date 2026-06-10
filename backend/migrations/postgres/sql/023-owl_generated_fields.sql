@@ -21,6 +21,7 @@ CREATE TABLE owl_generated_fields (
     is_readonly boolean DEFAULT false,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    deleted_at timestamp with time zone,
     field_group character varying(50) DEFAULT 'default'::character varying,
     show_in_detail boolean DEFAULT true,
     detail_sort integer DEFAULT 0,
@@ -50,6 +51,7 @@ COMMENT ON COLUMN owl_generated_fields.form_rules IS '表单验证规则';
 COMMENT ON COLUMN owl_generated_fields.is_readonly IS '是否只读';
 COMMENT ON COLUMN owl_generated_fields.created_at IS '创建时间';
 COMMENT ON COLUMN owl_generated_fields.updated_at IS '更新时间';
+COMMENT ON COLUMN owl_generated_fields.deleted_at IS '软删除时间';
 COMMENT ON COLUMN owl_generated_fields.field_group IS '字段所属分组（信息簇）';
 COMMENT ON COLUMN owl_generated_fields.show_in_detail IS '是否在详情页显示';
 COMMENT ON COLUMN owl_generated_fields.detail_sort IS '详情页显示顺序（数字越小越靠前）';

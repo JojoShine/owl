@@ -15,6 +15,7 @@ CREATE TABLE owl_api_monitors (
     created_by uuid NOT NULL,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    deleted_at timestamp with time zone,
     alert_enabled boolean NOT NULL DEFAULT false,
     alert_template_id uuid,
     alert_recipients json,
@@ -38,6 +39,7 @@ COMMENT ON COLUMN owl_api_monitors.enabled IS '是否启用';
 COMMENT ON COLUMN owl_api_monitors.created_by IS '创建者ID';
 COMMENT ON COLUMN owl_api_monitors.created_at IS '创建时间';
 COMMENT ON COLUMN owl_api_monitors.updated_at IS '更新时间';
+COMMENT ON COLUMN owl_api_monitors.deleted_at IS '软删除时间';
 COMMENT ON COLUMN owl_api_monitors.alert_enabled IS '是否启用告警';
 COMMENT ON COLUMN owl_api_monitors.alert_template_id IS '告警邮件模版ID';
 COMMENT ON COLUMN owl_api_monitors.alert_recipients IS '告警接收人邮箱列表';
@@ -48,12 +50,8 @@ DROP INDEX IF EXISTS idx_owl_api_monitors_alert_enabled CASCADE;
 DROP INDEX IF EXISTS idx_owl_api_monitors_alert_template CASCADE;
 DROP INDEX IF EXISTS idx_owl_api_monitors_created_by CASCADE;
 DROP INDEX IF EXISTS idx_owl_api_monitors_enabled CASCADE;
-DROP INDEX IF EXISTS owl_api_monitors_created_by CASCADE;
-DROP INDEX IF EXISTS owl_api_monitors_enabled CASCADE;
 
 CREATE INDEX idx_owl_api_monitors_alert_enabled ON owl_api_monitors (alert_enabled);
 CREATE INDEX idx_owl_api_monitors_alert_template ON owl_api_monitors (alert_template_id);
 CREATE INDEX idx_owl_api_monitors_created_by ON owl_api_monitors (created_by);
 CREATE INDEX idx_owl_api_monitors_enabled ON owl_api_monitors (enabled);
-CREATE INDEX owl_api_monitors_created_by ON owl_api_monitors (created_by);
-CREATE INDEX owl_api_monitors_enabled ON owl_api_monitors (enabled);

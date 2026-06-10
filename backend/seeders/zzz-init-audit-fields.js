@@ -1,0 +1,199 @@
+'use strict';
+
+/**
+ * Seeder: 为初始数据添加审计字段
+ *
+ * 这个 seeder 为所有初始数据的 created_by 字段赋值（使用超级管理员 ID）
+ * 并为初始用户配置 access_level
+ */
+
+module.exports = {
+  up: async (queryInterface, Sequelize) => {
+    console.log('================================================================================');
+    console.log('📦 初始化审计字段 - Seeder');
+    console.log('================================================================================');
+    console.log('');
+
+    // 超级管理员 ID
+    const ADMIN_ID = '99e2337b-8676-4414-b71e-d5aff2008616';
+
+    try {
+      // 1. 为所有初始数据的 created_by 赋值（使用超级管理员）
+      console.log('⏳ 为所有表添加 created_by 字段（使用超级管理员 ID）...');
+
+      const tables = [
+        'owl_alert_history',
+        'owl_alert_rules',
+        'owl_api_call_logs',
+        'owl_api_interfaces',
+        'owl_api_keys',
+        'owl_api_monitor_logs',
+        'owl_api_monitors',
+        'owl_attachment',
+        'owl_dashboard_widgets',
+        'owl_departments',
+        'owl_dictionary',
+        'owl_email_logs',
+        'owl_email_templates',
+        'owl_file_permissions',
+        'owl_file_shares',
+        'owl_files',
+        'owl_folders',
+        'owl_generated_fields',
+        'owl_generated_modules',
+        'owl_generation_history',
+        'owl_menus',
+        'owl_monitor_metrics',
+        'owl_notification_settings',
+        'owl_notifications',
+        'owl_permissions',
+        'owl_role_menus',
+        'owl_role_permissions',
+        'owl_roles',
+        'owl_sensitive_fields',
+        'owl_system_configs',
+        'owl_third_party_api_keys',
+        'owl_user_roles',
+        'owl_user_sessions',
+        'owl_users',
+        'owl_watermark_config',
+      ];
+
+      for (const tableName of tables) {
+        try {
+          // 只更新 created_by 为 NULL 的记录
+          await queryInterface.sequelize.query(
+            `UPDATE public."${tableName}" SET created_by = :adminId WHERE created_by IS NULL`,
+            { replacements: { adminId: ADMIN_ID } }
+          );
+          console.log(`   ✅ 更新表: ${tableName}`);
+        } catch (error) {
+          // 忽略某些表可能不存在的错误
+          console.log(`   ⚠️  表处理: ${tableName} - ${error.message}`);
+        }
+      }
+
+      // 2. 为初始用户配置 access_level
+      console.log('');
+      console.log('⏳ 为用户配置 access_level...');
+
+      // 超级管理员：ALL
+      await queryInterface.sequelize.query(
+        `UPDATE public."owl_users" SET access_level = 'ALL' WHERE username = 'admin'`
+      );
+      console.log(`   ✅ admin: access_level = 'ALL'`);
+
+      // 管理员：DEPARTMENT_CHILDREN
+      await queryInterface.sequelize.query(
+        `UPDATE public."owl_users" SET access_level = 'DEPARTMENT_CHILDREN' WHERE username = 'manager'`
+      );
+      console.log(`   ✅ manager: access_level = 'DEPARTMENT_CHILDREN'`);
+
+      // 普通用户：SELF
+      await queryInterface.sequelize.query(
+        `UPDATE public."owl_users" SET access_level = 'SELF' WHERE username = 'user'`
+      );
+      console.log(`   ✅ user: access_level = 'SELF'`);
+
+      // 3. 为初始用户配置 created_by（使用各自的 ID）
+      console.log('');
+      console.log('⏳ 为初始用户配置 created_by...');
+
+      // 查询初始用户
+      const users = await queryInterface.sequelize.query(
+        `SELECT id, username FROM public."owl_users" LIMIT 3`
+      );
+
+      for (const user of users[0]) {
+        await queryInterface.sequelize.query(
+          `UPDATE public."owl_users" SET created_by = :userId WHERE id = :userId`,
+          { replacements: { userId: user.id } }
+        );
+        console.log(`   ✅ ${user.username}: created_by = '${user.id}'`);
+      }
+
+      console.log('');
+      console.log('================================================================================');
+      console.log('✅ 审计字段初始化完成！');
+      console.log('================================================================================');
+
+    } catch (error) {
+      console.error('❌ 错误:', error.message);
+      throw error;
+    }
+  },
+
+  down: async (queryInterface, Sequelize) => {
+    console.log('================================================================================');
+    console.log('🔄 回滚审计字段初始化 - Seeder');
+    console.log('================================================================================');
+    console.log('');
+
+    try {
+      // 回滚时将 created_by 设为 NULL
+      const tables = [
+        'owl_alert_history',
+        'owl_alert_rules',
+        'owl_api_call_logs',
+        'owl_api_interfaces',
+        'owl_api_keys',
+        'owl_api_monitor_logs',
+        'owl_api_monitors',
+        'owl_attachment',
+        'owl_dashboard_widgets',
+        'owl_departments',
+        'owl_dictionary',
+        'owl_email_logs',
+        'owl_email_templates',
+        'owl_file_permissions',
+        'owl_file_shares',
+        'owl_files',
+        'owl_folders',
+        'owl_generated_fields',
+        'owl_generated_modules',
+        'owl_generation_history',
+        'owl_menus',
+        'owl_monitor_metrics',
+        'owl_notification_settings',
+        'owl_notifications',
+        'owl_permissions',
+        'owl_role_menus',
+        'owl_role_permissions',
+        'owl_roles',
+        'owl_sensitive_fields',
+        'owl_system_configs',
+        'owl_third_party_api_keys',
+        'owl_user_roles',
+        'owl_user_sessions',
+        'owl_users',
+        'owl_watermark_config',
+      ];
+
+      for (const tableName of tables) {
+        try {
+          await queryInterface.sequelize.query(
+            `UPDATE public."${tableName}" SET created_by = NULL`
+          );
+          console.log(`   ✅ 回滚表: ${tableName}`);
+        } catch (error) {
+          console.log(`   ⚠️  表处理: ${tableName} - ${error.message}`);
+        }
+      }
+
+      // 重置 access_level 为默认值
+      await queryInterface.sequelize.query(
+        `UPDATE public."owl_users" SET access_level = 'SELF'`
+      );
+      console.log('   ✅ 重置所有用户 access_level 为 SELF');
+
+      console.log('');
+      console.log('================================================================================');
+      console.log('✅ 审计字段回滚完成！');
+      console.log('================================================================================');
+
+    } catch (error) {
+      console.error('❌ 错误:', error.message);
+      throw error;
+    }
+  }
+};

@@ -33,12 +33,23 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: true,
       comment: '额外的标签信息',
     },
+    created_by: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      comment: '创建者ID',
+    },
+    updated_by: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      comment: '最后更新者ID',
+    },
+    deleted_by: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      comment: '删除者ID（用于软删除）',
+    },
   }, {
     tableName: 'owl_monitor_metrics',
-    timestamps: false, // 只有 created_at，不需要 updated_at
-    underscored: true,
-    createdAt: 'created_at',
-    updatedAt: false,
     indexes: [
       {
         fields: ['metric_type'],

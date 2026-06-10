@@ -7,6 +7,7 @@ CREATE TABLE owl_folders (
     created_by uuid NOT NULL,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    deleted_at timestamp with time zone,
     inherit_permissions boolean DEFAULT true
 );
 
@@ -18,6 +19,7 @@ COMMENT ON COLUMN owl_folders.parent_id IS '父文件夹ID，顶级文件夹为N
 COMMENT ON COLUMN owl_folders.created_by IS '创建者ID';
 COMMENT ON COLUMN owl_folders.created_at IS '创建时间';
 COMMENT ON COLUMN owl_folders.updated_at IS '更新时间';
+COMMENT ON COLUMN owl_folders.deleted_at IS '软删除时间';
 COMMENT ON COLUMN owl_folders.inherit_permissions IS '是否继承父文件夹权限，默认为TRUE';
 
 DROP INDEX IF EXISTS idx_owl_folders_created_by CASCADE;

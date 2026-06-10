@@ -9,7 +9,9 @@ CREATE TABLE owl_notifications (
     link character varying(500),
     is_read boolean DEFAULT false,
     read_at timestamp with time zone,
-    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    deleted_at timestamp with time zone
 );
 
 COMMENT ON TABLE owl_notifications IS '站内通知表';
@@ -23,6 +25,8 @@ COMMENT ON COLUMN owl_notifications.link IS '点击跳转链接';
 COMMENT ON COLUMN owl_notifications.is_read IS '是否已读';
 COMMENT ON COLUMN owl_notifications.read_at IS '阅读时间';
 COMMENT ON COLUMN owl_notifications.created_at IS '创建时间';
+COMMENT ON COLUMN owl_notifications.updated_at IS '更新时间';
+COMMENT ON COLUMN owl_notifications.deleted_at IS '软删除时间';
 
 DROP INDEX IF EXISTS idx_owl_notifications_created_at CASCADE;
 DROP INDEX IF EXISTS idx_owl_notifications_is_read CASCADE;

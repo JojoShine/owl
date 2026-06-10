@@ -9,7 +9,8 @@ CREATE TABLE owl_permissions (
     description character varying(255),
     category character varying(50),
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
+    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    deleted_at timestamp with time zone
 );
 
 COMMENT ON TABLE owl_permissions IS '权限表';
@@ -23,6 +24,7 @@ COMMENT ON COLUMN owl_permissions.description IS '权限描述';
 COMMENT ON COLUMN owl_permissions.category IS '权限分类，如：用户管理、角色管理';
 COMMENT ON COLUMN owl_permissions.created_at IS '创建时间';
 COMMENT ON COLUMN owl_permissions.updated_at IS '更新时间';
+COMMENT ON COLUMN owl_permissions.deleted_at IS '软删除时间';
 
 DROP INDEX IF EXISTS idx_owl_permissions_code CASCADE;
 DROP INDEX IF EXISTS idx_owl_permissions_resource CASCADE;

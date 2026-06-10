@@ -10,7 +10,9 @@ CREATE TABLE owl_email_logs (
     error_message text,
     retry_count integer DEFAULT 0,
     sent_at timestamp with time zone,
-    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    deleted_at timestamp with time zone
 );
 
 COMMENT ON TABLE owl_email_logs IS '邮件发送记录表';
@@ -25,6 +27,8 @@ COMMENT ON COLUMN owl_email_logs.error_message IS '错误信息';
 COMMENT ON COLUMN owl_email_logs.retry_count IS '重试次数';
 COMMENT ON COLUMN owl_email_logs.sent_at IS '发送时间';
 COMMENT ON COLUMN owl_email_logs.created_at IS '创建时间';
+COMMENT ON COLUMN owl_email_logs.updated_at IS '更新时间';
+COMMENT ON COLUMN owl_email_logs.deleted_at IS '软删除时间';
 
 DROP INDEX IF EXISTS idx_owl_email_logs_created_at CASCADE;
 DROP INDEX IF EXISTS idx_owl_email_logs_status CASCADE;

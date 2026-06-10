@@ -9,6 +9,8 @@ CREATE TABLE owl_generation_history (
     files_generated json,
     created_by uuid,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    deleted_at timestamp with time zone,
     success boolean DEFAULT true,
     error_message text,
     operation_type character varying(20),
@@ -25,6 +27,8 @@ COMMENT ON COLUMN owl_generation_history.action IS '操作类型: create/update/
 COMMENT ON COLUMN owl_generation_history.files_generated IS '生成的文件列表';
 COMMENT ON COLUMN owl_generation_history.created_by IS '操作人';
 COMMENT ON COLUMN owl_generation_history.created_at IS '创建时间';
+COMMENT ON COLUMN owl_generation_history.updated_at IS '更新时间';
+COMMENT ON COLUMN owl_generation_history.deleted_at IS '软删除时间';
 COMMENT ON COLUMN owl_generation_history.success IS '是否成功';
 COMMENT ON COLUMN owl_generation_history.error_message IS '错误信息';
 COMMENT ON COLUMN owl_generation_history.operation_type IS '操作类型: create/update/delete';

@@ -36,12 +36,23 @@ module.exports = (sequelize, DataTypes) => {
       defaultValue: true,
       comment: '是否接收错误通知',
     },
+    created_by: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      comment: '创建者ID',
+    },
+    updated_by: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      comment: '最后更新者ID',
+    },
+    deleted_by: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      comment: '删除者ID（用于软删除）',
+    },
   }, {
     tableName: 'owl_notification_settings',
-    timestamps: true,
-    createdAt: 'created_at',
-    updatedAt: 'updated_at',
-    underscored: true,
   });
 
   NotificationSettings.associate = (models) => {

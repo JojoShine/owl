@@ -13,6 +13,7 @@ CREATE TABLE owl_watermark_config (
     masking_rules jsonb,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    deleted_at timestamp with time zone,
     created_by uuid
 );
 
@@ -30,6 +31,7 @@ COMMENT ON COLUMN owl_watermark_config.spacing IS '间距（50-300px）';
 COMMENT ON COLUMN owl_watermark_config.masking_rules IS '脱敏规则配置，格式: {fieldName: {type, hideCount|showCount}}';
 COMMENT ON COLUMN owl_watermark_config.created_at IS '创建时间';
 COMMENT ON COLUMN owl_watermark_config.updated_at IS '更新时间';
+COMMENT ON COLUMN owl_watermark_config.deleted_at IS '软删除时间';
 COMMENT ON COLUMN owl_watermark_config.created_by IS '创建者ID';
 
 DROP INDEX IF EXISTS idx_owl_watermark_config_enabled CASCADE;

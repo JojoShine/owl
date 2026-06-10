@@ -76,10 +76,23 @@ module.exports = (sequelize, DataTypes) => {
         max: 86400,
       },
     },
+    created_by: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      comment: '创建者ID',
+    },
+    updated_by: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      comment: '最后更新者ID',
+    },
+    deleted_by: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      comment: '删除者ID（用于软删除）',
+    },
   }, {
     tableName: 'owl_alert_rules',
-    timestamps: true,
-    underscored: true,
     indexes: [
       {
         fields: ['enabled'],

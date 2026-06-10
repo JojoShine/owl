@@ -48,10 +48,23 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       comment: '上传者ID',
     },
+    created_by: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      comment: '创建者ID',
+    },
+    updated_by: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      comment: '最后更新者ID',
+    },
+    deleted_by: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      comment: '删除者ID（用于软删除）',
+    },
   }, {
     tableName: 'owl_files',
-    timestamps: true,
-    underscored: true,
   });
 
   File.associate = (models) => {

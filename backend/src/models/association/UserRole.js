@@ -15,11 +15,23 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       comment: '角色ID',
     },
+    created_by: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      comment: '创建者ID',
+    },
+    updated_by: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      comment: '最后更新者ID',
+    },
+    deleted_by: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      comment: '删除者ID（用于软删除）',
+    },
   }, {
     tableName: 'owl_user_roles',
-    timestamps: true,
-    updatedAt: false, // 关联表不需要updated_at
-    underscored: true,
   });
 
   UserRole.associate = (models) => {

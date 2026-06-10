@@ -14,7 +14,8 @@ CREATE TABLE owl_attachment (
     is_deleted boolean DEFAULT false,
     deleted_at timestamp with time zone,
     deleted_by character varying(36),
-    created_at timestamp with time zone NOT NULL
+    created_at timestamp with time zone NOT NULL,
+    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON COLUMN owl_attachment.file_name IS '文件名';
@@ -29,3 +30,5 @@ COMMENT ON COLUMN owl_attachment.created_by IS '创建人ID';
 COMMENT ON COLUMN owl_attachment.is_deleted IS '是否删除';
 COMMENT ON COLUMN owl_attachment.deleted_at IS '删除时间';
 COMMENT ON COLUMN owl_attachment.deleted_by IS '删除人ID';
+COMMENT ON COLUMN owl_attachment.created_at IS '创建时间';
+COMMENT ON COLUMN owl_attachment.updated_at IS '更新时间';

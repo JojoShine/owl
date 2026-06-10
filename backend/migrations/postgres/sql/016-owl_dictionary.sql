@@ -11,7 +11,8 @@ CREATE TABLE owl_dictionary (
     is_active boolean DEFAULT true,
     remark text,
     created_at timestamp with time zone NOT NULL,
-    updated_at timestamp with time zone NOT NULL
+    updated_at timestamp with time zone NOT NULL,
+    deleted_at timestamp with time zone
 );
 
 COMMENT ON COLUMN owl_dictionary.dict_type IS '字典类型';
@@ -22,3 +23,6 @@ COMMENT ON COLUMN owl_dictionary.parent_code IS '父级代码';
 COMMENT ON COLUMN owl_dictionary.sort_order IS '排序';
 COMMENT ON COLUMN owl_dictionary.is_active IS '是否启用';
 COMMENT ON COLUMN owl_dictionary.remark IS '备注';
+COMMENT ON COLUMN owl_dictionary.created_at IS '创建时间';
+COMMENT ON COLUMN owl_dictionary.updated_at IS '更新时间';
+COMMENT ON COLUMN owl_dictionary.deleted_at IS '软删除时间';

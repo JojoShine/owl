@@ -28,6 +28,7 @@ const sequelize = new Sequelize(
     logging: loggingConfig,
     pool: dbConfig.pool,
     timezone: '+08:00', // 设置时区为中国标准时间（UTC+8）
+    define: config.globalSequelizeConfig, // 应用全局 Model 配置
   }
 );
 
@@ -93,6 +94,10 @@ Object.keys(db).forEach((modelName) => {
     db[modelName].associate(db);
   }
 });
+
+// 应用审计字段 Hook
+const auditHooksManager = require('../utils/hooks/audit-fields.hook')(sequelize);
+auditHooksManager.setupAllAuditHooks(db);
 
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;

@@ -12,6 +12,7 @@ CREATE TABLE owl_files (
     uploaded_by uuid NOT NULL,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    deleted_at timestamp with time zone,
     inherit_permissions boolean DEFAULT true
 );
 
@@ -28,6 +29,7 @@ COMMENT ON COLUMN owl_files.folder_id IS '所属文件夹ID，NULL表示根目�
 COMMENT ON COLUMN owl_files.uploaded_by IS '上传者ID';
 COMMENT ON COLUMN owl_files.created_at IS '创建时间';
 COMMENT ON COLUMN owl_files.updated_at IS '更新时间';
+COMMENT ON COLUMN owl_files.deleted_at IS '软删除时间';
 COMMENT ON COLUMN owl_files.inherit_permissions IS '是否继承所在文件夹权限，默认为TRUE';
 
 DROP INDEX IF EXISTS idx_owl_files_created_at CASCADE;

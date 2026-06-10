@@ -39,15 +39,6 @@ DROP INDEX IF EXISTS idx_owl_users_email CASCADE;
 DROP INDEX IF EXISTS idx_owl_users_phone CASCADE;
 DROP INDEX IF EXISTS idx_owl_users_status CASCADE;
 DROP INDEX IF EXISTS idx_owl_users_username CASCADE;
-DROP INDEX IF EXISTS owl_users_email_key1 CASCADE;
-DROP INDEX IF EXISTS owl_users_email_key2 CASCADE;
-DROP INDEX IF EXISTS owl_users_email_key3 CASCADE;
-DROP INDEX IF EXISTS owl_users_phone_key1 CASCADE;
-DROP INDEX IF EXISTS owl_users_phone_key2 CASCADE;
-DROP INDEX IF EXISTS owl_users_phone_key3 CASCADE;
-DROP INDEX IF EXISTS owl_users_username_key1 CASCADE;
-DROP INDEX IF EXISTS owl_users_username_key2 CASCADE;
-DROP INDEX IF EXISTS owl_users_username_key3 CASCADE;
 
 CREATE INDEX idx_owl_users_department_id ON owl_users (department_id);
 CREATE INDEX idx_owl_users_email ON owl_users (email);

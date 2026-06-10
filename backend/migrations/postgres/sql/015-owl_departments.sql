@@ -10,7 +10,8 @@ CREATE TABLE owl_departments (
     sort integer DEFAULT 0,
     status enum_owl_departments_status DEFAULT 'active'::enum_owl_departments_status,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
+    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    deleted_at timestamp with time zone
 );
 
 COMMENT ON TABLE owl_departments IS '部门表';
@@ -25,6 +26,7 @@ COMMENT ON COLUMN owl_departments.sort IS '排序值，数值越小越靠前';
 COMMENT ON COLUMN owl_departments.status IS '部门状态：active-启用，inactive-禁用';
 COMMENT ON COLUMN owl_departments.created_at IS '创建时间';
 COMMENT ON COLUMN owl_departments.updated_at IS '更新时间';
+COMMENT ON COLUMN owl_departments.deleted_at IS '软删除时间';
 
 DROP INDEX IF EXISTS idx_owl_departments_code CASCADE;
 DROP INDEX IF EXISTS idx_owl_departments_leader_id CASCADE;

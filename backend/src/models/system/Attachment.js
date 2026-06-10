@@ -64,12 +64,13 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: true,
       comment: '删除人ID',
     },
+    updated_by: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      comment: '最后更新者ID',
+    },
   }, {
     tableName: 'owl_attachment',
-    timestamps: true,
-    createdAt: 'created_at',
-    updatedAt: false,
-    underscored: true,
   });
 
   Attachment.associate = (models) => {

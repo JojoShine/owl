@@ -12,7 +12,8 @@ CREATE TABLE owl_third_party_api_keys (
     created_by uuid,
     remark text,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    deleted_at timestamp with time zone
 );
 
 DROP INDEX IF EXISTS idx_owl_third_party_api_keys_client_name CASCADE;

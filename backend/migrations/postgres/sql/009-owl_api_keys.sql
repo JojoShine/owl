@@ -11,7 +11,8 @@ CREATE TABLE owl_api_keys (
     last_used_at timestamp without time zone,
     created_by uuid NOT NULL,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
+    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    deleted_at timestamp with time zone
 );
 
 COMMENT ON TABLE owl_api_keys IS 'API密钥表';
@@ -27,6 +28,7 @@ COMMENT ON COLUMN owl_api_keys.last_used_at IS '最后使用时间';
 COMMENT ON COLUMN owl_api_keys.created_by IS '创建者ID';
 COMMENT ON COLUMN owl_api_keys.created_at IS '创建时间';
 COMMENT ON COLUMN owl_api_keys.updated_at IS '更新时间';
+COMMENT ON COLUMN owl_api_keys.deleted_at IS '软删除时间';
 
 DROP INDEX IF EXISTS idx_owl_api_keys_expires_at CASCADE;
 DROP INDEX IF EXISTS idx_owl_api_keys_interface_id CASCADE;

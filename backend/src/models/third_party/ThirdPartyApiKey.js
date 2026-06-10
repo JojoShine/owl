@@ -53,11 +53,19 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: true,
         comment: '备注信息',
       },
+      updated_by: {
+        type: DataTypes.UUID,
+        allowNull: true,
+        comment: '最后更新者ID',
+      },
+      deleted_by: {
+        type: DataTypes.UUID,
+        allowNull: true,
+        comment: '删除者ID（用于软删除）',
+      },
     },
     {
       tableName: 'owl_third_party_api_keys',
-      timestamps: true,
-      underscored: true,
       comment: '第三方系统API密钥表',
     }
   );

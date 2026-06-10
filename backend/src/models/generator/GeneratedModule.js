@@ -123,10 +123,18 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: true,
       comment: '创建人',
     },
+    updated_by: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      comment: '最后更新者ID',
+    },
+    deleted_by: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      comment: '删除者ID（用于软删除）',
+    },
   }, {
     tableName: 'owl_generated_modules',
-    timestamps: true,
-    underscored: true,
   });
 
   GeneratedModule.associate = (models) => {
