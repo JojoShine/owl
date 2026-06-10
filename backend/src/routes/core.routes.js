@@ -29,6 +29,7 @@ const apiBuilderKeysRoutes = require('../core/modules/api-builder/api-builder-ke
 const apiBuilderExecutorRoutes = require('../core/modules/api-builder/api-builder-executor.routes');
 const generatorRoutes = require('../core/modules/generator/generator.routes');
 const dataSecurityRoutes = require('../core/modules/data-security/data-security.routes');
+const thirdPartyKeysRoutes = require('../core/modules/third_party_keys/third-party-keys.routes');
 
 // 挂载核心路由
 router.use('/auth', authRoutes);
@@ -54,5 +55,6 @@ router.use('/api-builder', apiBuilderExecutorRoutes);
 router.use('/api-builder', apiBuilderRoutes);
 router.use('/generator', generatorRoutes);
 router.use('/data-security', dataSecurityRoutes);
+router.use('/third-party-keys', thirdPartyKeysRoutes);
 
 module.exports = router;

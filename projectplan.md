@@ -113,3 +113,41 @@ UPDATE owl_users SET access_level = 'SELF' WHERE username = 'user';
 - [ ] Phase 4: Service 层改造
 - [ ] Phase 5: 控制器和路由
 - [ ] Phase 6: 初始数据配置
+
+---
+
+# 第三方密钥模块重构计划
+
+## 目标
+将第三方密钥模块从 admin 模块重构为系统级别模块，以保持架构一致性。
+
+## 变更概览
+- **移动目录**：从 `backend/src/core/modules/admin/third_party_keys` 到 `backend/src/core/modules/third_party_keys`
+- **更新路由前缀**：从 `/api/admin/third-party-keys` 到 `/api/system/third-party-keys`
+- **代码逻辑**：保持不变
+
+## 变更项清单
+
+### 第一阶段：目录和文件移动
+- [ ] 创建新目录 `backend/src/core/modules/third_party_keys`
+- [ ] 复制所有文件到新位置
+- [ ] 删除旧目录
+- [ ] 删除空的 admin 目录
+
+### 第二阶段：路由注册更新
+- [ ] 在 `core.routes.js` 中添加第三方密钥模块路由（引入和挂载）
+- [ ] 更新 `third-party-keys.routes.js` 中的文档注释（从 `/api/admin` 改为 `/api/system`）
+
+### 第三阶段：验证和测试
+- [ ] 验证目录结构正确
+- [ ] 验证所有内部路径引用正确
+- [ ] 验证路由注册正确
+- [ ] 确保没有遗留引用
+
+## 相关文件位置
+- 源目录：`/Users/jojoshine/projects/owl_platform/backend/src/core/modules/admin/third_party_keys/`
+- 目标目录：`/Users/jojoshine/projects/owl_platform/backend/src/core/modules/third_party_keys/`
+- 路由注册文件：`/Users/jojoshine/projects/owl_platform/backend/src/routes/core.routes.js`
+
+## 审查部分
+[待完成后填写]

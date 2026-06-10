@@ -2145,6 +2145,13 @@ VALUES
 -- 数据访问管理相关菜单
 -- ============================================
 
+-- 第三方 API 密钥菜单（放在系统管理下）
+INSERT INTO public."owl_menus" ("id", "parent_id", "name", "path", "component", "icon", "type", "visible", "sort",
+                                "status", "permission_code", "menu_type", "created_at", "updated_at")
+VALUES ('5a6b7c8d-9e0f-1a2b-3c4d-5e6f7g8h9i0j', '0e734687-5eb8-472f-a138-ed35ce17556a', '第三方密钥',
+        '/setting/third-party-keys', 'ThirdPartyKeysPage', 'Key', 'menu', true, 87, 'active',
+        'third-party-keys:read', 'system', now(), now());
+
 -- 数据访问管理菜单（放在系统管理下）
 INSERT INTO public."owl_menus" ("id", "parent_id", "name", "path", "component", "icon", "type", "visible", "sort",
                                 "status", "permission_code", "menu_type", "created_at", "updated_at")
@@ -2190,23 +2197,20 @@ VALUES ('b8c9d0e1-f2a3-4b4c-5d6e-7f8a9b0c1d2e', '5bbddbca-0ace-4641-8a5b-8882a64
         '9d1ca541-1649-4444-b8f7-8f77a818667e', now());
 
 
--- ============================================
--- 超级管理员绑定数据访问管理菜单和概览配置菜单
--- ============================================
-
+-- 超级管理员绑定数据访问管理菜单
 INSERT INTO public."owl_role_menus" ("id", "role_id", "menu_id", "created_at")
 VALUES ('c5d6e7f8-a9b0-4c1d-2e3f-4a5b6c7d8e9f', '5bbddbca-0ace-4641-8a5b-8882a648ca49',
         '7f3e9a2b-4c1d-4e8f-9b5a-6d2c8e1f0a3b', now());
+
+-- 超级管理员绑定第三方密钥菜单
+INSERT INTO public."owl_role_menus" ("id", "role_id", "menu_id", "created_at")
+VALUES ('b2c3d4e5-f6a7-b8c9-d0e1-f2a3b4c5d6e7', '5bbddbca-0ace-4641-8a5b-8882a648ca49',
+        '5a6b7c8d-9e0f-1a2b-3c4d-5e6f7g8h9i0j', now());
 
 -- 超级管理员绑定概览配置菜单
 INSERT INTO public."owl_role_menus" ("id", "role_id", "menu_id", "created_at")
 VALUES ('a1b2c3d4-e5f6-7890-abcd-ef1234567890', '5bbddbca-0ace-4641-8a5b-8882a648ca49',
         '3e2aa45a-e1e3-4708-934c-f9f5d9681fd1', now());
-
-
--- ============================================
--- 系统配置初始化
--- ============================================
 
 INSERT INTO public."owl_system_configs" ("id", "logo_url", "login_bg_url", "company_name", "system_name", "show_tech_stack", "registration_enabled", "tech_stack_info", "enable_theme_switch", "theme_mode", "primary_color", "created_by", "created_at", "updated_at", "login_layout", "login_method", "registration_method")
 VALUES (1, NULL, NULL, 'Owl Platform', 'Owl Platform', true, true, NULL, true, 'auto', 'default', NULL, now(), now(), 'left-image', 'both', 'both');
