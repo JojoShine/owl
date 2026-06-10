@@ -11,7 +11,7 @@ const path = require('path');
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    const seederFile = path.join(__dirname, '..', 'sql', 'seeder.sql');
+    const seederFile = path.join(__dirname, 'sql', 'seeder.sql');
 
     console.log(`\n${'='.repeat(80)}`);
     console.log(`📦 初始数据导入 Seeder`);
