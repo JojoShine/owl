@@ -2148,7 +2148,7 @@ VALUES
 -- 第三方 API 密钥菜单（放在系统管理下）
 INSERT INTO public."owl_menus" ("id", "parent_id", "name", "path", "component", "icon", "type", "visible", "sort",
                                 "status", "permission_code", "menu_type", "created_at", "updated_at")
-VALUES ('5a6b7c8d-9e0f-1a2b-3c4d-5e6f7g8h9i0j', '0e734687-5eb8-472f-a138-ed35ce17556a', '第三方密钥',
+VALUES ('5a6b7c8d-9e0f-1a2b-3c4d-5e6f7a8b9c0d', '0e734687-5eb8-472f-a138-ed35ce17556a', '第三方密钥',
         '/setting/third-party-keys', 'ThirdPartyKeysPage', 'Key', 'menu', true, 87, 'active',
         'third-party-keys:read', 'system', now(), now());
 
@@ -2177,6 +2177,21 @@ VALUES ('a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d', '查看敏感字段', 'sensitive
        ('d4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a', '删除敏感字段', 'sensitive-field:delete', 'sensitive-field', 'delete',
         '删除敏感字段配置', '数据安全', now(), now());
 
+-- ============================================
+-- 第三方 API 密钥权限
+-- ============================================
+
+INSERT INTO public."owl_permissions" ("id", "name", "code", "resource", "action", "description", "category",
+                                      "created_at", "updated_at")
+VALUES ('e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b', '查看第三方密钥', 'third-party-keys:read', 'third-party-keys', 'read',
+        '查看第三方 API 密钥列表和详情', '系统配置', now(), now()),
+       ('f6a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c', '创建第三方密钥', 'third-party-keys:create', 'third-party-keys', 'create',
+        '创建新的第三方 API 密钥', '系统配置', now(), now()),
+       ('a7b8c9d0-e1f2-4a3b-4c5d-6e7f8a9b0c1d', '更新第三方密钥', 'third-party-keys:update', 'third-party-keys', 'update',
+        '更新第三方 API 密钥和状态', '系统配置', now(), now()),
+       ('b8c9d0e1-f2a3-4b4c-5d6e-7f8a9b0c1d2e', '删除第三方密钥', 'third-party-keys:delete', 'third-party-keys', 'delete',
+        '删除第三方 API 密钥', '系统配置', now(), now());
+
 
 -- ============================================
 -- 超级管理员绑定数据访问管理权限
@@ -2196,6 +2211,20 @@ VALUES ('b8c9d0e1-f2a3-4b4c-5d6e-7f8a9b0c1d2e', '5bbddbca-0ace-4641-8a5b-8882a64
        ('e8868351-e02b-4dea-8973-39a52ed0ebb5', '5bbddbca-0ace-4641-8a5b-8882a648ca49',
         '9d1ca541-1649-4444-b8f7-8f77a818667e', now());
 
+-- ============================================
+-- 超级管理员绑定第三方密钥权限
+-- ============================================
+
+INSERT INTO public."owl_role_permissions" ("id", "role_id", "permission_id", "created_at")
+VALUES ('c9d0e1f2-f3a4-4b5c-6d7e-8f9a0b1c2d3e', '5bbddbca-0ace-4641-8a5b-8882a648ca49',
+        'e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b', now()),
+       ('d0e1f2a3-a4b5-4c6d-7e8f-9a0b1c2d3e4f', '5bbddbca-0ace-4641-8a5b-8882a648ca49',
+        'f6a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c', now()),
+       ('e1f2a3b4-b5c6-4d7e-8f9a-0b1c2d3e4f5a', '5bbddbca-0ace-4641-8a5b-8882a648ca49',
+        'a7b8c9d0-e1f2-4a3b-4c5d-6e7f8a9b0c1d', now()),
+       ('f2a3b4c5-c6d7-4e8f-9a0b-1c2d3e4f5a6b', '5bbddbca-0ace-4641-8a5b-8882a648ca49',
+        'b8c9d0e1-f2a3-4b4c-5d6e-7f8a9b0c1d2e', now());
+
 
 -- 超级管理员绑定数据访问管理菜单
 INSERT INTO public."owl_role_menus" ("id", "role_id", "menu_id", "created_at")
@@ -2205,7 +2234,7 @@ VALUES ('c5d6e7f8-a9b0-4c1d-2e3f-4a5b6c7d8e9f', '5bbddbca-0ace-4641-8a5b-8882a64
 -- 超级管理员绑定第三方密钥菜单
 INSERT INTO public."owl_role_menus" ("id", "role_id", "menu_id", "created_at")
 VALUES ('b2c3d4e5-f6a7-b8c9-d0e1-f2a3b4c5d6e7', '5bbddbca-0ace-4641-8a5b-8882a648ca49',
-        '5a6b7c8d-9e0f-1a2b-3c4d-5e6f7g8h9i0j', now());
+        '5a6b7c8d-9e0f-1a2b-3c4d-5e6f7a8b9c0d', now());
 
 -- 超级管理员绑定概览配置菜单
 INSERT INTO public."owl_role_menus" ("id", "role_id", "menu_id", "created_at")
