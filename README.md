@@ -1,7 +1,11 @@
 # Owl Platform
 
 <div align="center">
-  <img src="./frontend/public/logo.png" alt="Owl Platform" width="120" height="120">
+  <picture>
+    <source media="(prefers-color-scheme: light)" srcset="./frontend/public/logo.png">
+    <source media="(prefers-color-scheme: dark)" srcset="./frontend/public/logo-dark.png">
+    <img alt="Owl Platform" src="./frontend/public/logo.png" width="120" height="120">
+  </picture>
   <h3>一个完整的前后端一体通用管理后台基础框架</h3>
   <p>快速构建企业级管理系统，开箱即用的权限、日志、文件、通知等核心能力</p>
 </div>
@@ -319,5 +323,5 @@ npm run dev  # 前后端同时启动
 ---
 
 <div align="center">
-  Made with ❤️ by JojoShine
+  Made with ❤️ by tbtparent
 </div>
