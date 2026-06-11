@@ -2,35 +2,6 @@ const db = require('../../../models');
 const { logger } = require('../../../config/logger');
 
 class DbReaderService {
-  /**
-   * 核心系统表列表（不允许通过代码生成器初始化）
-   */
-  CORE_TABLES = [
-    'owl_users',
-    'owl_roles',
-    'owl_permissions',
-    'owl_menus',
-    'owl_departments',
-    'owl_folders',
-    'owl_files',
-    'owl_file_shares',
-    'owl_monitor_metrics',
-    'owl_api_monitors',
-    'owl_api_monitor_logs',
-    'owl_alert_rules',
-    'owl_alert_histories',
-    'owl_notifications',
-    'owl_email_logs',
-    'owl_notification_settings',
-    'owl_email_templates',
-    'owl_generated_modules',
-    'owl_generated_fields',
-    'owl_generation_histories',
-    'owl_user_roles',
-    'owl_role_permissions',
-    'owl_role_menus',
-    'SequelizeMeta',
-  ];
 
   /**
    * 获取所有数据库表列表
@@ -45,7 +16,7 @@ class DbReaderService {
       let whereClause = `
         WHERE t.table_schema = 'public'
           AND t.table_type = 'BASE TABLE'
-          AND t.table_name NOT LIKE 'SequelizeMeta'
+          AND t.table_name NOT ILIKE 'SequelizeMeta'
       `;
 
       // 添加搜索条件
@@ -67,9 +38,6 @@ class DbReaderService {
       // 计算偏移量
       const offset = (page - 1) * limit;
 
-      // 构建核心表列表的SQL IN子句
-      const coreTablesStr = this.CORE_TABLES.map(t => `'${t}'`).join(', ');
-
       // 查询数据
       let dataQuery = `
         SELECT
@@ -82,14 +50,21 @@ class DbReaderService {
               AND c.table_schema = t.table_schema
           ) AS column_count,
           (
-            -- 表已经生成过配置，或者是核心系统表
+            -- 模块配置和生成历史都存在，或者是 owl_ 开头的系统表
             SELECT (
-              EXISTS(
-                SELECT 1
-                FROM owl_generated_modules gm
-                WHERE gm.table_name = t.table_name
+              (
+                EXISTS(
+                  SELECT 1
+                  FROM owl_generated_modules gm
+                  WHERE gm.table_name = t.table_name
+                )
+                AND EXISTS(
+                  SELECT 1
+                  FROM owl_generation_history gh
+                  WHERE gh.table_name = t.table_name
+                )
               )
-              OR t.table_name IN (${coreTablesStr})
+              OR t.table_name LIKE 'owl_%'
             )
           ) AS is_generated
         FROM information_schema.tables t
