@@ -49,8 +49,10 @@ class DbReaderService {
       `;
 
       // 添加搜索条件
+      const replacements = {};
       if (search) {
-        whereClause += ` AND t.table_name LIKE '%${search}%'`;
+        whereClause += ` AND t.table_name LIKE :search`;
+        replacements.search = `%${search}%`;
       }
 
       // 查询总数
@@ -59,7 +61,7 @@ class DbReaderService {
         FROM information_schema.tables t
         ${whereClause}
       `;
-      const [countResult] = await db.sequelize.query(countQuery);
+      const [countResult] = await db.sequelize.query(countQuery, { replacements });
       const total = parseInt(countResult[0].total);
 
       // 计算偏移量
@@ -96,7 +98,7 @@ class DbReaderService {
         LIMIT ${limit} OFFSET ${offset}
       `;
 
-      const [results] = await db.sequelize.query(dataQuery);
+      const [results] = await db.sequelize.query(dataQuery, { replacements });
 
       const data = results.map(row => ({
         tableName: row.table_name,
@@ -129,8 +131,8 @@ class DbReaderService {
     try {
       // 获取表注释
       const [tableInfo] = await db.sequelize.query(`
-        SELECT obj_description(('"public"."${tableName}"')::regclass) AS table_comment
-      `);
+        SELECT obj_description((quote_ident('public') || '.' || quote_ident(:tableName))::regclass) AS table_comment
+      `, { replacements: { tableName } });
 
       // 获取字段信息
       const columns = await this.getTableColumns(tableName);
@@ -175,12 +177,12 @@ class DbReaderService {
           c.is_nullable,
           c.column_default,
           c.udt_name,
-          col_description((c.table_schema || '.' || c.table_name)::regclass::oid, c.ordinal_position) AS column_comment
+          col_description((quote_ident(c.table_schema) || '.' || quote_ident(c.table_name))::regclass::oid, c.ordinal_position) AS column_comment
         FROM information_schema.columns c
-        WHERE c.table_name = '${tableName}'
+        WHERE c.table_name = :tableName
           AND c.table_schema = 'public'
         ORDER BY c.ordinal_position
-      `);
+      `, { replacements: { tableName } });
 
       return results.map(col => ({
         name: col.column_name,
@@ -215,10 +217,10 @@ class DbReaderService {
             ELSE false
           END AS is_unique
         FROM pg_indexes i
-        WHERE i.tablename = '${tableName}'
+        WHERE i.tablename = :tableName
           AND i.schemaname = 'public'
         ORDER BY i.indexname
-      `);
+      `, { replacements: { tableName } });
 
       return results.map(idx => ({
         name: idx.index_name,
@@ -244,10 +246,10 @@ class DbReaderService {
         JOIN information_schema.key_column_usage kcu
           ON tc.constraint_name = kcu.constraint_name
         WHERE tc.constraint_type = 'PRIMARY KEY'
-          AND tc.table_name = '${tableName}'
+          AND tc.table_name = :tableName
           AND tc.table_schema = 'public'
         ORDER BY kcu.ordinal_position
-      `);
+      `, { replacements: { tableName } });
 
       return results.map(row => row.column_name);
     } catch (error) {
@@ -278,9 +280,9 @@ class DbReaderService {
         JOIN information_schema.referential_constraints AS rc
           ON rc.constraint_name = tc.constraint_name
         WHERE tc.constraint_type = 'FOREIGN KEY'
-          AND tc.table_name = '${tableName}'
+          AND tc.table_name = :tableName
           AND tc.table_schema = 'public'
-      `);
+      `, { replacements: { tableName } });
 
       return results.map(fk => ({
         columnName: fk.column_name,
@@ -307,9 +309,9 @@ class DbReaderService {
           SELECT 1
           FROM information_schema.tables
           WHERE table_schema = 'public'
-            AND table_name = '${tableName}'
+            AND table_name = :tableName
         ) AS exists
-      `);
+      `, { replacements: { tableName } });
 
       return results[0].exists;
     } catch (error) {

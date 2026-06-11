@@ -4,7 +4,6 @@
  * Seeder: 为初始数据添加审计字段
  *
  * 这个 seeder 为所有初始数据的 created_by 字段赋值（使用超级管理员 ID）
- * 并为初始用户配置 access_level
  */
 
 module.exports = {
@@ -18,7 +17,7 @@ module.exports = {
     const ADMIN_ID = '99e2337b-8676-4414-b71e-d5aff2008616';
 
     try {
-      // 1. 为所有初始数据的 created_by 赋值（使用超级管理员）
+      // 为所有初始数据的 created_by 赋值（使用超级管理员）
       console.log('⏳ 为所有表添加 created_by 字段（使用超级管理员 ID）...');
 
       const tables = [
@@ -29,7 +28,6 @@ module.exports = {
         'owl_api_keys',
         'owl_api_monitor_logs',
         'owl_api_monitors',
-        'owl_attachment',
         'owl_dashboard_widgets',
         'owl_departments',
         'owl_dictionary',
@@ -53,6 +51,7 @@ module.exports = {
         'owl_sensitive_fields',
         'owl_system_configs',
         'owl_third_party_api_keys',
+        'owl_test_generate',
         'owl_user_roles',
         'owl_user_sessions',
         'owl_users',
@@ -61,45 +60,20 @@ module.exports = {
 
       for (const tableName of tables) {
         try {
-          // 只更新 created_by 为 NULL 的记录
           await queryInterface.sequelize.query(
             `UPDATE public."${tableName}" SET created_by = :adminId WHERE created_by IS NULL`,
             { replacements: { adminId: ADMIN_ID } }
           );
           console.log(`   ✅ 更新表: ${tableName}`);
         } catch (error) {
-          // 忽略某些表可能不存在的错误
           console.log(`   ⚠️  表处理: ${tableName} - ${error.message}`);
         }
       }
 
-      // 2. 为初始用户配置 access_level
-      console.log('');
-      console.log('⏳ 为用户配置 access_level...');
-
-      // 超级管理员：ALL
-      await queryInterface.sequelize.query(
-        `UPDATE public."owl_users" SET access_level = 'ALL' WHERE username = 'admin'`
-      );
-      console.log(`   ✅ admin: access_level = 'ALL'`);
-
-      // 管理员：DEPARTMENT_CHILDREN
-      await queryInterface.sequelize.query(
-        `UPDATE public."owl_users" SET access_level = 'DEPARTMENT_CHILDREN' WHERE username = 'manager'`
-      );
-      console.log(`   ✅ manager: access_level = 'DEPARTMENT_CHILDREN'`);
-
-      // 普通用户：SELF
-      await queryInterface.sequelize.query(
-        `UPDATE public."owl_users" SET access_level = 'SELF' WHERE username = 'user'`
-      );
-      console.log(`   ✅ user: access_level = 'SELF'`);
-
-      // 3. 为初始用户配置 created_by（使用各自的 ID）
+      // 为初始用户配置 created_by（使用各自的 ID）
       console.log('');
       console.log('⏳ 为初始用户配置 created_by...');
 
-      // 查询初始用户
       const users = await queryInterface.sequelize.query(
         `SELECT id, username FROM public."owl_users" LIMIT 3`
       );
@@ -139,7 +113,6 @@ module.exports = {
         'owl_api_keys',
         'owl_api_monitor_logs',
         'owl_api_monitors',
-        'owl_attachment',
         'owl_dashboard_widgets',
         'owl_departments',
         'owl_dictionary',
@@ -163,6 +136,7 @@ module.exports = {
         'owl_sensitive_fields',
         'owl_system_configs',
         'owl_third_party_api_keys',
+        'owl_test_generate',
         'owl_user_roles',
         'owl_user_sessions',
         'owl_users',
@@ -179,12 +153,6 @@ module.exports = {
           console.log(`   ⚠️  表处理: ${tableName} - ${error.message}`);
         }
       }
-
-      // 重置 access_level 为默认值
-      await queryInterface.sequelize.query(
-        `UPDATE public."owl_users" SET access_level = 'SELF'`
-      );
-      console.log('   ✅ 重置所有用户 access_level 为 SELF');
 
       console.log('');
       console.log('================================================================================');

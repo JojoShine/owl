@@ -16,6 +16,8 @@ CREATE TABLE owl_third_party_api_keys (
     deleted_at timestamp with time zone
 );
 
+COMMENT ON TABLE owl_third_party_api_keys IS '第三方API密钥表';
+
 DROP INDEX IF EXISTS idx_owl_third_party_api_keys_client_name CASCADE;
 DROP INDEX IF EXISTS idx_owl_third_party_api_keys_status CASCADE;
 

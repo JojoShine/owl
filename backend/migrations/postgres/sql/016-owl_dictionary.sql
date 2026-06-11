@@ -15,6 +15,7 @@ CREATE TABLE owl_dictionary (
     deleted_at timestamp with time zone
 );
 
+COMMENT ON TABLE owl_dictionary IS '数据字典表';
 COMMENT ON COLUMN owl_dictionary.dict_type IS '字典类型';
 COMMENT ON COLUMN owl_dictionary.dict_code IS '字典代码';
 COMMENT ON COLUMN owl_dictionary.dict_name IS '字典名称';

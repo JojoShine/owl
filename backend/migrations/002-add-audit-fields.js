@@ -21,7 +21,7 @@ const TABLES_WITH_AUDIT = [
   'owl_api_keys',
   'owl_api_monitor_logs',
   'owl_api_monitors',
-  'owl_attachment',
+
   'owl_dashboard_widgets',
   'owl_departments',
   'owl_dictionary',

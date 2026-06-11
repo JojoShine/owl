@@ -14,7 +14,8 @@ CREATE TABLE owl_users (
     created_at timestamp with time zone NOT NULL,
     updated_at timestamp with time zone NOT NULL,
     deleted_at timestamp with time zone,
-    department_id uuid
+    department_id uuid,
+    access_level character varying(30) DEFAULT 'SELF'
 );
 
 COMMENT ON TABLE owl_users IS '用户表';
@@ -33,6 +34,7 @@ COMMENT ON COLUMN owl_users.created_at IS '创建时间';
 COMMENT ON COLUMN owl_users.updated_at IS '更新时间';
 COMMENT ON COLUMN owl_users.deleted_at IS '软删除时间';
 COMMENT ON COLUMN owl_users.department_id IS '所属部门ID';
+COMMENT ON COLUMN owl_users.access_level IS '数据访问级别：ALL=全部，DEPARTMENT=本部门，DEPARTMENT_CHILDREN=本部门及下级，SELF=仅本人';
 
 DROP INDEX IF EXISTS idx_owl_users_department_id CASCADE;
 DROP INDEX IF EXISTS idx_owl_users_email CASCADE;
