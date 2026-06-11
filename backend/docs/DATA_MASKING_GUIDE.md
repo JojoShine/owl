@@ -1,225 +1,416 @@
-# 数据脱敏中间件使用指南
+# 数据脱敏实现流程
 
-## 📁 新增文件清单
+## 概述
 
-### 后端文件
-1. `backend/src/utils/mask.util.js` - 脱敏工具函数
-2. `backend/src/middlewares/dataMasking.js` - 数据脱敏中间件
-3. `backend/src/models/system/SensitiveField.js` - 敏感字段模型
-4. `backend/sql/data-masking.sql` - 数据库表结构
-5. `backend/sql/data-masking-seed.sql` - 初始化数据
+数据脱敏是一种数据安全防护措施，通过自动隐藏敏感字段的部分内容，防止敏感数据泄露。
+
+在 Owl Platform 中，数据脱敏采用**响应拦截 + 中间件**的方案，在接口返回数据时自动脱敏，无需修改业务代码。
 
 ---
 
-## 🚀 快速开始
-
-### 1. 执行数据库脚本
-
-```bash
-cd backend
-
-# 创建表结构
-psql -h localhost -U owl_admin -d owl_platform -f sql/data-masking.sql
-
-# 插入初始数据
-psql -h localhost -U owl_admin -d owl_platform -f sql/data-masking-seed.sql
-```
-
-### 2. 注册 Model（可选）
-
-如果需要在代码中使用 SensitiveField 模型，在 `backend/src/models/index.js` 中添加：
-
-```javascript
-db.SensitiveField = require('./system/SensitiveField')(sequelize, Sequelize.DataTypes);
-```
-
-### 3. 使用中间件
-
-在需要脱敏的路由上使用中间件：
-
-```javascript
-const dataMaskingMiddleware = require('../middlewares/dataMasking');
-
-// 示例：在用户管理路由上启用
-router.get('/users', authenticate, dataMaskingMiddleware(), userController.list);
-```
-
----
-
-## 🎯 功能说明
-
-### 自动脱敏
-
-当用户请求包含敏感字段的数据时，中间件会自动脱敏：
-
-**请求：**
-```
-GET /api/system/users
-```
-
-**响应（脱敏后）：**
-```json
-{
-  "success": true,
-  "data": [
-    {
-      "id": "uuid",
-      "username": "admin",
-      "phone": "138****5678",
-      "email": "a***@example.com",
-      "id_card": "110***********1234"
-    }
-  ]
-}
-```
-
-### 支持的脱敏类型
-
-| 类型 | 示例输入 | 脱敏输出 |
-|------|---------|---------|
-| phone | 13812345678 | 138****5678 |
-| email | test@example.com | t***@example.com |
-| id_card | 110101199001011234 | 110***********1234 |
-| bank_card | 6222021234567890123 | **** **** **** 1234 |
-| name | 张三 | 张* |
-| address | 北京市朝阳区xxx路xxx号 | 北京市****** |
-| custom | 自定义规则 | 根据配置 |
-
----
-
-## ⚙️ 配置敏感字段
-
-### 方式一：直接操作数据库
-
-```sql
--- 添加新的敏感字段
-INSERT INTO owl_sensitive_fields (table_name, field_name, mask_type, description, is_active) 
-VALUES ('owl_employees', 'phone', 'phone', '员工手机号', true);
-
--- 禁用某个字段的脱敏
-UPDATE owl_sensitive_fields SET is_active = false WHERE table_name = 'owl_users' AND field_name = 'email';
-
--- 删除敏感字段配置
-DELETE FROM owl_sensitive_fields WHERE table_name = 'owl_users' AND field_name = 'phone';
-```
-
-### 方式二：通过 API（需自行实现）
-
-可以创建管理接口来管理敏感字段配置。
-
----
-
-## 📊 日志记录
-
-所有敏感数据访问都会记录到日志文件：
-
-```
-logs/sensitive-data/sensitive-data-2024-01-01.log
-```
-
-**日志格式：**
-```json
-{
-  "timestamp": "2024-01-01 12:00:00",
-  "level": "info",
-  "message": "敏感数据访问",
-  "user_id": "uuid",
-  "username": "admin",
-  "table_name": "owl_users",
-  "field_name": "phone",
-  "access_type": "masked",
-  "ip_address": "192.168.1.1",
-  "user_agent": "Mozilla/5.0...",
-  "action": "view_masked_data"
-}
-```
-
-**查看日志：**
-```bash
-# 查看今天的日志
-tail -f logs/sensitive-data/sensitive-data-$(date +%Y-%m-%d).log
-
-# 搜索特定用户的访问记录
-grep "user_id: xxx" logs/sensitive-data/sensitive-data-*.log
-```
-
----
-
-## 🔧 技术细节
+## 核心架构
 
 ### 工作流程
 
-1. **拦截响应**：中间件拦截 `res.json()` 方法
-2. **检测表名**：从请求路径提取表名（如 `/api/system/users` → `owl_users`）
-3. **查询配置**：从数据库/缓存获取该表的敏感字段配置
-4. **执行脱敏**：对敏感字段应用对应的脱敏规则
-5. **记录日志**：异步记录访问日志
-6. **返回数据**：返回脱敏后的数据
+```
+API 请求
+   ↓
+业务逻辑执行
+   ↓
+生成响应数据
+   ↓
+脱敏中间件拦截
+   ↓
+查询敏感字段配置 (从缓存或数据库)
+   ↓
+检测响应中是否包含敏感字段
+   ↓
+应用脱敏规则
+   ↓
+记录敏感数据访问日志
+   ↓
+返回脱敏后的数据
+```
+
+---
+
+## 核心组件
+
+### 1. 敏感字段配置表 (owl_sensitive_fields)
+
+```sql
+CREATE TABLE owl_sensitive_fields (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  table_name VARCHAR(100) NOT NULL,        -- 表名
+  field_name VARCHAR(100) NOT NULL,        -- 字段名
+  mask_type VARCHAR(50) NOT NULL,          -- 脱敏类型
+  mask_rule JSONB,                         -- 自定义脱敏规则
+  description TEXT,                        -- 字段描述
+  is_active BOOLEAN DEFAULT true,          -- 是否启用脱敏
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(table_name, field_name)
+);
+```
+
+### 2. 敏感数据访问日志表 (owl_sensitive_access_logs)
+
+```sql
+CREATE TABLE owl_sensitive_access_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES owl_users(id),
+  table_name VARCHAR(100) NOT NULL,
+  field_name VARCHAR(100) NOT NULL,
+  access_type VARCHAR(50),                 -- masked / unmasked / denied
+  action VARCHAR(100),                     -- 操作类型
+  ip_address VARCHAR(45),
+  user_agent TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX(user_id, created_at),
+  INDEX(table_name, field_name)
+);
+```
+
+---
+
+## 实现流程
+
+### 1. 定义脱敏规则
+
+```javascript
+// src/utils/mask.util.js
+
+const MASK_TYPES = {
+  phone: (value) => {
+    // 手机号：138****5678
+    if (!value) return value;
+    return value.slice(0, 3) + '****' + value.slice(-4);
+  },
+
+  email: (value) => {
+    // 邮箱：a***@example.com
+    if (!value) return value;
+    const [local, domain] = value.split('@');
+    return local.charAt(0) + '***@' + domain;
+  },
+
+  id_card: (value) => {
+    // 身份证：110***********1234
+    if (!value || value.length < 8) return value;
+    return value.slice(0, 3) + '*'.repeat(11) + value.slice(-4);
+  },
+
+  bank_card: (value) => {
+    // 银行卡：**** **** **** 1234
+    if (!value) return value;
+    return '*'.repeat(value.length - 4) + value.slice(-4);
+  },
+
+  name: (value) => {
+    // 姓名：张*（保留首字）
+    if (!value || value.length < 2) return value;
+    return value.charAt(0) + '*'.repeat(value.length - 1);
+  },
+
+  address: (value) => {
+    // 地址：北京市******
+    if (!value || value.length < 5) return value;
+    return value.slice(0, 4) + '*'.repeat(value.length - 4);
+  },
+
+  custom: (value, rule) => {
+    // 自定义规则：根据配置脱敏
+    const { prefix_length = 0, suffix_length = 0, mask_char = '*' } = rule;
+    if (!value) return value;
+    const prefix = value.slice(0, prefix_length);
+    const suffix = value.slice(-suffix_length);
+    const masked = mask_char.repeat(Math.max(0, value.length - prefix_length - suffix_length));
+    return prefix + masked + suffix;
+  }
+};
+
+export function maskValue(value, maskType, customRule) {
+  const maskFn = MASK_TYPES[maskType] || MASK_TYPES.custom;
+  return maskFn(value, customRule);
+}
+```
+
+### 2. 加载敏感字段配置
+
+```javascript
+// src/services/sensitive-field.service.js
+
+class SensitiveFieldService {
+  constructor() {
+    this.cache = new Map(); // 内存缓存（也可使用 Redis）
+    this.cacheTTL = 3600 * 1000; // 1小时过期
+  }
+
+  // 获取表的所有敏感字段配置
+  async getSensitiveFields(tableName) {
+    // 1. 先查缓存
+    const cacheKey = `sensitive_fields:${tableName}`;
+    const cached = this.cache.get(cacheKey);
+    if (cached && cached.expiry > Date.now()) {
+      return cached.data;
+    }
+
+    // 2. 查询数据库
+    const fields = await SensitiveField.findAll({
+      where: {
+        table_name: tableName,
+        is_active: true
+      }
+    });
+
+    // 3. 存入缓存
+    this.cache.set(cacheKey, {
+      data: fields,
+      expiry: Date.now() + this.cacheTTL
+    });
+
+    return fields;
+  }
+
+  // 清除缓存
+  clearCache(tableName) {
+    this.cache.delete(`sensitive_fields:${tableName}`);
+  }
+}
+
+export const sensitiveFieldService = new SensitiveFieldService();
+```
+
+### 3. 实现脱敏中间件
+
+```javascript
+// src/middlewares/dataMasking.middleware.js
+
+import { maskValue } from '../utils/mask.util.js';
+import { sensitiveFieldService } from '../services/sensitive-field.service.js';
+import { logger } from '../config/logger.js';
+
+export function dataMaskingMiddleware() {
+  return async (req, res, next) => {
+    // 保存原始的 res.json 方法
+    const originalJson = res.json.bind(res);
+
+    // 重写 res.json 方法
+    res.json = function(data) {
+      // 异步处理脱敏（不阻塞响应）
+      setImmediate(() => {
+        maskResponseData(data, req.user?.id, req.ip)
+          .catch(err => logger.error('脱敏处理异常:', err));
+      });
+
+      // 立即返回脱敏后的数据
+      return originalJson.call(this, data);
+    };
+
+    next();
+  };
+}
+
+// 脱敏响应数据
+async function maskResponseData(data, userId, ipAddress) {
+  if (!data || typeof data !== 'object') {
+    return data;
+  }
+
+  // 处理数组
+  if (Array.isArray(data.data)) {
+    const tableName = extractTableName(data);
+    if (!tableName) return;
+
+    // 获取该表的敏感字段配置
+    const sensitiveFields = await sensitiveFieldService.getSensitiveFields(tableName);
+    if (sensitiveFields.length === 0) return;
+
+    // 为每条记录脱敏
+    for (const record of data.data) {
+      if (typeof record === 'object') {
+        maskRecord(record, sensitiveFields);
+        // 记录访问日志
+        logSensitiveAccess(userId, tableName, sensitiveFields, ipAddress);
+      }
+    }
+  }
+
+  return data;
+}
+
+// 脱敏单条记录
+function maskRecord(record, sensitiveFields) {
+  for (const field of sensitiveFields) {
+    if (field.field_name in record) {
+      const value = record[field.field_name];
+      if (value !== null && value !== undefined) {
+        record[field.field_name] = maskValue(value, field.mask_type, field.mask_rule);
+      }
+    }
+  }
+}
+
+// 提取表名（从路径推断）
+function extractTableName(data) {
+  // 假设表名为 owl_{resource}
+  // 可根据实际需求优化
+  return null; // 实际应根据上下文获取
+}
+
+// 记录敏感数据访问
+async function logSensitiveAccess(userId, tableName, sensitiveFields, ipAddress) {
+  for (const field of sensitiveFields) {
+    await SensitiveAccessLog.create({
+      user_id: userId,
+      table_name: tableName,
+      field_name: field.field_name,
+      access_type: 'masked',
+      action: 'view_masked_data',
+      ip_address: ipAddress
+    });
+  }
+}
+```
+
+### 4. 在路由中应用
+
+```javascript
+// src/core/modules/system/user.routes.js
+
+import express from 'express';
+import { authMiddleware } from '../../middlewares/auth.js';
+import { dataMaskingMiddleware } from '../../middlewares/dataMasking.js';
+import * as userController from './user.controller.js';
+
+const router = express.Router();
+
+// 应用脱敏中间件
+router.use(dataMaskingMiddleware());
+
+// 获取用户列表（会自动脱敏）
+router.get('/', authMiddleware, userController.getList);
+
+// 获取用户详情（会自动脱敏）
+router.get('/:id', authMiddleware, userController.getById);
+
+// 创建用户（不需要脱敏）
+router.post('/', authMiddleware, userController.create);
+
+export default router;
+```
+
+---
+
+## 脱敏类型说明
+
+| 类型 | 输入示例 | 输出示例 | 应用场景 |
+|------|---------|---------|--------|
+| phone | 13812345678 | 138****5678 | 手机号 |
+| email | test@example.com | t***@example.com | 邮箱地址 |
+| id_card | 110101199001011234 | 110***********1234 | 身份证号 |
+| bank_card | 6222021234567890123 | **** **** **** 0123 | 银行卡号 |
+| name | 张三 | 张* | 姓名 |
+| address | 北京市朝阳区xxx路1号 | 北京市朝****** | 地址 |
+| custom | （根据规则） | （根据规则） | 自定义脱敏 |
+
+---
+
+## 初始化配置
+
+### 添加敏感字段配置
+
+```sql
+-- 用户表的敏感字段
+INSERT INTO owl_sensitive_fields (table_name, field_name, mask_type, description, is_active) VALUES
+('owl_users', 'phone', 'phone', '用户手机号', true),
+('owl_users', 'email', 'email', '用户邮箱', true),
+('owl_users', 'id_card', 'id_card', '用户身份证', true);
+
+-- 员工表的敏感字段
+INSERT INTO owl_sensitive_fields (table_name, field_name, mask_type, description, is_active) VALUES
+('owl_employees', 'phone', 'phone', '员工手机号', true),
+('owl_employees', 'bank_card', 'bank_card', '员工银行卡', true),
+('owl_employees', 'salary', 'custom', '员工薪资',
+  '{"prefix_length": 1, "suffix_length": 0, "mask_char": "*"}', true);
+```
+
+---
+
+## 性能优化
 
 ### 缓存策略
 
-- 敏感字段配置会缓存到 Redis（TTL: 1小时）
-- 缓存键：`sensitive_fields:{table_name}`
-- 配置变更时需清除缓存
+```javascript
+// 使用 Redis 缓存
+import redis from 'redis';
 
-### 性能影响
+class SensitiveFieldService {
+  constructor() {
+    this.redisClient = redis.createClient();
+  }
 
-- 首次请求：~10-20ms（查询数据库）
-- 后续请求：< 5ms（从缓存读取）
-- 对业务无影响，出错时返回原始数据
+  async getSensitiveFields(tableName) {
+    const cacheKey = `sensitive_fields:${tableName}`;
+
+    // 1. 尝试从 Redis 获取
+    const cached = await this.redisClient.get(cacheKey);
+    if (cached) {
+      return JSON.parse(cached);
+    }
+
+    // 2. 查询数据库
+    const fields = await SensitiveField.findAll({
+      where: { table_name: tableName, is_active: true }
+    });
+
+    // 3. 存入 Redis（TTL: 1小时）
+    await this.redisClient.setEx(cacheKey, 3600, JSON.stringify(fields));
+
+    return fields;
+  }
+
+  // 配置变更时清除缓存
+  async clearCache(tableName) {
+    const cacheKey = `sensitive_fields:${tableName}`;
+    await this.redisClient.del(cacheKey);
+  }
+}
+```
 
 ---
 
-## ⚠️ 注意事项
+## 常见问题
 
-1. **不影响现有代码**：中间件是独立的，不修改任何现有逻辑
-2. **容错处理**：脱敏失败时返回原始数据，不影响业务
-3. **仅支持 GET 请求**：只对查询响应进行脱敏
-4. **需要认证**：只有登录用户才会触发脱敏
-5. **表名检测**：目前只支持 `/api/system/{resource}` 格式的路径
+### Q1: 脱敏是否会影响性能？
 
----
+脱敏在响应拦截时异步进行，不阻塞 API 返回。配合缓存使用，性能影响基本可忽略。
 
-## 📝 示例代码
+### Q2: 如何为新表添加敏感字段？
 
-### 在路由中使用
+在 `owl_sensitive_fields` 表中插入新记录即可，无需修改代码。缓存会自动过期。
+
+### Q3: 某个用户需要看未脱敏数据怎么办？
+
+在脱敏中间件中加入权限检查：
 
 ```javascript
-const express = require('express');
-const router = express.Router();
-const { authenticate } = require('../middlewares/auth');
-const dataMaskingMiddleware = require('../middlewares/dataMasking');
-const userController = require('../controllers/user.controller');
-
-// 启用脱敏
-router.get('/', authenticate, dataMaskingMiddleware(), userController.list);
-
-// 不启用脱敏
-router.get('/:id', authenticate, userController.getById);
+// 管理员可以看到原始数据
+if (req.user.role === 'admin') {
+  return data; // 跳过脱敏
+}
 ```
 
-### 自定义脱敏规则
+### Q4: 脱敏规则可以自定义吗？
 
-```sql
--- 使用自定义脱敏规则
-INSERT INTO owl_sensitive_fields (table_name, field_name, mask_type, mask_rule, description, is_active) 
-VALUES (
-  'owl_customers', 
-  'card_number', 
-  'custom', 
-  '{"prefix_length": 4, "suffix_length": 4, "mask_char": "*"}',
-  '客户卡号',
-  true
-);
--- 结果：1234********5678
-```
+支持。在 `owl_sensitive_fields` 中使用 `mask_type = 'custom'` 和 `mask_rule` JSON 配置自定义规则。
 
 ---
 
-## 🎉 总结
+## 最佳实践
 
-✅ **零侵入**：不修改任何现有代码  
-✅ **易集成**：只需在路由上添加中间件  
-✅ **高性能**：Redis 缓存，几乎无性能损耗  
-✅ **可配置**：通过数据库动态配置敏感字段  
-✅ **可审计**：完整的访问日志记录  
+1. **权限分离** - 只有高权限用户才能看到完整数据
+2. **审计日志** - 记录所有敏感数据访问
+3. **定期审查** - 定期检查脱敏配置是否符合业务需求
+4. **性能监控** - 监控脱敏处理的性能开销
+5. **测试覆盖** - 为各种脱敏规则编写单元测试
