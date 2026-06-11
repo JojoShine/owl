@@ -1268,7 +1268,7 @@ VALUES ('b0d4dcd0-5cc7-4a72-ad1f-1f6a779db1b9', '用户查询接口-测试', '�
   email,
   phone
 from
-  users
+  owl_users
 where
   status = :status
 limit
@@ -1278,16 +1278,6 @@ offset
         '[{"name":"status","type":"string","required":true,"description":""},{"name":"limit","type":"string","required":true,"description":""},{"name":"offset","type":"string","required":true,"description":""}]',
         'active', true, 1000, '99e2337b-8676-4414-b71e-d5aff2008616', '"2025-11-27T09:10:52.951Z"',
         '"2025-11-28T10:04:30.997Z"', '06870ba4-2d33-49a6-ac44-a880df470c5b');
-INSERT INTO public."owl_api_interfaces" ("id", "name", "description", "sql_query", "method", "endpoint", "version",
-                                         "parameters", "status", "require_auth", "rate_limit", "created_by",
-                                         "created_at", "updated_at", "api_key_id")
-VALUES ('bba45872-1655-4dff-9016-88410a746299', '测试添加', '', 'insert into
-  test_insert (name, age)
-values
-  (:name, :age)', 'POST', '/custom/test-insert', 1,
-        '[{"name":"name","type":"string","required":true,"description":""},{"name":"age","type":"string","required":true,"description":""}]',
-        'active', true, 1000, '99e2337b-8676-4414-b71e-d5aff2008616', '"2025-11-28T07:01:24.653Z"',
-        '"2025-11-28T08:59:46.171Z"', '06870ba4-2d33-49a6-ac44-a880df470c5b');
 
 
 -- api_monitors: Empty

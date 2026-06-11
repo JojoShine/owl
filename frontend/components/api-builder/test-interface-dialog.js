@@ -127,17 +127,19 @@ export default function TestInterfaceDialog({ open, onOpenChange, interface_ }) 
                     {(result?.rowCount || 0) > 5 && <span className="ml-2">（显示前5条）</span>}
                   </p>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    const rows = Array.isArray(result?.rows) ? result.rows : (Array.isArray(result) ? result : []);
-                    const displayData = rows.slice(0, 5);
-                    copyToClipboard(JSON.stringify(displayData, null, 2));
-                  }}
-                >
-                  <Copy className="h-4 w-4" />
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      const rows = Array.isArray(result?.rows) ? result.rows : (Array.isArray(result) ? result : []);
+                      const displayData = rows.slice(0, 5);
+                      copyToClipboard(JSON.stringify(displayData, null, 2));
+                    }}
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
               <pre className="p-3 rounded border overflow-y-auto text-sm text-gray-300 flex-1" style={{ backgroundColor: '#0f0f0f', maxHeight: '300px' }}>
                 {(() => {

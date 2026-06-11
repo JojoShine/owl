@@ -8,7 +8,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Copy, Lightbulb } from 'lucide-react';
+import { Copy, Lightbulb, Download } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { getFullApiUrl } from '@/lib/utils/api-url';
@@ -25,6 +25,100 @@ export default function ApiKeysDialog({ open, onOpenChange, interface_ }) {
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
     toast.success('已复制到剪贴板');
+  };
+
+  const handleDownloadDoc = () => {
+    const url = getFullApiUrl(interface_.endpoint);
+    const params = interface_.parameters || [];
+
+    // 生成参数表格
+    let paramTable = '';
+    if (params.length > 0) {
+      paramTable = '## 请求参数\n\n';
+      paramTable += '| 参数名 | 类型 | 是否必填 | 描述 |\n';
+      paramTable += '|--------|------|----------|------|\n';
+      paramTable += params.map(p =>
+        `| ${p.name} | ${p.type} | ${p.required ? '是' : '否'} | ${p.description || '-'} |`
+      ).join('\n');
+    } else {
+      paramTable = '## 请求参数\n\n无';
+    }
+
+    // 生成请求参数示例
+    let paramExample = '';
+    if (params.length > 0) {
+      const sampleParams = {};
+      params.forEach(param => {
+        sampleParams[param.name] = `example_${param.name}`;
+      });
+
+      paramExample = '\n\n## 请求参数示例\n\n';
+      if (interface_.method === 'GET') {
+        const queryString = Object.entries(sampleParams)
+          .map(([k, v]) => `${k}=${v}`)
+          .join('&');
+        paramExample += '```\n' + `${url}?${queryString}\n` + '```\n';
+      } else {
+        paramExample += '```json\n' + JSON.stringify(sampleParams, null, 2) + '\n' + '```\n';
+      }
+    }
+
+    // 生成认证说明
+    let authSection = '';
+    if (interface_.require_auth) {
+      authSection = '\n\n## 认证方式\n\n'
+        + '### 方式一：换取 JWT Token\n\n'
+        + '```bash\n'
+        + `curl -X POST ${apiBaseUrl}/auth/api-token \\\n`
+        + '  -H "Content-Type: application/json" \\\n'
+        + '  -d \'{\n'
+        + '    "app_id": "your-app-id",\n'
+        + '    "app_key": "your-app-key"\n'
+        + '  }\'\n'
+        + '```\n\n'
+        + '然后用返回的 token 调用接口：\n\n'
+        + `\`\`\`bash\n`
+        + `curl -X ${interface_.method} "${url}" \\\n`
+        + `  -H "Authorization: Bearer YOUR_TOKEN"\n`
+        + `\`\`\`\n\n`
+        + '### 方式二：直接携带 API Key\n\n'
+        + `\`\`\`bash\n`
+        + `curl -X ${interface_.method} "${url}" \\\n`
+        + `  -H "Authorization: Bearer YOUR_API_KEY"\n`
+        + `\`\`\`\n`;
+    } else {
+      authSection = '\n\n## 认证方式\n\n该接口不需要认证，直接调用即可。\n';
+    }
+
+    // 生成 markdown 文档
+    const markdown = `# ${interface_.name}\n\n`
+      + `**请求方式：** ${interface_.method}  \n`
+      + `**接口地址：** ${url}  \n`
+      + `**描述：** ${interface_.description || '-'}  \n`
+      + `**版本：** v${interface_.version}  \n`
+      + `**是否需要认证：** ${interface_.require_auth ? '是' : '否'}\n\n`
+      + paramTable
+      + paramExample
+      + authSection
+      + '\n\n## 响应示例\n\n'
+      + '```json\n'
+      + '{\n'
+      + '  "success": true,\n'
+      + '  "data": [],\n'
+      + '  "meta": { "rowCount": 0 }\n'
+      + '}\n'
+      + '```\n';
+
+    // 触发下载
+    const blob = new Blob([markdown], { type: 'text/markdown' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `${interface_.name || 'api-doc'}.md`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(a.href);
+    toast.success('接口文档已下载');
   };
 
   // 生成示例参数
@@ -48,8 +142,17 @@ export default function ApiKeysDialog({ open, onOpenChange, interface_ }) {
       <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>接口调用说明</DialogTitle>
-          <DialogDescription>
-            接口 &quot;{interface_.name}&quot; 的调用方式
+          <DialogDescription className="flex items-center justify-between">
+            <span>接口 &quot;{interface_.name}&quot; 的调用方式</span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleDownloadDoc}
+              title="下载接口文档"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              下载文档
+            </Button>
           </DialogDescription>
         </DialogHeader>
 
