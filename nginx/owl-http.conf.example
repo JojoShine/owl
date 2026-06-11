@@ -1,0 +1,64 @@
+# Nginx 简单 HTTP 配置
+# 用于非 HTTPS 环境（开发、测试）
+# 使用方法：
+# 1. 复制到 /etc/nginx/sites-available/ 或 /etc/nginx/conf.d/
+# 2. 修改 server_name 为实际域名或 IP
+# 3. 执行 nginx -t 检查语法
+# 4. 执行 systemctl restart nginx 重载配置
+
+upstream backend {
+  server 127.0.0.1:3001;
+}
+
+upstream frontend {
+  server 127.0.0.1:3000;
+}
+
+server {
+  listen 80;
+  server_name your-domain.com www.your-domain.com;
+
+  access_log /var/log/nginx/owl-access.log;
+  error_log /var/log/nginx/owl-error.log;
+
+  client_max_body_size 100M;
+
+  # API 后端代理
+  location /api/ {
+    proxy_pass http://backend;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_connect_timeout 60s;
+    proxy_send_timeout 60s;
+    proxy_read_timeout 60s;
+  }
+
+  # WebSocket 支持（用于实时通知）
+  location /socket.io {
+    proxy_pass http://backend;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "Upgrade";
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+  }
+
+  # 前端应用代理
+  location / {
+    proxy_pass http://frontend;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+  }
+
+  # 禁用访问某些文件
+  location ~ /\. {
+    deny all;
+  }
+}

@@ -1,0 +1,42 @@
+name: Pull Request
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: 设置 Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: 后端依赖检查
+        run: |
+          cd backend
+          npm install --frozen-lockfile
+          npm run lint
+        continue-on-error: true
+
+      - name: 前端依赖检查
+        run: |
+          cd frontend
+          npm install --frozen-lockfile
+          npm run lint
+        continue-on-error: true
+
+      - name: 检查代码格式
+        run: npm run format:check
+        continue-on-error: true

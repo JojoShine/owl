@@ -16,6 +16,19 @@ if [ ! -d ".next/standalone" ]; then
     exit 1
 fi
 
+# 动态获取项目目录名（兼容不同的项目路径）
+# 从 .next/standalone/projects/ 下获取实际的项目文件夹名
+PROJECT_DIR=$(find .next/standalone/projects -maxdepth 1 -type d | grep -v "^.next/standalone/projects$" | head -1)
+
+if [ -z "$PROJECT_DIR" ]; then
+    echo "错误: 无法找到构建的项目目录"
+    exit 1
+fi
+
+# 获取项目文件夹的实际名称（用于调试）
+PROJECT_NAME=$(basename "$PROJECT_DIR")
+echo "   检测到项目目录: $PROJECT_NAME"
+
 # 清理旧的部署文件
 echo "1. 清理旧文件..."
 rm -rf deploy/dist
@@ -27,8 +40,8 @@ mkdir -p deploy/dist
 
 # 复制 standalone 代码（这是 Node.js 服务器的核心代码）
 echo "3. 复制 standalone 服务器代码..."
-cp -r .next/standalone/projects/ykt_owl_platform/frontend/* deploy/dist/
-cp -r .next/standalone/projects/ykt_owl_platform/frontend/.next deploy/dist/
+cp -r "$PROJECT_DIR/frontend"/* deploy/dist/
+cp -r "$PROJECT_DIR/frontend/.next" deploy/dist/
 
 # 关键步骤：复制静态资源到 standalone 的 .next 目录
 echo "4. 复制静态资源（关键步骤）..."
@@ -126,10 +139,10 @@ echo "打包文件: deploy/frontend-deploy.tar.gz"
 echo "文件大小: $(du -h deploy/frontend-deploy.tar.gz | cut -f1)"
 echo ""
 echo "下一步操作:"
-echo "1. 上传到服务器: scp deploy/frontend-deploy.tar.gz root@121.196.245.95:/tmp/"
-echo "2. SSH 登录: ssh root@121.196.245.95"
-echo "3. 创建目录: mkdir -p /opt/frontend/owl-frontend"
-echo "4. 解压: cd /opt/frontend/owl-frontend && tar -xzf /tmp/frontend-deploy.tar.gz"
+echo "1. 上传到服务器: scp deploy/frontend-deploy.tar.gz user@your-server:/tmp/"
+echo "2. SSH 登录: ssh user@your-server"
+echo "3. 创建目录: mkdir -p /opt/frontend/owl"
+echo "4. 解压: cd /opt/frontend/owl && tar -xzf /tmp/frontend-deploy.tar.gz"
 echo "5. 启动 PM2: pm2 start ecosystem.config.js"
 echo "6. 保存 PM2 进程: pm2 save"
 echo ""

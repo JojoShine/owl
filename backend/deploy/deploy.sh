@@ -44,8 +44,8 @@ cat > INSTALL.txt << 'EOF'
    npm install --production
 
 3. 配置环境变量
-   cp .env.example .env
-   # 编辑 .env 文件，配置数据库、Redis 等
+   cp .env.example .env.production
+   # 编辑 .env.production 文件，配置数据库、Redis 等
 
 4. 初始化数据库
    npm run db:init
@@ -59,7 +59,7 @@ cat > INSTALL.txt << 'EOF'
 
 ## 详细文档
 
-请参考 deploy/DEPLOY.md 文件
+请参考 ../../docs/ 目录下的文档
 
 EOF
 
@@ -92,9 +92,8 @@ tar -czf "${DEPLOY_DIR}/${PACKAGE_NAME}" \
   package.json \
   package-lock.json \
   ecosystem.config.js \
-  .env \
   .env.example \
-  .env.production.example \
+  .env.production \
   .sequelizerc \
   INSTALL.txt \
   README.md 2>/dev/null || true
@@ -129,7 +128,7 @@ echo "  ✗ .git/            - Git 仓库"
 echo ""
 echo -e "${YELLOW}📤 部署步骤:${NC}"
 echo "  1. 上传到服务器:"
-echo "     scp deploy/${PACKAGE_NAME} root@121.196.245.95:/tmp/"
+echo "     scp deploy/${PACKAGE_NAME} user@your-server:/tmp/"
 echo ""
 echo "  2. 在服务器上解压:"
 echo "     cd /opt/backend"

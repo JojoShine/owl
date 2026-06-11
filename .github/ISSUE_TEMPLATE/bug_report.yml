@@ -1,0 +1,89 @@
+name: Bug Report
+description: 报告一个 bug
+title: "[Bug] "
+labels: ["bug"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢报告 bug！请详细填写以下信息帮助我们快速定位问题。
+
+  - type: textarea
+    id: describe
+    attributes:
+      label: 问题描述
+      description: 清晰简洁地描述 bug
+      placeholder: 当我执行...时，发生了...
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: 复现步骤
+      description: 提供能复现 bug 的步骤
+      placeholder: |
+        1. 进入...
+        2. 点击...
+        3. 观察到...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: 预期行为
+      description: 描述应该发生的行为
+      placeholder: 应该显示...
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: 实际行为
+      description: 描述实际发生的行为
+      placeholder: 实际显示了...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: environment
+    attributes:
+      label: 环境
+      description: 你使用的环境
+      options:
+        - 开发环境
+        - 测试环境
+        - 生产环境
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment-details
+    attributes:
+      label: 环境详情
+      description: 操作系统、浏览器、Node.js 版本等
+      placeholder: |
+        - OS: macOS 14.0
+        - Node.js: 18.17.0
+        - Browser: Chrome 120
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: 错误日志
+      description: 粘贴相关的错误日志或控制台输出
+      placeholder: 粘贴错误信息...
+      render: bash
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: 补充信息
+      description: 其他有助于诊断的信息
+      placeholder: 补充说明...

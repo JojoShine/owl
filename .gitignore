@@ -1,59 +1,90 @@
-# Dependencies
+# 环境变量
+.env
+.env.local
+.env.production
+.env.*.local
+
+# 依赖
 node_modules/
 .pnp
 .pnp.js
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
 
-# Testing
-coverage/
-
-# Production
-build/
+# 构建输出
+.next/
 dist/
+build/
+out/
 
-# Misc
-.DS_Store
-*.pem
-
-# Debug
+# 日志
+logs/
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+lerna-debug.log*
 
-# Uploads
-backend/public/uploads/*
-!backend/public/uploads/.gitkeep
-
-# Local env files
-.env
-.env*.local
-.env.production
-
-# Vercel
-.vercel
-
-# Next.js
-.next/
-out/
-
-# Logs
-logs/
-*.log
-
-# IDEs
-.idea/
-.vscode/
+# 运行时
+.DS_Store
+Thumbs.db
+*.pem
 *.swp
 *.swo
-.lingma/
+*~
+._*
 
-# OS
-Thumbs.db
+# IDE
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.iml
+
+# 部署
+deploy/*.tar.gz
+deploy/dist/
+frontend/deploy/*.tar.gz
+backend/deploy/*.tar.gz
+
+# 缓存
+.cache/
+.turbo/
+.eslintcache
+
+# 测试覆盖率
+coverage/
+.nyc_output/
+
+# 临时文件
+tmp/
+temp/
+*.tmp
+
+# 计划和工作文件
+projectplan.md
+ProjectPlan.md
+claude.md
+Claude.md
+CLAUDE.md
+.lingma/
+.Lingma/
+
+# MinIO 本地存储
+minio/data
+
+# Redis 持久化
+dump.rdb
+appendonly.aof
 
 # Docker volumes
 docker/data/
 
-# Deployment packages
-*.tar.gz
-backend/deploy/*.tar.gz
-frontend/deploy/*.tar.gz
+# Vercel
+.vercel
+
+# 上传目录
+backend/public/uploads/*
+!backend/public/uploads/.gitkeep
