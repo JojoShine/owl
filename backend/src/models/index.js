@@ -67,6 +67,8 @@ db.Notification = require('./notification/Notification')(sequelize, Sequelize.Da
 db.EmailLog = require('./notification/EmailLog')(sequelize, Sequelize.DataTypes);
 db.NotificationSettings = require('./notification/NotificationSettings')(sequelize, Sequelize.DataTypes);
 db.EmailTemplate = require('./notification/EmailTemplate')(sequelize, Sequelize.DataTypes);
+db.EmailTask = require('./notification/EmailTask')(sequelize, Sequelize.DataTypes);
+db.EmailTask = require('./notification/EmailTask')(sequelize, Sequelize.DataTypes);
 
 // ========== Generator Models ==========
 // 代码生成器相关模型

@@ -25,6 +25,7 @@ import * as monitorModule from './system/monitor.api';
 import * as generatorModule from './system/generator.api';
 import * as statsModule from './system/stats.api';
 import * as fileManagerModule from './system/file-manager.api';
+import * as emailTaskModule from './system/email-task.api';
 
 // 认证相关
 export const authApi = authModule.authApi;
@@ -63,6 +64,7 @@ export const systemConfigApi = systemConfigModule.systemConfigApi;
 export const captchaApi = captchaModule.captchaApi;
 export const sensitiveFieldApi = sensitiveFieldModule.sensitiveFieldApi;
 export const dataAccessApi = dataAccessModule.dataAccessApi;
+export const emailTaskApi = emailTaskModule.emailTaskApi;
 
 // 默认导出（用于向后兼容）
 export default {
@@ -110,4 +112,5 @@ export default {
   captchaApi,
   sensitiveFieldApi,
   dataAccessApi,
+  emailTaskApi,
 };
