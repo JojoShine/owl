@@ -58,6 +58,17 @@ module.exports = {
       console.log(`\n${'='.repeat(80)}`);
       console.log(`✅ 初始数据导入完成！`);
       console.log(`${'='.repeat(80)}\n`);
+
+      // 显示默认用户密码
+      console.log(`\n${'⚠️ '.repeat(40)}`);
+      console.log(`📝 默认用户登录信息`);
+      console.log(`${'⚠️ '.repeat(40)}\n`);
+      console.log(`超级管理员用户：`);
+      console.log(`  用户名：admin`);
+      console.log(`  邮箱：admin@example.com`);
+      console.log(`  密码：R994wjZIIB`);
+      console.log(`  \n请妥善保管此密码，首次登录后请立即修改！\n`);
+      console.log(`${'⚠️ '.repeat(40)}\n`);
     } catch (error) {
       console.error(`\n❌ 初始数据导入失败`);
       console.error(`   错误: ${error.message}\n`);
