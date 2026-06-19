@@ -138,10 +138,10 @@ export default function NotificationList({
 
               {/* 时间列 */}
               <TableCell className="text-sm text-muted-foreground">
-                {formatDistanceToNow(new Date(notification.created_at), {
+                {notification.created_at ? formatDistanceToNow(new Date(notification.created_at), {
                   addSuffix: true,
                   locale: zhCN,
-                })}
+                }) : '-'}
               </TableCell>
 
               {/* 操作列 */}

@@ -83,10 +83,10 @@ export default function EmailTemplateTable({
                   {template.description || '-'}
                 </TableCell>
                 <TableCell className="text-sm text-muted-foreground">
-                  {formatDistanceToNow(new Date(template.updated_at), {
+                  {template.updated_at ? formatDistanceToNow(new Date(template.updated_at), {
                     addSuffix: true,
                     locale: zhCN,
-                  })}
+                  }) : '-'}
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-1">
