@@ -45,20 +45,34 @@ class ApiMonitorService {
       order: [['created_at', 'DESC']],
     });
 
-    // 获取每个监控的最新日志
-    const monitorsWithLastLog = await Promise.all(
-      rows.map(async (monitor) => {
-        const lastLog = await ApiMonitorLog.findOne({
-          where: { monitor_id: monitor.id },
-          order: [['created_at', 'DESC']],
-        });
+    // 获取所有监控的最新日志（批量查询，而非串行）
+    const monitorIds = rows.map(m => m.id);
+    const latestLogs = {};
 
-        return {
-          ...monitor.toJSON(),
-          lastLog: lastLog ? lastLog.toJSON() : null,
-        };
-      })
-    );
+    if (monitorIds.length > 0) {
+      // 使用子查询优化：一次查询获取所有监控的最新日志
+      const logs = await ApiMonitorLog.findAll({
+        where: {
+          monitor_id: { [Op.in]: monitorIds }
+        },
+        attributes: ['monitor_id', 'status', 'status_code', 'response_time', 'error_message', 'created_at'],
+        order: [['created_at', 'DESC']],
+        raw: true,
+      });
+
+      // 构建最新日志映射（每个monitor只保留最新的一条）
+      logs.forEach(log => {
+        if (!latestLogs[log.monitor_id]) {
+          latestLogs[log.monitor_id] = log;
+        }
+      });
+    }
+
+    // 关联最新日志
+    const monitorsWithLastLog = rows.map(monitor => ({
+      ...monitor.toJSON(),
+      lastLog: latestLogs[monitor.id] || null,
+    }));
 
     return {
       total: count,

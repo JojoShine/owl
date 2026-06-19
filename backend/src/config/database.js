@@ -48,10 +48,10 @@ module.exports = {
     dialect: 'postgres',
     logging: process.env.NODE_ENV === 'production' ? false : pgLogging,
     pool: {
-      max: 5,
-      min: 0,
-      acquire: 30000,
-      idle: 10000,
+      max: 15,  // 增加到15个连接
+      min: 2,   // 保持2个空闲连接
+      acquire: 15000,  // 连接获取超时15秒
+      idle: 30000,  // 30秒后释放空闲连接
     },
   },
   test: {
@@ -72,10 +72,10 @@ module.exports = {
     dialect: 'postgres',
     logging: process.env.DB_LOGGING === 'true' ? pgLogging : false,
     pool: {
-      max: 10,
-      min: 0,
-      acquire: 30000,
-      idle: 10000,
+      max: 20,  // 增加到20个连接
+      min: 5,   // 保持5个空闲连接
+      acquire: 15000,  // 连接获取超时15秒
+      idle: 30000,  // 30秒后释放空闲连接
     },
   },
 };

@@ -152,13 +152,46 @@ UI 组件统一使用 `shadcn/ui`，样式使用 Tailwind CSS，不引入新的 
 
 ---
 
-## 菜单与权限配置
+## 菜单与权限配置（必读）
 
-1. 「系统管理 → 菜单管理」新建菜单，路径填 `/your-biz/your-module`
-2. 点击「自动生成权限」，自动生成 `your-module:read/create/update/delete` 四个权限
-3. 「角色管理」将权限绑定到对应角色
+### 开发流程
 
-也可直接在 `seeders/sql/seeder.sql` 中写入 SQL，随 `db:init` 初始化。
+**第一步：维护菜单** → 自动生成权限 → **第二步：按菜单名称规范开发前后端** → 权限自动生效
+
+### 为什么先维护菜单？
+
+- 菜单是权限的基础，系统会自动生成该菜单对应的权限
+- 所有权限默认关联到「系统管理员」角色
+- **建立统一的命名规范**：菜单名 → 前端路由 → 后端模块 → 数据库表
+
+### 快速开始
+
+#### 1. 创建菜单
+
+「系统管理 → 菜单管理」→ 「新建菜单」
+
+- 菜单名称：`用户反馈`
+- 菜单路径：`/business/feedback`
+- 菜单图标：`MessageCircle`
+
+点击「自动生成权限」 → 自动创建 `feedback:read/create/update/delete`
+
+#### 2. 按规范命名开发
+
+菜单路径 `/business/feedback` 对应：
+
+- **前端**：`app/(authenticated)/business/feedback/page.js`
+- **后端**：`src/business/modules/feedback/feedback.routes.js`
+- **接口**：`GET /api/biz/feedback` 等
+- **数据表**：`feedback` (不用 owl_ 前缀)
+
+#### 3. 验证权限
+
+「系统管理 → 角色管理」→ 查看「系统管理员」是否包含 `feedback:*` 权限
+
+### 权限自动检查
+
+后端在权限中间件自动检查（无需手动验证），前端通过 `localStorage.user.permissions` 判断按钮权限。
 
 ---
 
