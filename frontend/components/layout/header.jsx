@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/lib/utils/auth';
 import { ThemeToggle } from '@/components/layout/theme/theme-toggle';
 import NotificationIcon from '@/components/notification/NotificationIcon';
@@ -23,30 +23,30 @@ export default function Header() {
   const [systemName, setSystemName] = useState('Owl 管理平台');
   const [logoUrl, setLogoUrl] = useState(null);
 
-  useEffect(() => {
-    const fetchConfig = async () => {
-      try {
-        const response = await systemConfigApi.getConfig();
-        if (response.success) {
-          setEnableThemeSwitch(response.data?.enable_theme_switch ?? true);
-          setSystemName(response.data?.system_name || 'Owl 管理平台');
-          // 处理 logo - 如果是相对路径，补全为完整 URL
-          if (response.data?.logo_url) {
-            const logoUrl = response.data.logo_url;
-            const { getApiBaseUrl } = await import('@/lib/utils/http-client');
-            const fullUrl = logoUrl.startsWith('http')
-              ? logoUrl
-              : `${getApiBaseUrl()}${logoUrl}`;
-            setLogoUrl(fullUrl);
-          }
+  const fetchConfig = useCallback(async () => {
+    try {
+      const response = await systemConfigApi.getConfig();
+      if (response.success) {
+        setEnableThemeSwitch(response.data?.enable_theme_switch ?? true);
+        setSystemName(response.data?.system_name || 'Owl 管理平台');
+        // 处理 logo - 如果是相对路径，补全为完整 URL
+        if (response.data?.logo_url) {
+          const logoUrl = response.data.logo_url;
+          const { getApiBaseUrl } = await import('@/lib/utils/http-client');
+          const fullUrl = logoUrl.startsWith('http')
+            ? logoUrl
+            : `${getApiBaseUrl()}${logoUrl}`;
+          setLogoUrl(fullUrl);
         }
-      } catch (error) {
-        console.error('Failed to fetch system config:', error);
       }
-    };
-
-    fetchConfig();
+    } catch (error) {
+      console.error('Failed to fetch system config:', error);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchConfig();
+  }, [fetchConfig]);
 
   const handleLogout = () => {
     logout();

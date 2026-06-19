@@ -5,10 +5,6 @@
 
 BEGIN;
 
--- Disable foreign key checks during import (optional, but safer)
-SET CONSTRAINTS ALL DEFERRED;
-
-
 -- ============================================
 -- Table: departments
 -- Records: 4
@@ -268,6 +264,22 @@ VALUES ('df4b8233-172e-46cc-b7ab-52f15051db50', '查看邮件模板', 'email_tem
         '查看邮件模板列表和详情', '邮件管理', '"2025-10-28T00:43:06.737Z"', '"2025-10-28T00:43:06.737Z"');
 INSERT INTO public."owl_permissions" ("id", "name", "code", "resource", "action", "description", "category",
                                       "created_at", "updated_at")
+VALUES ('df4b8233-172e-46cc-7ac0-52f15051db51', '查看邮件任务', 'email-task:read', 'email-task', 'read',
+        '查看邮件发送任务列表和详情', '邮件管理', '"2025-10-28T00:43:06.737Z"', '"2025-10-28T00:43:06.737Z"');
+INSERT INTO public."owl_permissions" ("id", "name", "code", "resource", "action", "description", "category",
+                                      "created_at", "updated_at")
+VALUES ('df4b8233-172e-46cc-7ac0-52f15051db52', '创建邮件任务', 'email-task:create', 'email-task', 'create',
+        '创建邮件发送任务', '邮件管理', '"2025-10-28T00:43:06.737Z"', '"2025-10-28T00:43:06.737Z"');
+INSERT INTO public."owl_permissions" ("id", "name", "code", "resource", "action", "description", "category",
+                                      "created_at", "updated_at")
+VALUES ('df4b8233-172e-46cc-7ac0-52f15051db53', '更新邮件任务', 'email-task:update', 'email-task', 'update',
+        '更新邮件任务信息', '邮件管理', '"2025-10-28T00:43:06.737Z"', '"2025-10-28T00:43:06.737Z"');
+INSERT INTO public."owl_permissions" ("id", "name", "code", "resource", "action", "description", "category",
+                                      "created_at", "updated_at")
+VALUES ('df4b8233-172e-46cc-7ac0-52f15051db54', '删除邮件任务', 'email-task:delete', 'email-task', 'delete',
+        '删除邮件任务', '邮件管理', '"2025-10-28T00:43:06.737Z"', '"2025-10-28T00:43:06.737Z"');
+INSERT INTO public."owl_permissions" ("id", "name", "code", "resource", "action", "description", "category",
+                                      "created_at", "updated_at")
 VALUES ('e132cadc-511b-44f9-b702-65a01bb72956', '更新权限', 'permission:update', 'permission', 'update', '更新权限信息',
         '权限管理', '"2025-10-28T00:43:06.737Z"', '"2025-10-28T00:43:06.737Z"');
 INSERT INTO public."owl_permissions" ("id", "name", "code", "resource", "action", "description", "category",
@@ -352,6 +364,10 @@ VALUES ('0e734687-5eb8-472f-a138-ed35ce17556a', NULL, '系统管理', NULL, NULL
         NULL, 'system', '"2025-10-28T00:43:06.737Z"', '"2025-10-28T00:43:06.737Z"');
 INSERT INTO public."owl_menus" ("id", "parent_id", "name", "path", "component", "icon", "type", "visible", "sort",
                                 "status", "permission_code", "menu_type", "created_at", "updated_at")
+VALUES ('7150a49c-3b3e-4b22-827c-af4aab39d2d7', NULL, '系统工具', NULL, NULL, 'Wrench', 'menu', true, 98, 'active',
+        NULL, 'system', '"2025-10-28T00:43:06.737Z"', '"2025-10-28T00:43:06.737Z"');
+INSERT INTO public."owl_menus" ("id", "parent_id", "name", "path", "component", "icon", "type", "visible", "sort",
+                                "status", "permission_code", "menu_type", "created_at", "updated_at")
 VALUES ('1cc8a153-2470-4714-8da1-9545db5b8794', NULL, '文件管理', '/files', NULL, 'FolderOpen', 'menu', true, 2,
         'active', 'file:read', 'system', '"2025-10-28T00:43:06.737Z"', '"2025-10-28T00:43:06.737Z"');
 INSERT INTO public."owl_menus" ("id", "parent_id", "name", "path", "component", "icon", "type", "visible", "sort",
@@ -378,12 +394,12 @@ VALUES ('31aa61d5-711f-43ec-ba19-01035c393a58', '0e734687-5eb8-472f-a138-ed35ce1
         '"2025-10-28T00:43:06.737Z"');
 INSERT INTO public."owl_menus" ("id", "parent_id", "name", "path", "component", "icon", "type", "visible", "sort",
                                 "status", "permission_code", "menu_type", "created_at", "updated_at")
-VALUES ('6ae5d75e-3020-4f69-aaa9-df75474c0921', '0e734687-5eb8-472f-a138-ed35ce17556a', '通知设置',
+VALUES ('6ae5d75e-3020-4f69-aaa9-df75474c0921', '7150a49c-3b3e-4b22-827c-af4aab39d2d7', '通知设置',
         '/setting/notification-settings', NULL, 'Settings', 'menu', true, 85, 'active', NULL, 'system',
         '"2025-10-28T00:43:06.737Z"', '"2025-10-28T00:43:06.737Z"');
 INSERT INTO public."owl_menus" ("id", "parent_id", "name", "path", "component", "icon", "type", "visible", "sort",
                                 "status", "permission_code", "menu_type", "created_at", "updated_at")
-VALUES ('6f6f4f29-38bc-44fd-89b3-c82203678c13', '0e734687-5eb8-472f-a138-ed35ce17556a', '接口开发',
+VALUES ('6f6f4f29-38bc-44fd-89b3-c82203678c13', '7150a49c-3b3e-4b22-827c-af4aab39d2d7', '接口开发',
         '/setting/api-builder', '', 'Key', 'menu', true, 7, 'active', 'user:read', 'system',
         '"2025-11-27T02:46:53.914Z"', '"2025-11-27T02:47:08.756Z"');
 INSERT INTO public."owl_menus" ("id", "parent_id", "name", "path", "component", "icon", "type", "visible", "sort",
@@ -395,11 +411,6 @@ INSERT INTO public."owl_menus" ("id", "parent_id", "name", "path", "component", 
                                 "status", "permission_code", "menu_type", "created_at", "updated_at")
 VALUES ('05a7bb9b-bf96-4ce9-b510-bf0d068acd5d', '51785958-3437-4938-b77d-ce7cf2d9782b', '监控概览', '/monitor', NULL,
         'BarChart3', 'menu', true, 1, 'active', 'monitor:read', 'system', '"2025-10-28T00:43:06.737Z"',
-        '"2025-10-28T00:43:06.737Z"');
-INSERT INTO public."owl_menus" ("id", "parent_id", "name", "path", "component", "icon", "type", "visible", "sort",
-                                "status", "permission_code", "menu_type", "created_at", "updated_at")
-VALUES ('8075b442-90e6-4c91-9b2c-8fc8051ac337', '51785958-3437-4938-b77d-ce7cf2d9782b', '告警管理', '/monitor/alerts',
-        NULL, 'Bell', 'menu', true, 3, 'active', 'monitor:update', 'system', '"2025-10-28T00:43:06.737Z"',
         '"2025-10-28T00:43:06.737Z"');
 INSERT INTO public."owl_menus" ("id", "parent_id", "name", "path", "component", "icon", "type", "visible", "sort",
                                 "status", "permission_code", "menu_type", "created_at", "updated_at")
@@ -423,22 +434,22 @@ VALUES ('d9126103-db5f-43b2-8964-503b65b76983', '0e734687-5eb8-472f-a138-ed35ce1
         '"2025-10-28T00:43:06.737Z"');
 INSERT INTO public."owl_menus" ("id", "parent_id", "name", "path", "component", "icon", "type", "visible", "sort",
                                 "status", "permission_code", "menu_type", "created_at", "updated_at")
-VALUES ('eeeeeeee-ffff-0000-1111-222222222222', '0e734687-5eb8-472f-a138-ed35ce17556a', '水印设置',
+VALUES ('eeeeeeee-ffff-0000-1111-222222222222', '7150a49c-3b3e-4b22-827c-af4aab39d2d7', '水印设置',
         '/setting/watermark-settings', NULL, 'Waves', 'menu', true, 8, 'active', 'watermark:update', 'system',
         '"2025-12-10T06:07:13.302Z"', '"2025-12-10T06:07:13.302Z"');
 INSERT INTO public."owl_menus" ("id", "parent_id", "name", "path", "component", "icon", "type", "visible", "sort",
                                 "status", "permission_code", "menu_type", "created_at", "updated_at")
-VALUES ('f98825d5-2161-4952-ac09-e3c21f7047d7', '0e734687-5eb8-472f-a138-ed35ce17556a', '代码生成器', '/generator', '',
+VALUES ('f98825d5-2161-4952-ac09-e3c21f7047d7', '7150a49c-3b3e-4b22-827c-af4aab39d2d7', '代码生成器', '/generator', '',
         'Code', 'menu', true, 99, 'active', 'generator:read', 'system', '"2025-11-24T02:31:56.976Z"',
         '"2025-11-24T02:32:23.939Z"');
 INSERT INTO public."owl_menus" ("id", "parent_id", "name", "path", "component", "icon", "type", "visible", "sort",
                                 "status", "permission_code", "menu_type", "created_at", "updated_at")
-VALUES ('feed1e74-6c95-47f6-9576-c2fc7f71ed65', '0e734687-5eb8-472f-a138-ed35ce17556a', '邮件模板',
+VALUES ('feed1e74-6c95-47f6-9576-c2fc7f71ed65', '7150a49c-3b3e-4b22-827c-af4aab39d2d7', '邮件管理',
         '/setting/email-templates', NULL, 'Mail', 'menu', true, 80, 'active', 'email_template:read', 'system',
         '"2025-10-28T00:43:06.737Z"', '"2025-10-28T00:43:06.737Z"');
 INSERT INTO public."owl_menus" ("id", "parent_id", "name", "path", "component", "icon", "type", "visible", "sort",
                                 "status", "permission_code", "menu_type", "created_at", "updated_at")
-VALUES ('ffffffff-ffff-ffff-ffff-111111111111', '0e734687-5eb8-472f-a138-ed35ce17556a', '配置管理',
+VALUES ('ffffffff-ffff-ffff-ffff-111111111111', '7150a49c-3b3e-4b22-827c-af4aab39d2d7', '配置管理',
         '/setting/config-management', 'ConfigManagementPage', 'Sliders', 'menu', true, 90, 'active', 'config:read',
         'system', '"2025-10-28T00:43:06.737Z"', '"2025-10-28T00:43:06.737Z"');
 
@@ -920,6 +931,18 @@ VALUES ('fce2efe8-0615-4ecb-8c48-c79b37d6d087', 'b4f563f7-b8a8-4322-b9ac-4b6daae
 INSERT INTO public."owl_role_permissions" ("id", "role_id", "permission_id", "created_at")
 VALUES ('fd669c6e-c519-45a3-a17f-8796a887be07', '6b81e3c2-ec0c-40f3-8e00-ec54f1b41345',
         '4e527c72-862e-46d6-bd15-05547109dcb9', '"2025-11-12T06:43:07.180Z"');
+INSERT INTO public."owl_role_permissions" ("id", "role_id", "permission_id", "created_at")
+VALUES ('fd669c6e-c519-45a3-a17f-8796a887be08', '6b81e3c2-ec0c-40f3-8e00-ec54f1b41345',
+        'df4b8233-172e-46cc-7ac0-52f15051db51', '"2025-12-10T05:57:14.853Z"');
+INSERT INTO public."owl_role_permissions" ("id", "role_id", "permission_id", "created_at")
+VALUES ('fd669c6e-c519-45a3-a17f-8796a887be09', '6b81e3c2-ec0c-40f3-8e00-ec54f1b41345',
+        'df4b8233-172e-46cc-7ac0-52f15051db52', '"2025-12-10T05:57:14.853Z"');
+INSERT INTO public."owl_role_permissions" ("id", "role_id", "permission_id", "created_at")
+VALUES ('fd669c6e-c519-45a3-a17f-8796a887be0a', '6b81e3c2-ec0c-40f3-8e00-ec54f1b41345',
+        'df4b8233-172e-46cc-7ac0-52f15051db53', '"2025-12-10T05:57:14.853Z"');
+INSERT INTO public."owl_role_permissions" ("id", "role_id", "permission_id", "created_at")
+VALUES ('fd669c6e-c519-45a3-a17f-8796a887be0b', '6b81e3c2-ec0c-40f3-8e00-ec54f1b41345',
+        'df4b8233-172e-46cc-7ac0-52f15051db54', '"2025-12-10T05:57:14.853Z"');
 
 
 -- ============================================
@@ -954,9 +977,6 @@ VALUES ('2b42425f-3a68-4b52-8f2f-4d30e2ff572f', '5bbddbca-0ace-4641-8a5b-8882a64
 INSERT INTO public."owl_role_menus" ("id", "role_id", "menu_id", "created_at")
 VALUES ('2c40af45-902c-4d9a-ae20-3e9fa5d8914a', 'b4f563f7-b8a8-4322-b9ac-4b6daae6271f',
         '20d1ace9-f45a-4888-9a69-733606f583f6', '"2025-11-18T08:30:26.406Z"');
-INSERT INTO public."owl_role_menus" ("id", "role_id", "menu_id", "created_at")
-VALUES ('2d0839fa-31fc-4e8d-9dbb-8c336d0f931f', '5bbddbca-0ace-4641-8a5b-8882a648ca49',
-        '8075b442-90e6-4c91-9b2c-8fc8051ac337', '"2025-11-27T02:47:21.544Z"');
 INSERT INTO public."owl_role_menus" ("id", "role_id", "menu_id", "created_at")
 VALUES ('2e1912fb-2e40-49f8-9a10-fa64a4494813', 'b4f563f7-b8a8-4322-b9ac-4b6daae6271f',
         'fcca17f1-a067-40bb-8315-948a4371b5ed', '"2025-11-18T08:30:26.406Z"');
@@ -994,9 +1014,6 @@ INSERT INTO public."owl_role_menus" ("id", "role_id", "menu_id", "created_at")
 VALUES ('5ae06b82-b3a2-4a40-97e9-4eb24f4fd810', 'b4f563f7-b8a8-4322-b9ac-4b6daae6271f',
         '7896701f-ca95-4293-bda5-2a7281090ef8', '"2025-11-18T08:30:26.406Z"');
 INSERT INTO public."owl_role_menus" ("id", "role_id", "menu_id", "created_at")
-VALUES ('5b3fec3a-5d4d-4dfc-a5c4-fa1ffb109c7e', 'b4f563f7-b8a8-4322-b9ac-4b6daae6271f',
-        '8075b442-90e6-4c91-9b2c-8fc8051ac337', '"2025-11-18T08:30:26.407Z"');
-INSERT INTO public."owl_role_menus" ("id", "role_id", "menu_id", "created_at")
 VALUES ('5da08cac-3f37-41af-a2f9-9297fd7feb14', '5bbddbca-0ace-4641-8a5b-8882a648ca49',
         '20d1ace9-f45a-4888-9a69-733606f583f6', '"2025-11-27T02:47:21.543Z"');
 INSERT INTO public."owl_role_menus" ("id", "role_id", "menu_id", "created_at")
@@ -1032,9 +1049,6 @@ VALUES ('8c4842fb-6ce2-4de5-9ce3-7e872c9c6f41', '6b81e3c2-ec0c-40f3-8e00-ec54f1b
 INSERT INTO public."owl_role_menus" ("id", "role_id", "menu_id", "created_at")
 VALUES ('8e3f227b-9930-4116-b6bf-88b9d27be5e5', '6b81e3c2-ec0c-40f3-8e00-ec54f1b41345',
         '1cc8a153-2470-4714-8da1-9545db5b8794', '"2025-11-12T06:43:07.512Z"');
-INSERT INTO public."owl_role_menus" ("id", "role_id", "menu_id", "created_at")
-VALUES ('94c54c4e-9e0c-4717-b373-cc9e4696d508', '6b81e3c2-ec0c-40f3-8e00-ec54f1b41345',
-        '8075b442-90e6-4c91-9b2c-8fc8051ac337', '"2025-11-12T06:43:07.513Z"');
 INSERT INTO public."owl_role_menus" ("id", "role_id", "menu_id", "created_at")
 VALUES ('97242956-56c0-456a-8a43-4e6df5e39252', '6b81e3c2-ec0c-40f3-8e00-ec54f1b41345',
         '6ae5d75e-3020-4f69-aaa9-df75474c0921', '"2025-11-12T06:43:07.513Z"');
@@ -1181,60 +1195,9 @@ VALUES ('fec6260b-c284-44b6-94bf-2b2bfe72c41b', '61976ffe-b6bb-4be2-8ffa-a223315
 
 -- ============================================
 -- Table: email_templates
--- Records: 3
+-- Records: 0
 -- ============================================
-ALTER SEQUENCE IF EXISTS owl_email_templates_id_seq RESTART;
-INSERT INTO public."owl_email_templates" ("id", "name", "subject", "content", "variables", "description", "created_at",
-                                          "updated_at", "template_type", "variable_schema", "tags")
-VALUES ('107c287a-5525-4248-a093-31a6cd15bd4c', '内存使用率告警模版', '{{title}}', '<div style="font-family: Arial, sans-serif; padding: 20px; background-color: #f5f5f5;">
-  <div style="max-width: 600px; margin: 0 auto; background-color: white; padding: 30px; border-radius: 8px;">
-    <h2 style="color: #ff6b6b; margin-top: 0;">⚠️ {{title}}</h2>
-
-    {{{content}}}
-
-    <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
-    <p style="color: #999; font-size: 12px; text-align: center;">
-      此邮件由系统自动发送，请勿回复
-    </p>
-  </div>
-</div>', NULL, '系统内存使用率超出阈值时的告警邮件模版', '"2025-10-28T00:43:06.737Z"', '"2025-10-28T00:43:06.737Z"',
-        'SYSTEM_ALERT',
-        '[{"name":"ruleName","label":"规则名称","description":"触发告警的规则名称","type":"string","required":true,"example":"内存使用率过高告警"},{"name":"currentValue","label":"当前值","description":"当前内存使用率","type":"number","required":true,"example":"90"},{"name":"threshold","label":"阈值","description":"告警阈值","type":"number","required":true,"example":"85"},{"name":"level","label":"告警级别","description":"告警级别（info/warning/error/critical）","type":"string","required":true,"example":"error"},{"name":"timestamp","label":"告警时间","description":"告警发生时间","type":"string","required":true,"example":"2025-10-22 14:30:00"}]',
-        '["system","alert","memory"]');
-INSERT INTO public."owl_email_templates" ("id", "name", "subject", "content", "variables", "description", "created_at",
-                                          "updated_at", "template_type", "variable_schema", "tags")
-VALUES ('d30b6b29-90af-4e2b-b039-93d3d968a5e7', '接口异常告警模版', '{{title}}', '<div style="font-family: Arial, sans-serif; padding: 20px; background-color: #f5f5f5;">
-  <div style="max-width: 600px; margin: 0 auto; background-color: white; padding: 30px; border-radius: 8px;">
-    <h2 style="color: #dc3545; margin-top: 0;">🚨 {{title}}</h2>
-
-    {{{content}}}
-
-    <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
-    <p style="color: #999; font-size: 12px; text-align: center;">
-      此邮件由系统自动发送，请勿回复
-    </p>
-  </div>
-</div>', NULL, '接口监控异常时的告警邮件模版', '"2025-10-28T00:43:06.737Z"', '"2025-10-28T00:43:06.737Z"',
-        'API_MONITOR_ALERT',
-        '[{"name":"apiName","label":"接口名称","description":"监控接口的名称","type":"string","required":true,"example":"用户登录接口"},{"name":"apiUrl","label":"接口地址","description":"接口URL","type":"string","required":true,"example":"https://api.example.com/login"},{"name":"method","label":"请求方法","description":"HTTP请求方法","type":"string","required":true,"example":"POST"},{"name":"errorType","label":"异常类型","description":"异常类型（超时/状态码异常/响应内容异常）","type":"string","required":true,"example":"超时"},{"name":"errorMessage","label":"错误信息","description":"详细错误信息","type":"string","required":false,"example":"请求超时"},{"name":"statusCode","label":"状态码","description":"HTTP响应状态码","type":"number","required":false,"example":"500"},{"name":"responseTime","label":"响应时间","description":"接口响应时间（毫秒）","type":"number","required":false,"example":"3500"},{"name":"timestamp","label":"发生时间","description":"异常发生时间","type":"string","required":true,"example":"2025-10-22 14:30:00"}]',
-        '["api","alert","monitor"]');
-INSERT INTO public."owl_email_templates" ("id", "name", "subject", "content", "variables", "description", "created_at",
-                                          "updated_at", "template_type", "variable_schema", "tags")
-VALUES ('fbc66f6f-8a0e-45a8-881c-ea1deb6b0de7', 'CPU使用率告警模版', '{{title}}', '<div style="font-family: Arial, sans-serif; padding: 20px; background-color: #f5f5f5;">
-  <div style="max-width: 600px; margin: 0 auto; background-color: white; padding: 30px; border-radius: 8px;">
-    <h2 style="color: #ff6b6b; margin-top: 0;">⚠️ {{title}}</h2>
-
-    {{{content}}}
-
-    <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
-    <p style="color: #999; font-size: 12px; text-align: center;">
-      此邮件由系统自动发送，请勿回复
-    </p>
-  </div>
-</div>', NULL, '系统CPU使用率超出阈值时的告警邮件模版', '"2025-10-28T00:43:06.737Z"', '"2025-10-28T00:43:06.737Z"',
-        'SYSTEM_ALERT',
-        '[{"name":"ruleName","label":"规则名称","description":"触发告警的规则名称","type":"string","required":true,"example":"CPU使用率过高告警"},{"name":"currentValue","label":"当前值","description":"当前CPU使用率","type":"number","required":true,"example":"85"},{"name":"threshold","label":"阈值","description":"告警阈值","type":"number","required":true,"example":"80"},{"name":"level","label":"告警级别","description":"告警级别（info/warning/error/critical）","type":"string","required":true,"example":"warning"},{"name":"timestamp","label":"告警时间","description":"告警发生时间","type":"string","required":true,"example":"2025-10-22 14:30:00"}]',
-        '["system","alert","cpu"]');
+-- 不创建默认模板，由用户自定义创建
 
 
 -- notifications: Empty
@@ -2135,20 +2098,19 @@ VALUES
 -- 数据访问管理相关菜单
 -- ============================================
 
--- 第三方 API 密钥菜单（放在系统管理下）
+-- 第三方 API 密钥菜单（放在系统工具下）
 INSERT INTO public."owl_menus" ("id", "parent_id", "name", "path", "component", "icon", "type", "visible", "sort",
                                 "status", "permission_code", "menu_type", "created_at", "updated_at")
-VALUES ('5a6b7c8d-9e0f-1a2b-3c4d-5e6f7a8b9c0d', '0e734687-5eb8-472f-a138-ed35ce17556a', '第三方密钥',
+VALUES ('5a6b7c8d-9e0f-1a2b-3c4d-5e6f7a8b9c0d', '7150a49c-3b3e-4b22-827c-af4aab39d2d7', '第三方密钥',
         '/setting/third-party-keys', 'ThirdPartyKeysPage', 'Key', 'menu', true, 87, 'active',
         'third-party-keys:read', 'system', now(), now());
 
--- 数据访问管理菜单（放在系统管理下）
+-- 数据访问管理菜单（放在系统工具下）
 INSERT INTO public."owl_menus" ("id", "parent_id", "name", "path", "component", "icon", "type", "visible", "sort",
                                 "status", "permission_code", "menu_type", "created_at", "updated_at")
-VALUES ('7f3e9a2b-4c1d-4e8f-9b5a-6d2c8e1f0a3b', '0e734687-5eb8-472f-a138-ed35ce17556a', '数据访问管理',
+VALUES ('7f3e9a2b-4c1d-4e8f-9b5a-6d2c8e1f0a3b', '7150a49c-3b3e-4b22-827c-af4aab39d2d7', '数据访问管理',
         '/setting/sensitive-fields', 'SensitiveFieldsPage', 'ShieldCheck', 'menu', true, 88, 'active',
-        'sensitive-field:read', 'system', now(), now())
-;
+        'sensitive-field:read', 'system', now(), now());
 
 
 -- ============================================
@@ -2216,7 +2178,17 @@ VALUES ('c9d0e1f2-f3a4-4b5c-6d7e-8f9a0b1c2d3e', '5bbddbca-0ace-4641-8a5b-8882a64
         'b8c9d0e1-f2a3-4b4c-5d6e-7f8a9b0c1d2e', now());
 
 
--- 超级管理员绑定数据访问管理菜单
+-- 超级管理员绑定邮件任务权限
+INSERT INTO public."owl_role_permissions" ("id", "role_id", "permission_id", "created_at")
+VALUES ('f2a3b4c5-c6d7-4e8f-9a0b-1c2d3e4f5a6c', '5bbddbca-0ace-4641-8a5b-8882a648ca49',
+        'df4b8233-172e-46cc-7ac0-52f15051db51', now()),
+       ('f2a3b4c5-c6d7-4e8f-9a0b-1c2d3e4f5a6d', '5bbddbca-0ace-4641-8a5b-8882a648ca49',
+        'df4b8233-172e-46cc-7ac0-52f15051db52', now()),
+       ('f2a3b4c5-c6d7-4e8f-9a0b-1c2d3e4f5a6e', '5bbddbca-0ace-4641-8a5b-8882a648ca49',
+        'df4b8233-172e-46cc-7ac0-52f15051db53', now()),
+       ('f2a3b4c5-c6d7-4e8f-9a0b-1c2d3e4f5a6f', '5bbddbca-0ace-4641-8a5b-8882a648ca49',
+        'df4b8233-172e-46cc-7ac0-52f15051db54', now());
+
 INSERT INTO public."owl_role_menus" ("id", "role_id", "menu_id", "created_at")
 VALUES ('c5d6e7f8-a9b0-4c1d-2e3f-4a5b6c7d8e9f', '5bbddbca-0ace-4641-8a5b-8882a648ca49',
         '7f3e9a2b-4c1d-4e8f-9b5a-6d2c8e1f0a3b', now());
@@ -2230,6 +2202,11 @@ VALUES ('b2c3d4e5-f6a7-b8c9-d0e1-f2a3b4c5d6e7', '5bbddbca-0ace-4641-8a5b-8882a64
 INSERT INTO public."owl_role_menus" ("id", "role_id", "menu_id", "created_at")
 VALUES ('a1b2c3d4-e5f6-7890-abcd-ef1234567890', '5bbddbca-0ace-4641-8a5b-8882a648ca49',
         '3e2aa45a-e1e3-4708-934c-f9f5d9681fd1', now());
+
+-- 超级管理员绑定系统工具菜单
+INSERT INTO public."owl_role_menus" ("id", "role_id", "menu_id", "created_at")
+VALUES ('02042918-ec81-47c5-8a9f-cfb447595d4d', '5bbddbca-0ace-4641-8a5b-8882a648ca49',
+        '7150a49c-3b3e-4b22-827c-af4aab39d2d7', now());
 
 INSERT INTO public."owl_system_configs" ("id", "logo_url", "login_bg_url", "company_name", "system_name", "show_tech_stack", "registration_enabled", "tech_stack_info", "enable_theme_switch", "theme_mode", "primary_color", "created_by", "created_at", "updated_at", "login_layout", "login_method", "registration_method")
 VALUES (1, NULL, NULL, 'Owl Platform', 'Owl Platform', true, true, NULL, true, 'auto', 'default', NULL, now(), now(), 'left-image', 'both', 'both');

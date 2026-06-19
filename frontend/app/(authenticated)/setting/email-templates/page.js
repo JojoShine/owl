@@ -1,271 +1,546 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Plus, Mail, Eye } from 'lucide-react';
+import { Plus, Edit, Trash2, Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import EmailTemplateTable from '@/components/notification/EmailTemplateTable';
-import EmailTemplateFormDialog from '@/components/notification/EmailTemplateFormDialog';
-import { emailTemplateApi } from '@/lib/api';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { SearchFilter } from '@/components/common/SearchFilter';
+import { DataTable } from '@/components/common/DataTable';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { toast } from 'sonner';
+import { emailTaskApi, emailTemplateApi } from '@/lib/api';
+import { formatDistanceToNow } from 'date-fns';
+import { zhCN } from 'date-fns/locale';
+import EmailTaskDialog from '@/components/notification/EmailTaskDialog';
+import EmailTemplateFormDialog from '@/components/notification/EmailTemplateFormDialog';
 
-export default function EmailTemplatesPage() {
+const frequencyMap = {
+  once: '一次',
+  hourly: '每小时',
+  daily: '每天',
+  weekly: '每周',
+  monthly: '每月',
+};
+
+const statusMap = {
+  pending: { label: '待执行', variant: 'secondary' },
+  success: { label: '成功', variant: 'default' },
+  failed: { label: '失败', variant: 'destructive' },
+};
+
+export default function EmailManagementPage() {
+  // =============== 发送任务相关状态 ===============
+  const [tasks, setTasks] = useState([]);
+  const [isLoadingTasks, setIsLoadingTasks] = useState(true);
+  const [taskSearchValues, setTaskSearchValues] = useState({});
+  const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState(null);
+  const [taskPagination, setTaskPagination] = useState({ page: 1, pageSize: 10, total: 0 });
+  const [confirmTaskDeleteOpen, setConfirmTaskDeleteOpen] = useState(false);
+  const [taskToDelete, setTaskToDelete] = useState(null);
+
+  // =============== 邮件模板相关状态 ===============
   const [templates, setTemplates] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [formDialogOpen, setFormDialogOpen] = useState(false);
-  const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
-  const [selectedTemplate, setSelectedTemplate] = useState(null);
-  const [previewHtml, setPreviewHtml] = useState('');
-  const [previewVariables, setPreviewVariables] = useState({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoadingTemplates, setIsLoadingTemplates] = useState(true);
+  const [templateSearchValues, setTemplateSearchValues] = useState({});
+  const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false);
+  const [editingTemplate, setEditingTemplate] = useState(null);
+  const [templatePagination, setTemplatePagination] = useState({ page: 1, pageSize: 10, total: 0 });
+  const [confirmTemplateDeleteOpen, setConfirmTemplateDeleteOpen] = useState(false);
+  const [templateToDelete, setTemplateToDelete] = useState(null);
 
-  // 获取模板列表
-  const fetchTemplates = useCallback(async () => {
-    setIsLoading(true);
+  // =============== 发送任务相关方法 ===============
+
+  const fetchTasks = useCallback(async () => {
     try {
-      const response = await emailTemplateApi.getTemplates();
+      setIsLoadingTasks(true);
+      const response = await emailTaskApi.getTasks({
+        page: taskPagination.page,
+        limit: taskPagination.pageSize,
+      });
+      const tasksData = response.data?.items || response.data || [];
+      setTasks(Array.isArray(tasksData) ? tasksData : []);
 
-      // 注意：axios 拦截器已经将 response.data 返回，所以 response 就是后端的数据
-      // 后端返回格式：{ success: true, data: { items: [...], pagination: {...} } }
-      if (response.success) {
-        const items = response.data.items || [];
-        setTemplates(items);
+      if (response.data?.pagination) {
+        setTaskPagination(prev => ({
+          ...prev,
+          total: response.data.pagination.total || 0,
+        }));
       }
     } catch (error) {
-      console.error('Failed to fetch templates:', error);
-      toast.error('获取模板列表失败');
+      console.error('获取邮件任务列表失败:', error);
+      setTasks([]);
+      toast.error('获取邮件任务列表失败');
     } finally {
-      setIsLoading(false);
+      setIsLoadingTasks(false);
     }
-  }, []);
+  }, [taskPagination.page, taskPagination.pageSize]);
 
-  // 创建模板
-  const handleCreate = () => {
-    setSelectedTemplate(null);
-    setFormDialogOpen(true);
+  useEffect(() => {
+    fetchTasks();
+  }, [taskPagination.page, taskPagination.pageSize]);
+
+  const handleTaskSearch = () => {
+    setTaskPagination(prev => ({ ...prev, page: 1 }));
+    setTimeout(() => fetchTasks(), 0);
   };
 
-  // 编辑模板
-  const handleEdit = (template) => {
-    setSelectedTemplate(template);
-    setFormDialogOpen(true);
+  const handleTaskReset = () => {
+    setTaskSearchValues({});
+    setTaskPagination(prev => ({ ...prev, page: 1 }));
+    setTimeout(() => fetchTasks(), 0);
   };
 
-  // 保存模板
-  const handleSave = async (formData) => {
-    setIsSubmitting(true);
+  const handleTaskPageChange = (newPage) => {
+    setTaskPagination(prev => ({ ...prev, page: newPage }));
+  };
+
+  const handleTaskPageSizeChange = (newPageSize) => {
+    setTaskPagination(prev => ({ ...prev, pageSize: newPageSize, page: 1 }));
+  };
+
+  const handleAddTask = () => {
+    setEditingTask(null);
+    setIsTaskDialogOpen(true);
+  };
+
+  const handleEditTask = (task) => {
+    setEditingTask(task);
+    setIsTaskDialogOpen(true);
+  };
+
+  const handleDeleteTask = (task) => {
+    setTaskToDelete(task);
+    setConfirmTaskDeleteOpen(true);
+  };
+
+  const handleConfirmTaskDelete = async () => {
+    if (!taskToDelete) return;
+
     try {
-      if (selectedTemplate) {
-        // 更新模板
-        await emailTemplateApi.updateTemplate(selectedTemplate.id, formData);
-        toast.success('模板更新成功');
-      } else {
-        // 创建模板
-        await emailTemplateApi.createTemplate(formData);
-        toast.success('模板创建成功');
-      }
-
-      setFormDialogOpen(false);
-      setSelectedTemplate(null);
-      fetchTemplates();
+      await emailTaskApi.deleteTask(taskToDelete.id);
+      toast.success('删除邮件任务成功');
+      fetchTasks();
     } catch (error) {
-      console.error('Failed to save template:', error);
-      toast.error(error.response?.data?.message || '保存失败');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  // 删除模板
-  const handleDelete = async (id) => {
-    try {
-      await emailTemplateApi.deleteTemplate(id);
-      toast.success('模板删除成功');
-      fetchTemplates();
-    } catch (error) {
-      console.error('Failed to delete template:', error);
+      console.error('删除邮件任务失败:', error);
       toast.error('删除失败');
+    } finally {
+      setTaskToDelete(null);
     }
   };
 
-  // 预览模板
-  const handlePreview = async (template) => {
-    setSelectedTemplate(template);
-
-    // 初始化预览变量
-    const initialVariables = {
-      title: template.subject || '示例告警标题',
-      content: '<p>这里展示示例告警内容。</p>',
-    };
-    setPreviewVariables(initialVariables);
-
-    // 获取预览内容
+  const handleExecuteTask = async (task) => {
     try {
-      const response = await emailTemplateApi.previewTemplate(template.id, initialVariables);
-      if (response.success) {
-        setPreviewHtml(response.data.html);
-        setPreviewDialogOpen(true);
+      await emailTaskApi.executeTask(task.id);
+      toast.success('邮件任务已提交执行');
+      fetchTasks();
+    } catch (error) {
+      console.error('执行邮件任务失败:', error);
+      toast.error('执行失败');
+    }
+  };
+
+  const handleSaveTask = async (formData) => {
+    try {
+      if (editingTask) {
+        await emailTaskApi.updateTask(editingTask.id, formData);
+        toast.success('邮件任务更新成功');
+      } else {
+        await emailTaskApi.createTask(formData);
+        toast.success('邮件任务创建成功');
+      }
+      setIsTaskDialogOpen(false);
+      setEditingTask(null);
+      fetchTasks();
+    } catch (error) {
+      console.error('保存邮件任务失败:', error);
+      toast.error(error.response?.data?.message || '保存失败');
+    }
+  };
+
+  // =============== 邮件模板相关方法 ===============
+
+  const fetchTemplates = useCallback(async () => {
+    try {
+      setIsLoadingTemplates(true);
+      const response = await emailTemplateApi.getTemplates({
+        page: templatePagination.page,
+        limit: templatePagination.pageSize,
+      });
+      const templatesData = response.data?.items || response.data || [];
+      setTemplates(Array.isArray(templatesData) ? templatesData : []);
+
+      if (response.data?.pagination) {
+        setTemplatePagination(prev => ({
+          ...prev,
+          total: response.data.pagination.total || 0,
+        }));
       }
     } catch (error) {
-      console.error('Failed to preview template:', error);
-      toast.error('预览失败');
+      console.error('获取邮件模板列表失败:', error);
+      setTemplates([]);
+      toast.error('获取邮件模板列表失败');
+    } finally {
+      setIsLoadingTemplates(false);
     }
-  };
+  }, [templatePagination.page, templatePagination.pageSize]);
 
-  // 更新预览变量
-  const handlePreviewVariableChange = (variable, value) => {
-    setPreviewVariables((prev) => ({
-      ...prev,
-      [variable]: value,
-    }));
-  };
-
-  // 刷新预览
-  const refreshPreview = async () => {
-    if (!selectedTemplate) return;
-
-    try {
-      const response = await emailTemplateApi.previewTemplate(
-        selectedTemplate.id,
-        previewVariables
-      );
-      if (response.success) {
-        setPreviewHtml(response.data.html);
-      }
-    } catch (error) {
-      console.error('Failed to refresh preview:', error);
-      toast.error('刷新预览失败');
-    }
-  };
-
-  // 初始加载
   useEffect(() => {
     fetchTemplates();
-  }, [fetchTemplates]);
+  }, [templatePagination.page, templatePagination.pageSize]);
+
+  const handleTemplateSearch = () => {
+    setTemplatePagination(prev => ({ ...prev, page: 1 }));
+    setTimeout(() => fetchTemplates(), 0);
+  };
+
+  const handleTemplateReset = () => {
+    setTemplateSearchValues({});
+    setTemplatePagination(prev => ({ ...prev, page: 1 }));
+    setTimeout(() => fetchTemplates(), 0);
+  };
+
+  const handleTemplatePageChange = (newPage) => {
+    setTemplatePagination(prev => ({ ...prev, page: newPage }));
+  };
+
+  const handleTemplatePageSizeChange = (newPageSize) => {
+    setTemplatePagination(prev => ({ ...prev, pageSize: newPageSize, page: 1 }));
+  };
+
+  const handleAddTemplate = () => {
+    setEditingTemplate(null);
+    setIsTemplateDialogOpen(true);
+  };
+
+  const handleEditTemplate = (template) => {
+    setEditingTemplate(template);
+    setIsTemplateDialogOpen(true);
+  };
+
+  const handleDeleteTemplate = (template) => {
+    setTemplateToDelete(template);
+    setConfirmTemplateDeleteOpen(true);
+  };
+
+  const handleConfirmTemplateDelete = async () => {
+    if (!templateToDelete) return;
+
+    try {
+      await emailTemplateApi.deleteTemplate(templateToDelete.id);
+      toast.success('删除邮件模板成功');
+      fetchTemplates();
+    } catch (error) {
+      console.error('删除邮件模板失败:', error);
+      toast.error('删除失败');
+    } finally {
+      setTemplateToDelete(null);
+    }
+  };
+
+  const handleSaveTemplate = async (formData) => {
+    try {
+      if (editingTemplate) {
+        await emailTemplateApi.updateTemplate(editingTemplate.id, formData);
+        toast.success('邮件模板更新成功');
+      } else {
+        await emailTemplateApi.createTemplate(formData);
+        toast.success('邮件模板创建成功');
+      }
+      setIsTemplateDialogOpen(false);
+      setEditingTemplate(null);
+      fetchTemplates();
+    } catch (error) {
+      console.error('保存邮件模板失败:', error);
+      toast.error(error.response?.data?.message || '保存失败');
+    }
+  };
+
+  // =============== 发送任务表格列配置 ===============
+
+  const taskSearchFields = [
+    {
+      type: 'text',
+      name: 'keyword',
+      placeholder: '搜索任务名称...',
+    },
+  ];
+
+  const taskColumns = [
+    {
+      key: 'name',
+      label: '任务名称',
+      cellClassName: 'font-medium',
+    },
+    {
+      key: 'frequency',
+      label: '发送频率',
+      render: (value) => frequencyMap[value] || '-',
+    },
+    {
+      key: 'recipients',
+      label: '收件人数',
+      render: (value) => value.split(',').filter(e => e.trim()).length,
+    },
+    {
+      key: 'last_status',
+      label: '执行状态',
+      render: (value) => (
+        <Badge variant={statusMap[value]?.variant || 'secondary'}>
+          {statusMap[value]?.label || '未知'}
+        </Badge>
+      ),
+    },
+    {
+      key: 'last_executed_at',
+      label: '最后执行时间',
+      render: (value) =>
+        value
+          ? formatDistanceToNow(new Date(value), {
+              addSuffix: true,
+              locale: zhCN,
+            })
+          : '-',
+    },
+    {
+      key: 'execution_count',
+      label: '执行次数',
+    },
+    {
+      key: 'enabled',
+      label: '状态',
+      render: (value) => (
+        <Badge variant={value ? 'default' : 'outline'}>
+          {value ? '启用' : '禁用'}
+        </Badge>
+      ),
+    },
+  ];
+
+  // =============== 邮件模板表格列配置 ===============
+
+  const templateSearchFields = [
+    {
+      type: 'text',
+      name: 'keyword',
+      placeholder: '搜索模板名称...',
+    },
+  ];
+
+  const templateColumns = [
+    {
+      key: 'name',
+      label: '模板名称',
+      cellClassName: 'font-medium',
+      render: (value) => (
+        <code className="text-sm bg-muted px-2 py-1 rounded">
+          {value}
+        </code>
+      ),
+    },
+    {
+      key: 'subject',
+      label: '邮件主题',
+      render: (value) => (
+        <div className="max-w-xs truncate" title={value}>
+          {value || '-'}
+        </div>
+      ),
+    },
+    {
+      key: 'description',
+      label: '描述',
+      render: (value) => (
+        <div className="max-w-[200px] truncate">
+          {value || '-'}
+        </div>
+      ),
+    },
+    {
+      key: 'updated_at',
+      label: '更新时间',
+      render: (value) =>
+        value
+          ? formatDistanceToNow(new Date(value), {
+              addSuffix: true,
+              locale: zhCN,
+            })
+          : '-',
+    },
+  ];
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-end gap-2">
-        <Button onClick={handleCreate}>
-          <Plus className="h-4 w-4 mr-2" />
-          创建模板
-        </Button>
-      </div>
-
-      {/* 统计卡片 */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">总模板数</CardTitle>
-            <Mail className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{templates.length}</div>
-            <p className="text-xs text-muted-foreground">
-              已创建的邮件模板总数
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* 模板列表 */}
       <Card>
         <CardHeader>
-          <CardTitle>模板列表</CardTitle>
-          <CardDescription>
-            使用 Handlebars 语法创建动态邮件模板
-          </CardDescription>
+          <div className="space-y-1">
+            <CardTitle>邮件管理</CardTitle>
+            <CardDescription>
+              管理邮件模板和配置定时邮件发送任务
+            </CardDescription>
+          </div>
         </CardHeader>
         <CardContent>
-          <EmailTemplateTable
-            templates={templates}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-            onPreview={handlePreview}
-            isLoading={isLoading}
-          />
+          <Tabs defaultValue="tasks" className="w-full">
+            <TabsList>
+              <TabsTrigger value="tasks">发送任务</TabsTrigger>
+              <TabsTrigger value="templates">邮件模板</TabsTrigger>
+            </TabsList>
+
+            {/* 发送任务 Tab */}
+            <TabsContent value="tasks" className="space-y-4">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-end">
+                <Button onClick={handleAddTask}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  新建任务
+                </Button>
+              </div>
+
+              {/* 搜索栏 */}
+              <SearchFilter
+                fields={taskSearchFields}
+                values={taskSearchValues}
+                onChange={setTaskSearchValues}
+                onSearch={handleTaskSearch}
+                onReset={handleTaskReset}
+              />
+
+              {/* 数据表格 */}
+              <DataTable
+                columns={taskColumns}
+                data={tasks}
+                loading={isLoadingTasks}
+                pagination={taskPagination}
+                onPageChange={handleTaskPageChange}
+                onPageSizeChange={handleTaskPageSizeChange}
+                actions={(task) => (
+                  <>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleExecuteTask(task)}
+                      title="立即执行"
+                    >
+                      <Play className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleEditTask(task)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDeleteTask(task)}
+                    >
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </>
+                )}
+              />
+            </TabsContent>
+
+            {/* 邮件模板 Tab */}
+            <TabsContent value="templates" className="space-y-4">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-end">
+                <Button onClick={handleAddTemplate}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  新建模板
+                </Button>
+              </div>
+
+              {/* 搜索栏 */}
+              <SearchFilter
+                fields={templateSearchFields}
+                values={templateSearchValues}
+                onChange={setTemplateSearchValues}
+                onSearch={handleTemplateSearch}
+                onReset={handleTemplateReset}
+              />
+
+              {/* 数据表格 */}
+              <DataTable
+                columns={templateColumns}
+                data={templates}
+                loading={isLoadingTemplates}
+                pagination={templatePagination}
+                onPageChange={handleTemplatePageChange}
+                onPageSizeChange={handleTemplatePageSizeChange}
+                actions={(template) => (
+                  <>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleEditTemplate(template)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDeleteTemplate(template)}
+                    >
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </>
+                )}
+              />
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
 
-      {/* 创建/编辑对话框 */}
-      <EmailTemplateFormDialog
-        open={formDialogOpen}
-        onOpenChange={setFormDialogOpen}
-        template={selectedTemplate}
-        onSave={handleSave}
-        isSubmitting={isSubmitting}
+      {/* 邮件任务表单弹窗 */}
+      <EmailTaskDialog
+        open={isTaskDialogOpen}
+        onOpenChange={setIsTaskDialogOpen}
+        task={editingTask}
+        onSave={handleSaveTask}
       />
 
-      {/* 预览对话框 */}
-      <Dialog open={previewDialogOpen} onOpenChange={setPreviewDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh]">
-          <DialogHeader>
-            <DialogTitle>预览邮件模板</DialogTitle>
-            <DialogDescription>
-              {selectedTemplate?.name} - {selectedTemplate?.subject}
-            </DialogDescription>
-          </DialogHeader>
+      {/* 邮件模板表单弹窗 */}
+      <EmailTemplateFormDialog
+        open={isTemplateDialogOpen}
+        onOpenChange={setIsTemplateDialogOpen}
+        template={editingTemplate}
+        onSave={handleSaveTemplate}
+      />
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-3 md:col-span-1">
-              <div className="flex items-center justify-between">
-                <h4 className="font-medium text-sm">预览参数</h4>
-                <Button size="sm" variant="outline" onClick={refreshPreview}>
-                  刷新预览
-                </Button>
-              </div>
-              <div className="space-y-3">
-                <div className="space-y-1">
-                  <Label htmlFor="preview-title" className="text-xs">
-                    {'{{'}title{'}}'}
-                  </Label>
-                  <Input
-                    id="preview-title"
-                    value={previewVariables.title || ''}
-                    onChange={(e) => handlePreviewVariableChange('title', e.target.value)}
-                    placeholder="输入邮件标题"
-                    size="sm"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <Label htmlFor="preview-content" className="text-xs">
-                    {'{{'}content{'}}'}
-                  </Label>
-                  <Textarea
-                    id="preview-content"
-                    value={previewVariables.content || ''}
-                    onChange={(e) => handlePreviewVariableChange('content', e.target.value)}
-                    placeholder="输入邮件正文支持HTML"
-                    className="min-h-[180px] text-sm"
-                  />
-                </div>
-              </div>
-            </div>
+      {/* 删除任务确认 */}
+      <ConfirmDialog
+        open={confirmTaskDeleteOpen}
+        onOpenChange={setConfirmTaskDeleteOpen}
+        onConfirm={handleConfirmTaskDelete}
+        title="确认删除"
+        description={
+          taskToDelete
+            ? `确定要删除邮件任务 "${taskToDelete.name}" 吗？此操作无法撤销。`
+            : ''
+        }
+        confirmText="删除"
+        cancelText="取消"
+        variant="destructive"
+      />
 
-            {/* 预览内容 */}
-            <div className="md:col-span-2">
-              <h4 className="font-medium text-sm mb-3">预览效果</h4>
-              <ScrollArea className="h-[500px] border rounded-md">
-                <div
-                  className="p-4"
-                  dangerouslySetInnerHTML={{ __html: previewHtml }}
-                />
-              </ScrollArea>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* 删除模板确认 */}
+      <ConfirmDialog
+        open={confirmTemplateDeleteOpen}
+        onOpenChange={setConfirmTemplateDeleteOpen}
+        onConfirm={handleConfirmTemplateDelete}
+        title="确认删除"
+        description={
+          templateToDelete
+            ? `确定要删除邮件模板 "${templateToDelete.name}" 吗？此操作无法撤销。`
+            : ''
+        }
+        confirmText="删除"
+        cancelText="取消"
+        variant="destructive"
+      />
     </div>
   );
 }

@@ -131,23 +131,64 @@ module.exports = {
     console.log('\n⚠️  警告: 回滚初始 Migration 将删除所有表！');
     console.log('执行回滚前请确保已备份数据！\n');
 
-    // 获取所有表并删除
-    const tables = await queryInterface.showAllTables();
+    const platform = queryInterface.sequelize.options.dialect;
 
-    for (const table of tables) {
-      // 跳过 Sequelize 元表
-      if (table === 'SequelizeMeta' || table === 'SequelizeData' ||
-          table.includes('sequelize')) {
-        continue;
+    try {
+      // 获取所有表并删除
+      const tables = await queryInterface.showAllTables();
+      const dataTables = tables.filter(t => !t.includes('sequelize'));
+
+      if (dataTables.length > 0) {
+        // 先禁用外键约束
+        if (platform === 'postgres') {
+          await queryInterface.sequelize.query(`SET session_replication_role = replica;`);
+        }
+
+        // 删除所有表
+        for (const table of dataTables) {
+          try {
+            console.log(`🗑️  删除表: ${table}`);
+            await queryInterface.sequelize.query(`DROP TABLE IF EXISTS "${table}" CASCADE;`);
+          } catch (error) {
+            console.warn(`   警告: 无法删除表 ${table} - ${error.message}`);
+          }
+        }
+
+        // 重新启用外键约束
+        if (platform === 'postgres') {
+          await queryInterface.sequelize.query(`SET session_replication_role = DEFAULT;`);
+
+          // 删除所有 Enum 类型
+          const enums = [
+            'enum_owl_departments_status',
+            'enum_owl_email_logs_status',
+            'enum_owl_menus_status',
+            'enum_owl_menus_type',
+            'enum_owl_menus_menu_type',
+            'enum_owl_notifications_type',
+            'enum_owl_roles_status',
+            'enum_owl_users_status',
+            'enum_owl_user_sessions_status',
+            'enum_owl_sensitive_fields_mask_type',
+          ];
+
+          for (const enumType of enums) {
+            try {
+              await queryInterface.sequelize.query(`DROP TYPE IF EXISTS ${enumType} CASCADE;`);
+              console.log(`🗑️  删除 Enum: ${enumType}`);
+            } catch (e) {
+              // 继续
+            }
+          }
+        }
       }
 
-      try {
-        console.log(`🗑️  删除表: ${table}`);
-        await queryInterface.dropTable(table);
-      } catch (error) {
-        console.warn(`   警告: 无法删除表 ${table} - ${error.message}`);
-      }
+      console.log('\n✅ 所有表和 Enum 类型已删除\n');
+    } catch (error) {
+      console.error(`❌ 回滚失败: ${error.message}\n`);
+      throw error;
     }
+  }
 
     // 删除所有自定义 Enum 类型（PostgreSQL）
     if (queryInterface.sequelize.options.dialect === 'postgres') {

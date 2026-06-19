@@ -270,12 +270,12 @@ class EmailService {
     return `
       <div style="font-family: Arial, sans-serif; padding: 16px; background-color: #f6f8fa;">
         <div style="max-width: 640px; margin: 0 auto; background: #ffffff; border-radius: 8px; padding: 24px; box-shadow: 0 2px 6px rgba(0,0,0,0.05);">
-          <h2 style="margin-top: 0; font-size: 20px; color: #d4380d;">${title}</h2>
+          <h2 style="margin-top: 0; font-size: 20px; color: #333333;">${title}</h2>
           <div style="font-size: 14px; color: #333333; line-height: 1.6;">
             ${content}
           </div>
         </div>
-        <p style="margin-top: 16px; font-size: 12px; color: #999999; text-align: center;">此邮件由监控系统自动发送，请勿回复。</p>
+        <p style="margin-top: 16px; font-size: 12px; color: #999999; text-align: center;">此邮件由系统自动发送，请勿回复。</p>
       </div>
     `;
   }
@@ -342,12 +342,9 @@ class EmailService {
         throw new Error(`邮件模板不存在，ID: ${templateId}`);
       }
 
-      // 渲染模板
-      const subjectTemplate = handlebars.compile(template.subject);
-      const contentTemplate = handlebars.compile(template.content);
-
-      const subject = subjectTemplate(variables);
-      const html = contentTemplate(variables);
+      const subject = template.subject;
+      // 包裹内容为完整的邮件HTML框架
+      const html = this.wrapAlertContent(subject, template.content);
 
       // 发送给所有接收人
       const results = await Promise.allSettled(

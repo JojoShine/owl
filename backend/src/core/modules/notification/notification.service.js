@@ -70,6 +70,13 @@ class NotificationService {
         order: [['created_at', 'DESC']],
         limit: parseInt(limit),
         offset: parseInt(offset),
+        include: [
+          {
+            model: User,
+            as: 'user',
+            attributes: ['id', 'username', 'real_name', 'email', 'avatar'],
+          },
+        ],
       });
 
       return {
@@ -117,6 +124,13 @@ class NotificationService {
           id: notificationId,
           user_id: userId, // 确保用户只能查看自己的通知
         },
+        include: [
+          {
+            model: User,
+            as: 'user',
+            attributes: ['id', 'username', 'real_name', 'email', 'avatar'],
+          },
+        ],
       });
 
       if (!notification) {

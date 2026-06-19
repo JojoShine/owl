@@ -56,9 +56,8 @@ export default function SendNotificationDialog({ open, onOpenChange, onSuccess }
     setIsLoadingUsers(true);
     try {
       const response = await userApi.getUsers({ limit: 100, page: 1 });
-      if (response.data.success) {
-        setUsers(response.data.data.users || []);
-      }
+      const usersData = response.data?.items || response.data?.data?.users || [];
+      setUsers(Array.isArray(usersData) ? usersData : []);
     } catch (error) {
       console.error('Failed to load users:', error);
       toast.error('加载用户列表失败');
@@ -176,9 +175,9 @@ export default function SendNotificationDialog({ open, onOpenChange, onSuccess }
                     <div className="flex items-center gap-2">
                       <Users className="h-4 w-4" />
                       <span>{user.username}</span>
-                      {user.realname && (
+                      {user.real_name && (
                         <span className="text-muted-foreground text-sm">
-                          ({user.realname})
+                          ({user.real_name})
                         </span>
                       )}
                     </div>

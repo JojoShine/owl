@@ -130,9 +130,15 @@ export default function NotificationIcon() {
     setIsOpen(false);
   };
 
-  // 初始化：加载未读数量 + 监听 WebSocket 推送
+  // 组件挂载时只加载一次未读数量
   useEffect(() => {
-    // 初始加载未读数量
+    fetchUnreadCount();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // 初始化：监听 WebSocket 推送
+  useEffect(() => {
+    // 初始加载未读数量（仅在挂载时一次）
     fetchUnreadCount();
 
     // 监听实时通知推送
@@ -161,7 +167,7 @@ export default function NotificationIcon() {
         off('notification', handleNewNotification);
       };
     }
-  }, [isConnected, socket, on, off, fetchUnreadCount]);
+  }, [isConnected, socket, on, off]);
 
   // 下拉菜单打开时加载最新通知
   useEffect(() => {

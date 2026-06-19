@@ -53,7 +53,21 @@ module.exports = {
       console.log(`\n⏳ 导入初始数据...\n`);
 
       // 直接执行整个 SQL 文件
-      await queryInterface.sequelize.query(sql);
+      try {
+        await queryInterface.sequelize.query(sql);
+      } catch (err) {
+        console.error('\n❌ SQL 执行错误');
+        console.error('错误消息:', err.message);
+        console.error('错误代码:', err.code);
+        console.error('错误位置:', err.position);
+        if (err.sql) {
+          const sqlLines = err.sql.split('\n');
+          const startLine = Math.max(0, parseInt(err.position || 0) - 500);
+          console.error('\n错误周围的 SQL 内容:');
+          console.error(err.sql.substring(startLine, parseInt(err.position || 0) + 200));
+        }
+        throw err;
+      }
 
       console.log(`\n${'='.repeat(80)}`);
       console.log(`✅ 初始数据导入完成！`);

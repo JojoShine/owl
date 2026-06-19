@@ -220,18 +220,25 @@ VALUES ('88feb135-7e32-4950-ad65-d6194347d08c', 'manager', 'manager@example.com'
 
 ### 4. 初始化数据库
 
+**首次初始化（推荐）**
+
 ```bash
 cd backend
 
-# 初始化表结构 + 导入初始数据（一步完成）
+# 完整初始化：删除旧表 → 建立新表 → 导入初始数据
+npm run db:reset
+```
+
+**更新现有数据库**
+
+如果已有数据库且只需要运行新的迁移/seeder：
+
+```bash
+# 仅运行未执行过的迁移和 seeder
 npm run db:init
 ```
 
-初始化完成后会自动创建：
-- 完整的表结构
-- 超级管理员账号（admin / admin123）
-- 初始角色和权限
-- 系统菜单
+> **注意**：`npm run db:reset` 会清空所有数据，添加新的 SQL 文件后首次初始化必须使用此命令，确保新表被正确创建。
 
 ### 5. 启动服务
 
@@ -251,16 +258,19 @@ npm run dev
 
 ## 数据库命令说明
 
-| 命令 | 说明 |
-|------|------|
-| `npm run db:init` | 建表 + 导入初始数据（首次初始化） |
-| `npm run db:reset` | 完整重置（删表 → 建表 → 导入数据） |
-| `npm run db:migrate` | 仅执行建表 migration |
-| `npm run db:seed` | 仅导入初始数据 |
-| `npm run db:migrate:undo` | 回滚表结构 |
-| `npm run db:seed:undo` | 回滚初始数据 |
+| 命令 | 说明 | 场景 |
+|------|------|------|
+| `npm run db:reset` | **完整重置** — 删表 → 建表 → 导入数据 | ✅ 首次初始化、添加新 SQL 后、完全重置 |
+| `npm run db:init` | 建表 + 导入初始数据（仅运行未执行的迁移/seeder） | 表已存在，只需更新代码后的迁移/seeder |
+| `npm run db:migrate` | 仅执行建表 migration | 不需要初始数据 |
+| `npm run db:seed` | 仅导入初始数据 | 表已存在 |
+| `npm run db:migrate:undo` | 回滚表结构 | 需要重新创建表 |
+| `npm run db:seed:undo` | 回滚初始数据 | 清空初始数据但保留表结构 |
 
-> **注意**：`db:reset` 会清空所有数据，仅在开发环境使用。
+**重要提示**：
+- 🔴 **新开发者拿到项目**：使用 `npm run db:reset`（完整初始化）
+- 🟡 **添加了新的 SQL 文件后**：如果 001 migration 已执行过，必须使用 `npm run db:reset`，否则新表不会被创建
+- 🟢 **只是更新代码中的 migration/seeder**：可以使用 `npm run db:init`
 
 ---
 

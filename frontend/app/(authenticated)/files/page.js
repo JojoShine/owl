@@ -77,20 +77,51 @@ export default function FilesPage() {
   const [currentItemIsFolder, setCurrentItemIsFolder] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
 
+  // 定义加载函数 - 必须在 useEffect 之前定义
+  const loadRootContents = useCallback(async () => {
+    try {
+      setLoading(true);
+      const [foldersResponse, filesResponse] = await Promise.all([
+        folderApi.getFolders({ parent_id: 'null' }),
+        fileApi.getFiles({ folder_id: 'null' })
+      ]);
+      setFolders(foldersResponse.data?.items || []);
+      setFiles(filesResponse.data?.items || []);
+    } catch (error) {
+      console.error('Failed to load root contents:', error);
+      toast.error('加载根目录失败');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const loadFolderContents = useCallback(async (folderId) => {
+    try {
+      setLoading(true);
+      const response = await folderApi.getFolderContents(folderId);
+      const data = response.data || {};
+      setFolders(data.folders || []);
+      setFiles(data.files || []);
+    } catch (error) {
+      console.error('Failed to load folder contents:', error);
+      toast.error('加载文件夹内容失败');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   // 初始化：加载存储统计和根目录内容
   useEffect(() => {
     loadInitialData();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // 当前文件夹变化时，加载文件夹内容
+  // 当前文件夹变化时，加载文件夹内容（仅在非初始化状态下触发）
   useEffect(() => {
     if (currentFolderInfo !== null) {
       loadFolderContents(currentFolderInfo.id);
-    } else {
-      loadRootContents();
     }
-  }, [currentFolderInfo]);
+  }, [currentFolderInfo, loadFolderContents]);
 
   const loadInitialData = async () => {
     try {
@@ -106,38 +137,6 @@ export default function FilesPage() {
     }
   };
 
-  const loadRootContents = async () => {
-    try {
-      setLoading(true);
-      const [foldersResponse, filesResponse] = await Promise.all([
-        folderApi.getFolders({ parent_id: 'null' }),
-        fileApi.getFiles({ folder_id: 'null' })
-      ]);
-      setFolders(foldersResponse.data?.items || []);
-      setFiles(filesResponse.data?.items || []);
-    } catch (error) {
-      console.error('Failed to load root contents:', error);
-      toast.error('加载根目录失败');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadFolderContents = async (folderId) => {
-    try {
-      setLoading(true);
-      const response = await folderApi.getFolderContents(folderId);
-      const data = response.data || {};
-      setFolders(data.folders || []);
-      setFiles(data.files || []);
-    } catch (error) {
-      console.error('Failed to load folder contents:', error);
-      toast.error('加载文件夹内容失败');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleRefresh = useCallback(() => {
     if (currentFolderInfo) {
       loadFolderContents(currentFolderInfo.id);
@@ -147,7 +146,7 @@ export default function FilesPage() {
     fileApi.getStats()
       .then(response => setStats(response.data))
       .catch(error => console.error('Failed to refresh stats:', error));
-  }, [currentFolderInfo]);
+  }, [currentFolderInfo, loadFolderContents, loadRootContents]);
 
   const handleFolderClick = async (folderId, folderName = null) => {
     if (folderId === null) {

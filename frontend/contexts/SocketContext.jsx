@@ -202,7 +202,8 @@ export const SocketProvider = ({ children }) => {
     return () => {
       window.removeEventListener('storage', handleStorageChange);
     };
-  }, [connectSocket, disconnectSocket]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const value = {
     socket,

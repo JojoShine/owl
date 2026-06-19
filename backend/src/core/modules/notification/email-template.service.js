@@ -86,7 +86,7 @@ class EmailTemplateService {
    * @param {String} templateData.name - 模板名称（唯一）
    * @param {String} templateData.subject - 邮件主题
    * @param {String} templateData.content - HTML模板内容
-    * @param {Array} templateData.tags - 标签列表 (可选)
+   * @param {Array} templateData.tags - 标签列表 (可选)
    * @param {String} templateData.description - 模板描述 (可选)
    * @returns {Promise<Object>} 创建的模板
    */
@@ -100,12 +100,6 @@ class EmailTemplateService {
       if (existingTemplate) {
         throw new Error(`模板名称已存在: ${templateData.name}`);
       }
-
-      // 验证模板语法
-      this.validateTemplateSyntax(templateData.subject, templateData.content);
-
-      // 验证模板中使用的变量
-      this.ensureAllowedPlaceholders(templateData.subject, templateData.content);
 
       // 创建模板
       const template = await EmailTemplate.create({
@@ -147,19 +141,6 @@ class EmailTemplateService {
         if (existingTemplate) {
           throw new Error(`模板名称已存在: ${updateData.name}`);
         }
-      }
-
-      // 如果更新主题或内容，验证模板语法
-      if (updateData.subject || updateData.content) {
-        this.validateTemplateSyntax(
-          updateData.subject || template.subject,
-          updateData.content || template.content
-        );
-
-        this.ensureAllowedPlaceholders(
-          updateData.subject || template.subject,
-          updateData.content || template.content
-        );
       }
 
       // 更新模板

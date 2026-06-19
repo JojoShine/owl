@@ -26,6 +26,7 @@ const TABLES_WITH_AUDIT = [
   'owl_departments',
   'owl_dictionary',
   'owl_email_logs',
+  'owl_email_tasks',
   'owl_email_templates',
   'owl_file_permissions',
   'owl_file_shares',
