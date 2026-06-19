@@ -1,0 +1,40 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 30
+    },
+    "auditLog": "/Users/jojoshine/projects/ykt_owl_platform/backend/logs/system/.3d2ff3eff399efdc85fe214984e6248e61b575e6-audit.json",
+    "files": [
+        {
+            "date": 1768993234606,
+            "name": "/Users/jojoshine/projects/ykt_owl_platform/backend/logs/system/system-2026-01-21.log",
+            "hash": "961ec37f5fe624218b3bd9bb8fb073a00e7b0c09c9a713164c80ba914e1c331a"
+        },
+        {
+            "date": 1769042016639,
+            "name": "/Users/jojoshine/projects/ykt_owl_platform/backend/logs/system/system-2026-01-22.log",
+            "hash": "030c3934763d1846a98da429f5e0f24f7d8e2a574fa15ae0f76c2811d7551a93"
+        },
+        {
+            "date": 1769128390585,
+            "name": "/Users/jojoshine/projects/ykt_owl_platform/backend/logs/system/system-2026-01-23.log",
+            "hash": "de04f596cc499ef38e3e5f25e5364ea98a34d5f23b413333ebe960e02b3cb542"
+        },
+        {
+            "date": 1769228329031,
+            "name": "/Users/jojoshine/projects/ykt_owl_platform/backend/logs/system/system-2026-01-24.log",
+            "hash": "0bf3b3f05e4f9c4d7da4ad6aa2c73f9805e1ec39a93668c5745a9e1082c41fcf"
+        },
+        {
+            "date": 1769387744031,
+            "name": "/Users/jojoshine/projects/ykt_owl_platform/backend/logs/system/system-2026-01-26.log",
+            "hash": "b0945e43254d0f46cc89fcb14d38e57875bcd14547ea68a5b24a8511e7f7edc8"
+        },
+        {
+            "date": 1769443388501,
+            "name": "/Users/jojoshine/projects/ykt_owl_platform/backend/logs/system/system-2026-01-27.log",
+            "hash": "03dd98d801ad10cdb4942b36640fdf457aefe40f45ed4d85424f7ff5f84ad8dc"
+        }
+    ],
+    "hashType": "sha256"
+}

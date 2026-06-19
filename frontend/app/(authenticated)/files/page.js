@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import {
   FolderIcon,
@@ -17,27 +18,50 @@ import { formatFileSize } from '@/lib/utils/file';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
-import FileUploadDialog from '@/components/files/FileUploadDialog';
 import FileList from '@/components/files/FileList';
-import NewFolderDialog from '@/components/files/NewFolderDialog';
-import FilePreviewDialog from '@/components/files/FilePreviewDialog';
-import FileShareDialog from '@/components/files/FileShareDialog';
-import RenameDialog from '@/components/files/RenameDialog';
-import MoveDialog from '@/components/files/MoveDialog';
-import PermissionDialog from '@/components/files/PermissionDialog';
+
+// 对话框组件动态导入 - 仅在需要时加载
+const FileUploadDialog = dynamic(() => import('@/components/files/FileUploadDialog'), {
+  loading: () => null,
+  ssr: false
+});
+const NewFolderDialog = dynamic(() => import('@/components/files/NewFolderDialog'), {
+  loading: () => null,
+  ssr: false
+});
+const FilePreviewDialog = dynamic(() => import('@/components/files/FilePreviewDialog'), {
+  loading: () => null,
+  ssr: false
+});
+const FileShareDialog = dynamic(() => import('@/components/files/FileShareDialog'), {
+  loading: () => null,
+  ssr: false
+});
+const RenameDialog = dynamic(() => import('@/components/files/RenameDialog'), {
+  loading: () => null,
+  ssr: false
+});
+const MoveDialog = dynamic(() => import('@/components/files/MoveDialog'), {
+  loading: () => null,
+  ssr: false
+});
+const PermissionDialog = dynamic(() => import('@/components/files/PermissionDialog'), {
+  loading: () => null,
+  ssr: false
+});
 
 export default function FilesPage() {
   const router = useRouter();
 
   // 状态管理
-  const [currentFolderInfo, setCurrentFolderInfo] = useState(null); // 当前文件夹信息 {id, name}
-  const [folders, setFolders] = useState([]); // 当前文件夹下的子文件夹
-  const [files, setFiles] = useState([]); // 当前文件夹下的文件
-  const [stats, setStats] = useState(null); // 存储统计
-  const [viewMode, setViewMode] = useState('grid'); // 视图模式: grid | list
+  const [currentFolderInfo, setCurrentFolderInfo] = useState(null);
+  const [folders, setFolders] = useState([]);
+  const [files, setFiles] = useState([]);
+  const [stats, setStats] = useState(null);
+  const [viewMode, setViewMode] = useState('grid');
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedItems, setSelectedItems] = useState([]); // 选中的文件/文件夹
+  const [selectedItems, setSelectedItems] = useState([]);
 
   // 对话框状态
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
@@ -48,10 +72,10 @@ export default function FilesPage() {
   const [renameDialogOpen, setRenameDialogOpen] = useState(false);
   const [moveDialogOpen, setMoveDialogOpen] = useState(false);
   const [permissionDialogOpen, setPermissionDialogOpen] = useState(false);
-  const [currentFile, setCurrentFile] = useState(null); // 当前操作的文件
-  const [currentItem, setCurrentItem] = useState(null); // 当前操作的项（文件或文件夹）
-  const [currentItemIsFolder, setCurrentItemIsFolder] = useState(false); // 当前操作项是否为文件夹
-  const [itemToDelete, setItemToDelete] = useState(null); // 待删除的项 {item, isFolder}
+  const [currentFile, setCurrentFile] = useState(null);
+  const [currentItem, setCurrentItem] = useState(null);
+  const [currentItemIsFolder, setCurrentItemIsFolder] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
 
   // 初始化：加载存储统计和根目录内容
   useEffect(() => {
@@ -64,23 +88,15 @@ export default function FilesPage() {
     if (currentFolderInfo !== null) {
       loadFolderContents(currentFolderInfo.id);
     } else {
-      // 根目录
       loadRootContents();
     }
   }, [currentFolderInfo]);
 
-  /**
-   * 加载初始数据
-   */
   const loadInitialData = async () => {
     try {
       setLoading(true);
-
-      // 加载存储统计
       const statsResponse = await fileApi.getStats();
       setStats(statsResponse.data || {});
-
-      // 加载根目录内容
       await loadRootContents();
     } catch (error) {
       console.error('Failed to load initial data:', error);
@@ -90,19 +106,13 @@ export default function FilesPage() {
     }
   };
 
-  /**
-   * 加载根目录内容
-   */
   const loadRootContents = async () => {
     try {
       setLoading(true);
-
-      // 获取根目录的文件夹和文件
       const [foldersResponse, filesResponse] = await Promise.all([
         folderApi.getFolders({ parent_id: 'null' }),
         fileApi.getFiles({ folder_id: 'null' })
       ]);
-
       setFolders(foldersResponse.data?.items || []);
       setFiles(filesResponse.data?.items || []);
     } catch (error) {
@@ -113,16 +123,11 @@ export default function FilesPage() {
     }
   };
 
-  /**
-   * 加载文件夹内容
-   */
   const loadFolderContents = async (folderId) => {
     try {
       setLoading(true);
-
       const response = await folderApi.getFolderContents(folderId);
       const data = response.data || {};
-
       setFolders(data.folders || []);
       setFiles(data.files || []);
     } catch (error) {
@@ -133,41 +138,28 @@ export default function FilesPage() {
     }
   };
 
-  /**
-   * 刷新当前视图
-   */
-  const handleRefresh = () => {
+  const handleRefresh = useCallback(() => {
     if (currentFolderInfo) {
       loadFolderContents(currentFolderInfo.id);
     } else {
       loadRootContents();
     }
-
-    // 同时刷新统计数据
     fileApi.getStats()
       .then(response => setStats(response.data))
       .catch(error => console.error('Failed to refresh stats:', error));
-  };
+  }, [currentFolderInfo]);
 
-  /**
-   * 进入文件夹
-   */
   const handleFolderClick = async (folderId, folderName = null) => {
     if (folderId === null) {
-      // 点击根目录
       setCurrentFolderInfo(null);
       setSelectedItems([]);
       return;
     }
-
-    // 如果已经有名称（从文件夹列表点击），直接使用
     if (folderName) {
       setCurrentFolderInfo({ id: folderId, name: folderName });
       setSelectedItems([]);
       return;
     }
-
-    // 否则从API获取文件夹详情（左侧树点击的情况）
     try {
       const response = await folderApi.getFolderById(folderId);
       setCurrentFolderInfo({
@@ -182,38 +174,20 @@ export default function FilesPage() {
     }
   };
 
-  /**
-   * 返回上级文件夹
-   */
-  const handleGoBack = () => {
-    setCurrentFolderInfo(null);
-  };
-
-  /**
-   * 文件点击（预览或下载）
-   */
   const handleFileClick = (file) => {
     setCurrentFile(file);
     setPreviewDialogOpen(true);
   };
 
-  /**
-   * 处理文件/文件夹操作
-   */
   const handleItemAction = async (item, action, isFolder) => {
     setCurrentFile(item);
-
     switch (action) {
       case 'preview':
-        // 打开预览对话框
         setPreviewDialogOpen(true);
         break;
-
       case 'download':
-        // 下载文件
         try {
           const response = await fileApi.downloadFile(item.id);
-          // response.data 已经是 Blob 对象
           const url = window.URL.createObjectURL(response.data);
           const link = document.createElement('a');
           link.href = url;
@@ -228,57 +202,39 @@ export default function FilesPage() {
           toast.error('文件下载失败');
         }
         break;
-
       case 'share':
-        // 打开分享对话框
         setShareDialogOpen(true);
         break;
-
       case 'rename':
-        // 打开重命名对话框
         setCurrentItem(item);
         setCurrentItemIsFolder(isFolder);
         setRenameDialogOpen(true);
         break;
-
       case 'move':
-        // 打开移动对话框
         setCurrentItem(item);
         setCurrentItemIsFolder(isFolder);
         setMoveDialogOpen(true);
         break;
-
       case 'copy':
-        // TODO: 打开复制对话框
         toast.info('复制功能将在下一步实现');
         break;
-
       case 'permissions':
-        // 打开权限管理对话框
         setCurrentItem(item);
         setCurrentItemIsFolder(isFolder);
         setPermissionDialogOpen(true);
         break;
-
       case 'delete':
-        // 打开确认对话框
         setItemToDelete({ item, isFolder });
         setConfirmDialogOpen(true);
         break;
-
       default:
         console.warn(`Unknown action: ${action}`);
     }
   };
 
-  /**
-   * 确认删除操作
-   */
   const handleConfirmDelete = async () => {
     if (!itemToDelete) return;
-
     const { item, isFolder } = itemToDelete;
-
     try {
       if (isFolder) {
         await folderApi.deleteFolder(item.id);
@@ -289,7 +245,6 @@ export default function FilesPage() {
       handleRefresh();
     } catch (error) {
       console.error('Failed to delete:', error);
-      // 显示后端返回的具体错误信息
       const errorMessage = error.response?.data?.message || error.message || '删除失败';
       toast.error(errorMessage);
     } finally {
@@ -297,12 +252,8 @@ export default function FilesPage() {
     }
   };
 
-  /**
-   * 处理重命名
-   */
   const handleRename = async (newName) => {
     if (!currentItem) return;
-
     try {
       if (currentItemIsFolder) {
         await folderApi.updateFolder(currentItem.id, { name: newName });
@@ -320,12 +271,8 @@ export default function FilesPage() {
     }
   };
 
-  /**
-   * 处理移动
-   */
   const handleMove = async (targetFolderId) => {
     if (!currentItem) return;
-
     try {
       if (currentItemIsFolder) {
         await folderApi.updateFolder(currentItem.id, { parent_id: targetFolderId });
@@ -343,16 +290,11 @@ export default function FilesPage() {
     }
   };
 
-  /**
-   * 搜索过滤
-   */
   const getFilteredItems = () => {
     if (!searchQuery.trim()) {
       return { folders, files };
     }
-
     const query = searchQuery.toLowerCase();
-
     return {
       folders: folders.filter(folder =>
         folder.name.toLowerCase().includes(query)
@@ -376,8 +318,6 @@ export default function FilesPage() {
             管理您的文件和文件夹
           </p>
         </div>
-
-        {/* 存储统计 */}
         <div className="flex items-center gap-2 px-4 py-2 bg-muted rounded-lg min-h-[44px]">
           {stats ? (
             <>
@@ -404,7 +344,6 @@ export default function FilesPage() {
             <UploadIcon />
             上传文件
           </Button>
-
           <Button
             variant="outline"
             onClick={() => setNewFolderDialogOpen(true)}
@@ -412,7 +351,6 @@ export default function FilesPage() {
             <PlusIcon />
             新建文件夹
           </Button>
-
           <Button
             variant="outline"
             onClick={handleRefresh}
@@ -421,9 +359,7 @@ export default function FilesPage() {
             刷新
           </Button>
         </div>
-
         <div className="flex items-center gap-2">
-          {/* 搜索框 */}
           <div className="relative">
             <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
@@ -434,8 +370,6 @@ export default function FilesPage() {
               className="pl-10 pr-4 py-2 w-64 border border-border bg-background text-foreground rounded-lg focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
-
-          {/* 视图切换 */}
           <div className="flex items-center gap-0.5 border border-border rounded-md p-0.5">
             <Button
               variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
@@ -467,38 +401,42 @@ export default function FilesPage() {
         onAction={handleItemAction}
       />
 
-      {/* 对话框组件 */}
-      <FileUploadDialog
-        open={uploadDialogOpen}
-        onClose={() => setUploadDialogOpen(false)}
-        folderId={currentFolderInfo?.id}
-        onUploadComplete={handleRefresh}
-      />
-
-      <NewFolderDialog
-        open={newFolderDialogOpen}
-        onClose={() => setNewFolderDialogOpen(false)}
-        parentFolderId={currentFolderInfo?.id}
-        onSuccess={handleRefresh}
-      />
-
-      <FilePreviewDialog
-        open={previewDialogOpen}
-        onClose={() => setPreviewDialogOpen(false)}
-        file={currentFile}
-        onShare={(file) => {
-          setCurrentFile(file);
-          setPreviewDialogOpen(false);
-          setShareDialogOpen(true);
-        }}
-      />
-
-      <FileShareDialog
-        open={shareDialogOpen}
-        onClose={() => setShareDialogOpen(false)}
-        file={currentFile}
-      />
-
+      {/* 对话框组件 - 仅在打开时渲染 */}
+      {uploadDialogOpen && (
+        <FileUploadDialog
+          open={uploadDialogOpen}
+          onClose={() => setUploadDialogOpen(false)}
+          folderId={currentFolderInfo?.id}
+          onUploadComplete={handleRefresh}
+        />
+      )}
+      {newFolderDialogOpen && (
+        <NewFolderDialog
+          open={newFolderDialogOpen}
+          onClose={() => setNewFolderDialogOpen(false)}
+          parentFolderId={currentFolderInfo?.id}
+          onSuccess={handleRefresh}
+        />
+      )}
+      {previewDialogOpen && (
+        <FilePreviewDialog
+          open={previewDialogOpen}
+          onClose={() => setPreviewDialogOpen(false)}
+          file={currentFile}
+          onShare={(file) => {
+            setCurrentFile(file);
+            setPreviewDialogOpen(false);
+            setShareDialogOpen(true);
+          }}
+        />
+      )}
+      {shareDialogOpen && (
+        <FileShareDialog
+          open={shareDialogOpen}
+          onClose={() => setShareDialogOpen(false)}
+          file={currentFile}
+        />
+      )}
       <ConfirmDialog
         open={confirmDialogOpen}
         onOpenChange={setConfirmDialogOpen}
@@ -513,29 +451,32 @@ export default function FilesPage() {
         cancelText="取消"
         variant="destructive"
       />
-
-      <RenameDialog
-        open={renameDialogOpen}
-        onClose={() => setRenameDialogOpen(false)}
-        item={currentItem}
-        isFolder={currentItemIsFolder}
-        onSuccess={handleRename}
-      />
-
-      <MoveDialog
-        open={moveDialogOpen}
-        onClose={() => setMoveDialogOpen(false)}
-        item={currentItem}
-        isFolder={currentItemIsFolder}
-        onSuccess={handleMove}
-      />
-
-      <PermissionDialog
-        open={permissionDialogOpen}
-        onClose={() => setPermissionDialogOpen(false)}
-        item={currentItem}
-        isFolder={currentItemIsFolder}
-      />
+      {renameDialogOpen && (
+        <RenameDialog
+          open={renameDialogOpen}
+          onClose={() => setRenameDialogOpen(false)}
+          item={currentItem}
+          isFolder={currentItemIsFolder}
+          onSuccess={handleRename}
+        />
+      )}
+      {moveDialogOpen && (
+        <MoveDialog
+          open={moveDialogOpen}
+          onClose={() => setMoveDialogOpen(false)}
+          item={currentItem}
+          isFolder={currentItemIsFolder}
+          onSuccess={handleMove}
+        />
+      )}
+      {permissionDialogOpen && (
+        <PermissionDialog
+          open={permissionDialogOpen}
+          onClose={() => setPermissionDialogOpen(false)}
+          item={currentItem}
+          isFolder={currentItemIsFolder}
+        />
+      )}
     </div>
   );
 }

@@ -1,0 +1,20 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 30
+    },
+    "auditLog": "/Users/jojoshine/projects/ha-wechat-miniprogram-owl-platform/backend/logs/system/.32ab987de6131da0e60c06df65b77bc4a2f3b879-audit.json",
+    "files": [
+        {
+            "date": 1775550635790,
+            "name": "/Users/jojoshine/projects/ha-wechat-miniprogram-owl-platform/backend/logs/system/system-2026-04-07.log",
+            "hash": "f1cc7f0914f0a3d7c1eb83c5e2c9fa8cb5cbf033e2bfd89329a46ed14a13da3d"
+        },
+        {
+            "date": 1775609116212,
+            "name": "/Users/jojoshine/projects/ha-wechat-miniprogram-owl-platform/backend/logs/system/system-2026-04-08.log",
+            "hash": "ef31d9c600715d47ce6b4950ed763b2b58d7548e63fee1970f3c2696f397c18e"
+        }
+    ],
+    "hashType": "sha256"
+}
