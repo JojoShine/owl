@@ -151,3 +151,137 @@ UPDATE owl_users SET access_level = 'SELF' WHERE username = 'user';
 
 ## 审查部分
 [待完成后填写]
+
+---
+
+# 多实例 Token 过期问题优化
+
+## 问题描述
+当多个 Owl 平台实例同时运行时，它们共享同一个 localStorage，导致：
+1. Token 恢复逻辑混乱（多个实例互相覆盖）
+2. 一个实例登出会影响其他实例
+3. 无法独立管理多个平台的认证状态
+
+## 解决方案
+
+### 方案设计
+为每个平台实例使用**独立的 localStorage 命名空间**，通过在 key 前加上平台标识前缀来隔离。
+
+### 实现步骤
+
+#### Phase 1: 平台标识管理
+- [ ] 读取或生成平台 ID（从环境变量 `NEXT_PUBLIC_PLATFORM_ID` 或 URL）
+- [ ] 创建 `lib/utils/storage-key.js` 工具函数，生成命名空间化的 key
+
+#### Phase 2: 更新 AuthProvider
+- [ ] 修改 `lib/utils/auth.js` 中的 localStorage 操作
+  - [ ] 将所有 localStorage key 使用 `getStorageKey()` 包装
+  - [ ] 保持 API 和逻辑不变
+
+#### Phase 3: 更新工具函数
+- [ ] 更新 `getToken()` 函数
+- [ ] 更新 `getUser()` 函数
+
+#### Phase 4: 测试
+- [ ] 验证单个实例的 token 恢复正常
+- [ ] 验证多个实例互不干扰
+- [ ] 测试登出时只清除当前实例的 token
+
+## 相关文件
+- 主要修改：`/Users/jojoshine/projects/owl_platform/frontend/lib/utils/auth.js`
+- 新增文件：`/Users/jojoshine/projects/owl_platform/frontend/lib/utils/storage-key.js`
+
+## 实现进度
+- [ ] Phase 1: 平台标识管理
+- [ ] Phase 2: 更新 AuthProvider
+- [ ] Phase 3: 更新工具函数
+- [ ] Phase 4: 测试
+
+## 审查部分
+[待完成后填写]
+
+---
+
+# 多实例 Token 过期问题优化
+
+## 问题描述
+当多个 Owl 平台实例同时运行时，它们共享同一个 localStorage，导致：
+1. Token 恢复逻辑混乱（多个实例互相覆盖）
+2. 一个实例登出会影响其他实例
+3. 无法独立管理多个平台的认证状态
+
+## 解决方案
+
+### 方案设计
+为每个平台实例使用**独立的 localStorage 命名空间**，通过在 key 前加上平台标识前缀来隔离。
+
+### 实现步骤
+
+#### Phase 1: 平台标识管理 ✅
+- [x] 创建 `lib/utils/storage-key.js` 工具函数
+  - [x] 从环境变量 `NEXT_PUBLIC_PLATFORM_ID` 获取平台 ID
+  - [x] 从 URL 端口号生成平台 ID
+  - [x] 生成命名空间化的 key（格式：`platformId__keyName`）
+
+#### Phase 2: 更新 AuthProvider ✅
+- [x] 修改 `lib/utils/auth.js`
+  - [x] 导入 `getStorageKey`
+  - [x] 更新初始化逻辑使用命名空间 key
+  - [x] 更新登录逻辑使用命名空间 key
+  - [x] 更新登出逻辑使用命名空间 key
+  - [x] 更新刷新用户逻辑使用命名空间 key
+  - [x] 更新 `isAuthenticated()` 使用命名空间 key
+
+#### Phase 3: 更新工具函数 ✅
+- [x] 更新 `getToken()` 使用命名空间 key
+- [x] 更新 `getUser()` 使用命名空间 key
+- [x] 更新 `http-client.js` 中的所有 localStorage 操作
+- [x] 更新 `module-client.js` 中的所有 localStorage 操作
+- [x] 更新 `SocketContext.jsx` 中的 token 读取
+- [x] 更新 `sms-login-form.jsx` 中的 token 保存
+
+#### Phase 4: 测试 ⏳
+- [ ] 验证单个实例的 token 恢复正常
+- [ ] 验证多个实例互不干扰
+- [ ] 测试登出时只清除当前实例的 token
+
+## 相关文件
+- 新增文件：`/Users/jojoshine/projects/owl_platform/frontend/lib/utils/storage-key.js`
+- 修改文件：
+  - `/Users/jojoshine/projects/owl_platform/frontend/lib/utils/auth.js`
+  - `/Users/jojoshine/projects/owl_platform/frontend/lib/utils/http-client.js`
+  - `/Users/jojoshine/projects/owl_platform/frontend/lib/utils/module-client.js`
+  - `/Users/jojoshine/projects/owl_platform/frontend/contexts/SocketContext.jsx`
+  - `/Users/jojoshine/projects/owl_platform/frontend/components/auth/sms-login-form.jsx`
+
+## 审查部分
+
+### 改动总结
+实现了多实例 localStorage 隔离方案，核心改动：
+
+1. **新增存储 key 工具** (`storage-key.js`)
+   - 自动检测平台 ID（优先级：环境变量 > URL 端口 > 生成唯一ID）
+   - 所有 localStorage key 使用 `getStorageKey()` 包装，生成 `platformId__keyName` 格式的 key
+
+2. **最小化改动**
+   - 所有改动都是将 `localStorage.getItem('token')` 改为 `localStorage.getItem(getStorageKey('token'))`
+   - API 和逻辑完全不变，只改变 key 的生成方式
+
+3. **隔离效果**
+   - 多个实例运行在不同端口时自动获得不同 platformId（如 `port-3000__token` vs `port-3001__token`）
+   - 每个实例只能访问自己命名空间的 token 和用户信息
+   - 登出一个实例不会影响其他实例
+
+### 已覆盖的场景
+- ✅ 认证初始化和 token 恢复
+- ✅ 登录/登出
+- ✅ Token 自动刷新（http-client、module-client）
+- ✅ WebSocket 连接（SocketContext）
+- ✅ 短信登录（sms-login-form）
+- ✅ 权限检查和用户信息获取
+
+### 测试建议
+1. 本地同时启动两个前端实例（不同端口）
+2. 在实例1登录，验证实例2不受影响
+3. 在实例2登录，验证实例1的 token 仍然有效
+4. 在实例1登出，验证实例2可以正常使用

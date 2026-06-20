@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { smsAuthApi } from '@/lib/api';
 import { useAuth } from '@/lib/utils/auth';
+import { getStorageKey } from '@/lib/utils/storage-key';
 
 // 表单验证规则 - 只做最基本的非空检查
 const smsLoginSchema = z.object({
@@ -87,12 +88,12 @@ export default function SmsLoginForm({ onSuccess }) {
       console.log('API 响应:', result);
 
       if (result.success && result.data) {
-        // 直接保存token和用户信息到localStorage
-        localStorage.setItem('token', result.data.token);
-        localStorage.setItem('user', JSON.stringify(result.data.user));
-        
+        // 直接保存token和用户信息到localStorage（使用命名空间化的key）
+        localStorage.setItem(getStorageKey('token'), result.data.token);
+        localStorage.setItem(getStorageKey('user'), JSON.stringify(result.data.user));
+
         console.log('短信登录成功，已保存token和用户信息');
-        
+
         // 强制刷新页面，让AuthProvider重新初始化
         if (onSuccess) {
           onSuccess();

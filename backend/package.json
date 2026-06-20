@@ -19,6 +19,7 @@
     "db:init:full": "npm run db:reset",
     "db:export": "node scripts/export-dev-data.js",
     "db:generate-seeder": "node scripts/generate-complete-seeder.js",
+    "pass": "echo 'admin初始密码：R994wjZIIB，请勿在线上系统中使用该密码。'",
     "pm2:start": "pm2 start ecosystem.config.js --env production",
     "pm2:stop": "pm2 stop owl-backend",
     "pm2:restart": "pm2 restart owl-backend",

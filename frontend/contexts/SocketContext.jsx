@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { io } from 'socket.io-client';
+import { getStorageKey } from '@/lib/utils/storage-key';
 
 const SocketContext = createContext(null);
 
@@ -24,7 +25,7 @@ export const SocketProvider = ({ children }) => {
   // 获取token
   const getToken = useCallback(() => {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('token');
+      return localStorage.getItem(getStorageKey('token'));
     }
     return null;
   }, []);
@@ -186,7 +187,7 @@ export const SocketProvider = ({ children }) => {
   // 监听token变化（登录/登出）
   useEffect(() => {
     const handleStorageChange = (e) => {
-      if (e.key === 'token') {
+      if (e.key === getStorageKey('token')) {
         if (e.newValue) {
           // 登录了，连接socket
           connectSocket();

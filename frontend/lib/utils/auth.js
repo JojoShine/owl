@@ -4,6 +4,7 @@ import { createContext, useContext, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { authApi } from '../api';
+import { getStorageKey } from './storage-key';
 
 // 创建认证Context
 const AuthContext = createContext({});
@@ -27,8 +28,8 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const initAuth = () => {
       try {
-        const token = localStorage.getItem('token');
-        const userStr = localStorage.getItem('user');
+        const token = localStorage.getItem(getStorageKey('token'));
+        const userStr = localStorage.getItem(getStorageKey('user'));
 
         if (token && userStr) {
           const userData = JSON.parse(userStr);
@@ -85,9 +86,9 @@ export const AuthProvider = ({ children }) => {
       const response = await authApi.login(credentials);
       const { token, user: userData } = response.data;
 
-      // 保存到localStorage
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(userData));
+      // 保存到localStorage（使用命名空间化的key）
+      localStorage.setItem(getStorageKey('token'), token);
+      localStorage.setItem(getStorageKey('user'), JSON.stringify(userData));
 
       // 更新状态
       setUser(userData);
@@ -109,9 +110,9 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       console.error('登出API调用失败:', error);
     } finally {
-      // 清除localStorage
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
+      // 清除localStorage（使用命名空间化的key）
+      localStorage.removeItem(getStorageKey('token'));
+      localStorage.removeItem(getStorageKey('user'));
 
       // 清除状态
       setUser(null);
@@ -127,8 +128,8 @@ export const AuthProvider = ({ children }) => {
       const response = await authApi.getCurrentUser();
       const userData = response.data;
 
-      // 更新localStorage和状态
-      localStorage.setItem('user', JSON.stringify(userData));
+      // 更新localStorage和状态（使用命名空间化的key）
+      localStorage.setItem(getStorageKey('user'), JSON.stringify(userData));
       setUser(userData);
 
       return { success: true, data: userData };
@@ -140,7 +141,7 @@ export const AuthProvider = ({ children }) => {
 
   // 检查是否已登录
   const isAuthenticated = () => {
-    return !!user && !!localStorage.getItem('token');
+    return !!user && !!localStorage.getItem(getStorageKey('token'));
   };
 
   // 检查权限
@@ -184,7 +185,7 @@ export const AuthProvider = ({ children }) => {
 // 工具函数：获取token
 export const getToken = () => {
   if (typeof window !== 'undefined') {
-    return localStorage.getItem('token');
+    return localStorage.getItem(getStorageKey('token'));
   }
   return null;
 };
@@ -192,7 +193,7 @@ export const getToken = () => {
 // 工具函数：获取用户信息
 export const getUser = () => {
   if (typeof window !== 'undefined') {
-    const userStr = localStorage.getItem('user');
+    const userStr = localStorage.getItem(getStorageKey('user'));
     if (userStr) {
       try {
         return JSON.parse(userStr);

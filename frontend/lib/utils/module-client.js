@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { toast } from 'sonner';
+import { getStorageKey } from './storage-key';
 
 const axiosInstance = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL ?
@@ -14,9 +15,9 @@ const axiosInstance = axios.create({
 // 请求拦截器
 axiosInstance.interceptors.request.use(
   (config) => {
-    // 从localStorage获取token
+    // 从localStorage获取token（使用命名空间化的key）
     if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem(getStorageKey('token'));
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
@@ -47,8 +48,8 @@ axiosInstance.interceptors.response.use(
         case 401:
           // Token过期，直接跳转到登录页
           if (typeof window !== 'undefined') {
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
+            localStorage.removeItem(getStorageKey('token'));
+            localStorage.removeItem(getStorageKey('user'));
             toast.error(data?.message || '登录已过期，请重新登录');
             setTimeout(() => {
               window.location.href = '/login';
