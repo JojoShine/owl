@@ -54,37 +54,6 @@ git clone https://github.com/JojoShine/owl owl_platform
 cd owl_platform
 ```
 
-### 2. 一键启动（推荐）
-
-前提条件：
-1. PostgreSQL 服务已启动
-2. Redis 服务已启动
-3. MinIO 服务已启动
-4. `backend/.env.local` 已正确配置
-5. `frontend/.env.local` 已正确配置
-
-进入后端目录执行：
-
-```bash
-cd backend
-node scripts/setup.js
-```
-
-脚本自动完成：依赖检查 → 安装依赖 → 初始化数据库 → 启动服务
-
-后端：http://localhost:3001 | 前端：http://localhost:3000
-
----
-
-## 详细初始化步骤
-
-### 1. 克隆项目
-
-```bash
-git clone https://github.com/JojoShine/owl owl_platform
-cd owl_platform
-```
-
 ### 2. 安装依赖
 
 ```bash
@@ -100,18 +69,19 @@ npm install
 ### 3. 配置环境变量
 
 本项目使用分离的环境配置文件：
+- `backend/.env.local` 和 `frontend/.env.local` — 本地开发环境
+- `backend/.env.production` 和 `frontend/.env.production` — 生产环境
 
-- `.env.local` — 本地开发环境配置
-- `.env.production` — 生产环境配置
+#### 本地开发环境配置
 
-**本地开发环境**
+**后端配置**
 
 ```bash
 cd backend
 cp .env.example .env.local
 ```
 
-编辑 `.env.local`：
+编辑 `backend/.env.local`：
 
 ```bash
 # 数据库
@@ -126,7 +96,7 @@ REDIS_HOST=localhost
 REDIS_PORT=6379
 REDIS_PASSWORD=
 
-# JWT（使用以下命令生成随机密钥）
+# JWT
 JWT_SECRET=your_random_secret_key_here
 JWT_REFRESH_SECRET=your_random_refresh_key_here
 
@@ -138,13 +108,13 @@ MINIO_SECRET_KEY=minioadmin
 MINIO_BUCKET=owl
 MINIO_USE_SSL=false
 
-# 短信（可选，仅在启用短信登录时配置）
+# 短信（可选）
 SMS_ACCESS_KEY_ID=
 SMS_ACCESS_KEY_SECRET=
 SMS_SIGN_NAME=
 SMS_TEMPLATE_CODE=
 
-# 邮件（可选，仅在启用邮件通知时配置）
+# 邮件（可选）
 SMTP_HOST=
 SMTP_PORT=465
 SMTP_USER=
@@ -155,13 +125,36 @@ APP_ENV=development
 APP_DEBUG=true
 ```
 
-**生产环境配置**
+**前端配置**
 
 ```bash
+cd frontend
+cp .env.example .env.local
+```
+
+编辑 `frontend/.env.local`：
+
+```bash
+# API URL - 指向本地后端
+NEXT_PUBLIC_API_URL=http://localhost:3001/api/system
+
+# Base Path - 本地开发为空
+NEXT_PUBLIC_BASE_PATH=
+
+# 应用名称
+NEXT_PUBLIC_APP_NAME=Owl Platform 管理后台
+```
+
+#### 生产环境配置
+
+**后端配置**
+
+```bash
+cd backend
 cp .env.example .env.production
 ```
 
-编辑 `.env.production`，填写生产环境的完整配置：
+编辑 `backend/.env.production`：
 
 ```bash
 # 应用环境
@@ -169,14 +162,14 @@ APP_ENV=production
 APP_DEBUG=false
 NODE_ENV=production
 
-# 数据库 - 生产环境配置
+# 数据库 - 生产环境
 DB_HOST=your_production_db_host
 DB_PORT=5432
 DB_NAME=owl_prod
 DB_USER=owl_db_user
 DB_PASSWORD=strong_database_password_here
 
-# Redis - 生产环境配置
+# Redis - 生产环境
 REDIS_HOST=your_production_redis_host
 REDIS_PORT=6379
 REDIS_PASSWORD=strong_redis_password_here
@@ -185,7 +178,7 @@ REDIS_PASSWORD=strong_redis_password_here
 JWT_SECRET=<生成的32位随机十六进制字符串>
 JWT_REFRESH_SECRET=<生成的32位随机十六进制字符串>
 
-# MinIO - 生产环境配置
+# MinIO - 生产环境
 MINIO_ENDPOINT=your_minio_server_domain
 MINIO_PORT=9000
 MINIO_ACCESS_KEY=production_access_key
@@ -206,48 +199,31 @@ SMTP_USER=your_email@example.com
 SMTP_PASSWORD=your_smtp_password
 ```
 
-各配置项说明：
-- `DB_*` — PostgreSQL 生产数据库连接信息
-- `REDIS_*` — Redis 生产服务器信息
-- `JWT_*` — JWT 签名密钥，必须使用强随机值
-- `MINIO_*` — MinIO 生产服务器信息，需启用 SSL
-- `SMS_*` — 短信服务商配置（如使用）
-- `SMTP_*` — 邮件服务配置（如使用）
+**前端配置**
+
+```bash
+cd frontend
+cp .env.example .env.production
+```
+
+编辑 `frontend/.env.production`：
+
+```bash
+# API URL - 使用相对路径，通过 nginx 转发
+NEXT_PUBLIC_API_URL=/owl/api
+
+# Base Path - 生产环境部署路径前缀
+NEXT_PUBLIC_BASE_PATH=/owl
+
+# 应用名称
+NEXT_PUBLIC_APP_NAME=owl系统管理后台
+```
 
 **生成强随机密钥**
 
 ```bash
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ```
-
-### 4. 获取初始账号密码
-
-首次初始化时，系统会创建超级管理员和其他测试账号。
-
-**账号信息查询**
-
-初始化的账号信息存储在 `backend/seeders/sql/seeder.sql` 文件中，可从该文件查找：
-
-```bash
-# 查看所有初始账号信息
-grep "INSERT INTO.*owl_users" backend/seeders/sql/seeder.sql -A 3
-```
-
-输出示例：
-
-```
-VALUES ('99e2337b-8676-4414-b71e-d5aff2008616', 'admin', 'admin@example.com',
-        '$2a$10$5YMppYUHBWVvENnqLQwWcOksGfUvcbH25Lp6IBUnm9LHAqqUfMSMC', ...
-VALUES ('88feb135-7e32-4950-ad65-d6194347d08c', 'manager', 'manager@example.com',
-        '$2a$10$QjH97YvOX6PcJyCaXTcLm.xfp.RR4ZLRRWGfbM77E.AEAsv5fjqnC', ...
-```
-
-其中第二个值是用户名，第四个值是密码哈希（bcrypt 加密）。
-
-**密码信息**
-
-密码使用 bcrypt 算法加密存储，如需了解原始密码，请联系项目管理员。
-
 
 ### 4. 初始化数据库
 

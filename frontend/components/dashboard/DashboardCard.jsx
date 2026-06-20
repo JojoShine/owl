@@ -62,13 +62,19 @@ function DashboardCard({
       chartInstance.current = null
     }
 
-    // 创建新的图表实例
-    chartInstance.current = echarts.init(chartRef.current, theme === 'dark' ? 'dark' : 'light')
+    // 创建新的图表实例，不使用预设主题，而是自定义
+    chartInstance.current = echarts.init(chartRef.current)
+
+    // 设置图表背景色为透明，让卡片背景显示
+    chartInstance.current.setOption({
+      backgroundColor: 'transparent'
+    })
 
     // 获取当前主题的文字颜色
     const isDark = theme === 'dark'
     const textColor = isDark ? '#ffffff' : '#000000'
-    const gridColor = isDark ? '#333333' : '#e5e7eb'
+    const gridColor = isDark ? '#404040' : '#e5e7eb'  // 暗黑模式下稍微浅一些
+    const axisColor = isDark ? '#555555' : '#cccccc'  // 坐标轴颜色也调亮一些
     // Line、Area、Bar 图表使用主题自适应颜色（暗黑白色，浅色黑色）
     const lineColor = isDark ? '#ffffff' : '#000000'
 
@@ -81,7 +87,7 @@ function DashboardCard({
           trigger: 'axis',
           backgroundColor: isDark ? 'rgba(30, 30, 30, 0.9)' : 'rgba(255, 255, 255, 0.9)',
           textStyle: { color: textColor },
-          borderColor: isDark ? '#444444' : '#cccccc',
+          borderColor: isDark ? axisColor : '#cccccc',
           borderWidth: 1,
         },
         grid: {
@@ -94,13 +100,13 @@ function DashboardCard({
         xAxis: {
           type: 'category',
           data: data.map(item => item[xKey]),
-          axisLine: { lineStyle: { color: isDark ? '#444444' : '#cccccc' } },
+          axisLine: { lineStyle: { color: isDark ? axisColor : '#cccccc' } },
           axisLabel: { color: textColor },
           splitLine: { show: false },
         },
         yAxis: {
           type: 'value',
-          axisLine: { lineStyle: { color: isDark ? '#444444' : '#cccccc' } },
+          axisLine: { lineStyle: { color: isDark ? axisColor : '#cccccc' } },
           axisLabel: { color: textColor },
           splitLine: { lineStyle: { color: gridColor } },
         },
@@ -122,7 +128,7 @@ function DashboardCard({
           trigger: 'axis',
           backgroundColor: isDark ? 'rgba(30, 30, 30, 0.9)' : 'rgba(255, 255, 255, 0.9)',
           textStyle: { color: textColor },
-          borderColor: isDark ? '#444444' : '#cccccc',
+          borderColor: isDark ? axisColor : '#cccccc',
           borderWidth: 1,
         },
         grid: {
@@ -135,13 +141,13 @@ function DashboardCard({
         xAxis: {
           type: 'category',
           data: data.map(item => item[xKey]),
-          axisLine: { lineStyle: { color: isDark ? '#444444' : '#cccccc' } },
+          axisLine: { lineStyle: { color: isDark ? axisColor : '#cccccc' } },
           axisLabel: { color: textColor },
           splitLine: { show: false },
         },
         yAxis: {
           type: 'value',
-          axisLine: { lineStyle: { color: isDark ? '#444444' : '#cccccc' } },
+          axisLine: { lineStyle: { color: isDark ? axisColor : '#cccccc' } },
           axisLabel: { color: textColor },
           splitLine: { lineStyle: { color: gridColor } },
         },
@@ -164,7 +170,7 @@ function DashboardCard({
           trigger: 'axis',
           backgroundColor: isDark ? 'rgba(30, 30, 30, 0.9)' : 'rgba(255, 255, 255, 0.9)',
           textStyle: { color: textColor },
-          borderColor: isDark ? '#444444' : '#cccccc',
+          borderColor: isDark ? axisColor : '#cccccc',
           borderWidth: 1,
         },
         grid: {
@@ -177,13 +183,13 @@ function DashboardCard({
         xAxis: {
           type: 'category',
           data: data.map(item => item[xKey]),
-          axisLine: { lineStyle: { color: isDark ? '#444444' : '#cccccc' } },
+          axisLine: { lineStyle: { color: isDark ? axisColor : '#cccccc' } },
           axisLabel: { color: textColor },
           splitLine: { show: false },
         },
         yAxis: {
           type: 'value',
-          axisLine: { lineStyle: { color: isDark ? '#444444' : '#cccccc' } },
+          axisLine: { lineStyle: { color: isDark ? axisColor : '#cccccc' } },
           axisLabel: { color: textColor },
           splitLine: { lineStyle: { color: gridColor } },
         },
@@ -202,13 +208,28 @@ function DashboardCard({
         ],
       }
     } else if (mode === 'pie') {
+      // 辅助函数：根据颜色的亮度决定边框颜色
+      const getBorderColor = (color) => {
+        // 如果背景是暗黑模式，使用深色边框
+        if (isDark) return '#1a1a1a'
+
+        // 浅色模式下，检查颜色是否是黑色或深色
+        // 黑色检查
+        if (color === '#000000' || color === 'rgb(0, 0, 0)') {
+          return '#333333'  // 深灰色边框
+        }
+
+        // 其他情况使用白色边框
+        return '#ffffff'
+      }
+
       option = {
         color: PIE_COLORS,
         tooltip: {
           trigger: 'item',
           backgroundColor: isDark ? 'rgba(30, 30, 30, 0.9)' : 'rgba(255, 255, 255, 0.9)',
           textStyle: { color: textColor },
-          borderColor: isDark ? '#444444' : '#cccccc',
+          borderColor: isDark ? axisColor : '#cccccc',
           borderWidth: 1,
         },
         legend: {
@@ -218,21 +239,22 @@ function DashboardCard({
         },
         series: [
           {
-            data: data.map((item, index) => ({
-              name: item[xKey],
-              value: item[dataKey],
-              itemStyle: {
-                color: PIE_COLORS[index % PIE_COLORS.length],
-              },
-            })),
+            data: data.map((item, index) => {
+              const pieColor = PIE_COLORS[index % PIE_COLORS.length]
+              return {
+                name: item[xKey],
+                value: item[dataKey],
+                itemStyle: {
+                  color: pieColor,
+                  borderColor: getBorderColor(pieColor),
+                  borderWidth: 2,
+                },
+              }
+            }),
             type: 'pie',
             radius: ['40%', '70%'],
             label: {
               color: textColor,
-            },
-            itemStyle: {
-              borderColor: isDark ? '#1a1a1a' : '#ffffff',
-              borderWidth: 2,
             },
           },
         ],

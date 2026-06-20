@@ -189,32 +189,4 @@ module.exports = {
       throw error;
     }
   }
-
-    // 删除所有自定义 Enum 类型（PostgreSQL）
-    if (queryInterface.sequelize.options.dialect === 'postgres') {
-      const enums = [
-        'enum_owl_departments_status',
-        'enum_owl_email_logs_status',
-        'enum_owl_menus_status',
-        'enum_owl_menus_type',
-        'enum_owl_menus_menu_type',
-        'enum_owl_notifications_type',
-        'enum_owl_roles_status',
-        'enum_owl_users_status',
-        'enum_owl_user_sessions_status',
-        'enum_owl_sensitive_fields_mask_type',
-      ];
-
-      for (const enumType of enums) {
-        try {
-          await queryInterface.sequelize.query(`DROP TYPE IF EXISTS ${enumType} CASCADE;`);
-          console.log(`🗑️  删除 Enum 类型: ${enumType}`);
-        } catch (error) {
-          console.warn(`   警告: 无法删除 Enum 类型 ${enumType}`);
-        }
-      }
-    }
-
-    console.log('\n✅ 回滚完成！\n');
-  },
 };

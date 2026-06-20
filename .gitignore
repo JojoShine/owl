@@ -4,7 +4,7 @@
 .env.production
 .env.*.local
 !.env.example
-!.env.local.example
+!frontend/.env.example
 
 # 依赖
 node_modules/
@@ -90,3 +90,6 @@ docker/data/
 # 上传目录
 backend/public/uploads/*
 !backend/public/uploads/.gitkeep
+
+# reference files
+/reference/
