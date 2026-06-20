@@ -9,6 +9,8 @@ const router = express.Router();
 
 // 验证码接口（公开，无需认证）
 const captchaRoutes = require('../core/modules/captcha/captcha.routes');
+
 router.use('/captcha', captchaRoutes);
 
 module.exports = router;
+

@@ -2112,7 +2112,6 @@ VALUES ('7f3e9a2b-4c1d-4e8f-9b5a-6d2c8e1f0a3b', '7150a49c-3b3e-4b22-827c-af4aab3
         '/setting/sensitive-fields', 'SensitiveFieldsPage', 'ShieldCheck', 'menu', true, 88, 'active',
         'sensitive-field:read', 'system', now(), now());
 
-
 -- ============================================
 -- 数据访问管理相关权限
 -- ============================================
