@@ -54,6 +54,37 @@ git clone https://github.com/JojoShine/owl owl_platform
 cd owl_platform
 ```
 
+### 2. 一键启动（推荐）
+
+前提条件：
+1. PostgreSQL 服务已启动
+2. Redis 服务已启动
+3. MinIO 服务已启动
+4. `backend/.env.local` 已正确配置
+5. `frontend/.env.local` 已正确配置
+
+进入后端目录执行：
+
+```bash
+cd backend
+node scripts/setup.js
+```
+
+脚本自动完成：依赖检查 → 安装依赖 → 初始化数据库 → 启动服务
+
+后端：http://localhost:3001 | 前端：http://localhost:3000
+
+---
+
+## 详细初始化步骤
+
+### 1. 克隆项目
+
+```bash
+git clone https://github.com/JojoShine/owl owl_platform
+cd owl_platform
+```
+
 ### 2. 安装依赖
 
 ```bash
@@ -241,6 +272,8 @@ npm run db:init
 > **注意**：`npm run db:reset` 会清空所有数据，添加新的 SQL 文件后首次初始化必须使用此命令，确保新表被正确创建。
 
 ### 5. 启动服务
+
+**手动启动**（如不使用一键脚本）
 
 ```bash
 # 后端（新终端）
