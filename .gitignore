@@ -21,7 +21,8 @@ build/
 out/
 
 # 日志
-/logs/
+/logs/**/*.json
+/logs/**/.*-audit.json
 *.log
 npm-debug.log*
 yarn-debug.log*
