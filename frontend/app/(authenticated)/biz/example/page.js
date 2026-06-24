@@ -4,7 +4,7 @@
  * 示例业务模块页面
  *
  * 复制此文件到你的业务模块目录，替换 example 为模块名
- * 路由路径：/your-biz/example
+ * 路由路径：/biz/example
  */
 
 import { useState, useEffect } from 'react';

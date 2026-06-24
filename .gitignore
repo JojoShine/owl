@@ -4,6 +4,9 @@
 .env.production
 .env.*.local
 !.env.example
+!frontend/.env
+!frontend/.env.local
+!frontend/.env.production
 !frontend/.env.example
 
 # 依赖

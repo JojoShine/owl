@@ -285,3 +285,81 @@ UPDATE owl_users SET access_level = 'SELF' WHERE username = 'user';
 2. 在实例1登录，验证实例2不受影响
 3. 在实例2登录，验证实例1的 token 仍然有效
 4. 在实例1登出，验证实例2可以正常使用
+
+---
+
+# 三个快速优化项
+
+## 1. 添加阿里云短信服务依赖
+- [x] 在 backend/package.json 的 dependencies 中添加 `@alicloud/pop-core`
+
+## 2. 优化数据库初始化脚本
+- [x] 修改 backend/migrations/001-initial-schema.js
+- [x] 更新表删除逻辑：只删除 owl_ 前缀的表
+- [x] 更新 Enum 类型删除逻辑：只删除 enum_owl_ 前缀的类型
+
+## 3. 更新 .gitignore
+- [x] 修改 .gitignore 移除对 frontend/.env 和 .env.production 的过滤
+- [x] 保留对 .env.local 和 .env.*.local 的过滤（本地配置）
+
+---
+
+## 审查
+
+### 优化 1: 阿里云短信服务依赖
+**文件**: `backend/package.json`
+- 添加 `@alicloud/pop-core: ^1.9.6` 到 dependencies
+- 按字母序排列，保持与其他依赖一致
+
+### 优化 2: 数据库初始化脚本优化
+**文件**: `backend/migrations/001-initial-schema.js`
+- **up 函数**: 修改表过滤逻辑从 `!t.includes('sequelize')` 改为 `t.startsWith('owl_') && !t.includes('sequelize')`
+- **down 函数**: 同样修改表过滤逻辑，只删除 owl_ 前缀的表
+- **Enum 类型**: 保持不变，已经只删除 enum_owl_ 前缀的类型
+- **效果**: 初始化脚本现在只清理 owl 平台相关的对象，不会影响数据库中其他应用的表
+
+### 优化 3: .gitignore 更新
+**文件**: `.gitignore`
+- 移除 `.env` 和 `.env.production` 的全局过滤
+- 添加 `!frontend/.env`, `!frontend/.env.local`, `!frontend/.env.production` 白名单
+- 保留对后端 `.env.example` 的白名单和本地配置的过滤 (`.env.local`, `.env.*.local`)
+- **效果**: 前端所有 .env 配置文件都可以提交，后端仍然只提交示例文件
+
+---
+
+# 前端业务页面目录重命名
+
+## 目标
+将 `frontend/app/(authenticated)/your-biz` 重命名为 `biz`，保持后续使用的一致性和简洁性。
+
+## 变更项清单
+
+### 第一阶段：重命名目录
+- [x] 重命名 `frontend/app/(authenticated)/your-biz` 为 `biz`
+
+### 第二阶段：更新文档
+- [x] 更新 `frontend/app/(authenticated)/biz/README.md`
+  - [x] 更新标题和路由示例
+  - [x] 更新页面路由为 `/biz/your-module`
+
+### 第三阶段：验证
+- [x] 验证目录结构正确
+- [x] 验证没有硬编码的路由引用
+
+## 审查
+
+### 目录重命名
+**文件**: 
+- 原: `/frontend/app/(authenticated)/your-biz`
+- 新: `/frontend/app/(authenticated)/biz`
+
+**更改**:
+1. 目录重命名成功
+2. 更新 `README.md` 文档中的目录结构示例（your-biz → biz）
+3. 更新 `README.md` 中的路由示例（/your-biz/your-module → /biz/your-module）
+4. 更新 `example/page.js` 的路由注释（/your-biz/example → /biz/example）
+
+**效果**: 
+- 新用户创建业务模块时无需再修改文件夹名称
+- 目录名称与后端 `/api/biz/*` 路由保持一致
+- 代码示例与实际使用路径对应

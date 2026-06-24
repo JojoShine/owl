@@ -1,11 +1,11 @@
-# 业务页面目录 (your-biz)
+# 业务页面目录 (biz)
 
 此目录用于存放所有业务模块的前端页面。基于 Next.js App Router 文件路由，每个子目录对应一个路由。
 
 ## 目录结构
 
 ```
-your-biz/
+biz/
 ├── README.md              # 本文件
 ├── example/               # 示例业务模块（参考此目录创建业务页面）
 │   ├── page.js            # 页面入口
@@ -24,5 +24,5 @@ your-biz/
 
 ## 访问路径
 
-页面路由：`/your-biz/your-module`
+页面路由：`/biz/your-module`
 对应接口：`/api/biz/your-module`

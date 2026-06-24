@@ -31,7 +31,8 @@ module.exports = {
       try {
         // 获取所有表
         const tables = await queryInterface.showAllTables();
-        const dataTables = tables.filter(t => !t.includes('sequelize'));
+        // 只保留 owl_ 前缀的表
+        const dataTables = tables.filter(t => t.startsWith('owl_') && !t.includes('sequelize'));
 
         // 先禁用所有外键约束
         console.log(`   • 禁用外键约束...`);
@@ -136,7 +137,8 @@ module.exports = {
     try {
       // 获取所有表并删除
       const tables = await queryInterface.showAllTables();
-      const dataTables = tables.filter(t => !t.includes('sequelize'));
+      // 只保留 owl_ 前缀的表
+      const dataTables = tables.filter(t => t.startsWith('owl_') && !t.includes('sequelize'));
 
       if (dataTables.length > 0) {
         // 先禁用外键约束
@@ -183,7 +185,7 @@ module.exports = {
         }
       }
 
-      console.log('\n✅ 所有表和 Enum 类型已删除\n');
+      console.log('\n✅ owl 相关表和 Enum 类型已删除\n');
     } catch (error) {
       console.error(`❌ 回滚失败: ${error.message}\n`);
       throw error;
