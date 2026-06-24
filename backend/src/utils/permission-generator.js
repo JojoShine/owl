@@ -116,11 +116,6 @@ function extractResourceFromPath(path) {
     .replace(/-(list|detail|edit|create|add)$/, '')
     .replace(/\/(list|detail|edit|create|add)$/, '');
 
-  // 去掉复数形式的 s
-  if (resource.endsWith('s') && resource.length > 1) {
-    resource = resource.slice(0, -1);
-  }
-
   return resource;
 }
 
