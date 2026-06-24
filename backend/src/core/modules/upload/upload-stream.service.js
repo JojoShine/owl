@@ -17,8 +17,8 @@ class UploadStreamService {
     let objectPath = path;
     const pathParts = path.split('/');
 
-    // 如果第一部分是桶名，则移除它
-    if (pathParts[0] === 'owl-platform' || pathParts[0] === process.env.MINIO_BUCKET_NAME) {
+    // 移除第一部分（桶名），保留其余部分作为对象路径
+    if (pathParts.length > 1) {
       objectPath = pathParts.slice(1).join('/');
     }
 

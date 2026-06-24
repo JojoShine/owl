@@ -20,7 +20,7 @@ import { ThemeToggle } from '@/components/layout/theme/theme-toggle';
 import SmsLoginForm from '@/components/auth/sms-login-form';
 import { authApi, monitorApi, systemConfigApi } from '@/lib/api';
 import { useAuth } from '@/lib/utils/auth';
-import { getApiBaseUrl } from '@/lib/utils/http-client';
+import { getFileUrl } from '@/lib/utils/image';
 
 // 表单验证规则 - 只做最基本的非空检查
 const loginSchema = z.object({
@@ -76,21 +76,13 @@ function LoginForm() {
           setRegistrationEnabled(configResponse.data?.registration_enabled ?? true);
           setLoginMethod(configResponse.data?.login_method || 'both');
           setLoginLayout(configResponse.data?.login_layout || 'center');
-          // 处理 logo - 如果是相对路径，补全为完整 URL
+          // 处理 logo - 支持 Minio 路径和本地路径
           if (configResponse.data?.logo_url) {
-            const logoUrl = configResponse.data.logo_url;
-            const fullUrl = logoUrl.startsWith('http')
-              ? logoUrl
-              : `${getApiBaseUrl()}${logoUrl}`;
-            setLogoUrl(fullUrl);
+            setLogoUrl(getFileUrl(configResponse.data.logo_url));
           }
-          // 处理登录背景 - 如果是相对路径，补全为完整 URL
+          // 处理登录背景 - 支持 Minio 路径和本地路径
           if (configResponse.data?.login_bg_url) {
-            const bgUrl = configResponse.data.login_bg_url;
-            const fullUrl = bgUrl.startsWith('http')
-              ? bgUrl
-              : `${getApiBaseUrl()}${bgUrl}`;
-            setLoginBgUrl(fullUrl);
+            setLoginBgUrl(getFileUrl(configResponse.data.login_bg_url));
           }
           
           // 根据配置的登录方式设置默认Tab

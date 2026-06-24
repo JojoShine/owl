@@ -16,7 +16,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ThemeToggle } from '@/components/layout/theme/theme-toggle';
 import { authApi, systemConfigApi, smsAuthApi } from '@/lib/api';
-import { getApiBaseUrl } from '@/lib/utils/http-client';
+import { getFileUrl } from '@/lib/utils/image';
 
 // 表单验证规则
 const registerSchema = z.object({
@@ -56,13 +56,9 @@ export default function RegisterPage() {
         if (response?.success) {
           setShowTechStack(response.data?.show_tech_stack ?? true);
           setSystemName(response.data?.system_name || 'Owl管理平台');
-          // 处理 logo - 如果是相对路径，补全为完整 URL
+          // 处理 logo - 支持 Minio 路径和本地路径
           if (response.data?.logo_url) {
-            const logoUrl = response.data.logo_url;
-            const fullUrl = logoUrl.startsWith('http')
-              ? logoUrl
-              : `${getApiBaseUrl()}${logoUrl}`;
-            setLogoUrl(fullUrl);
+            setLogoUrl(getFileUrl(response.data.logo_url));
           }
         }
       } catch (error) {

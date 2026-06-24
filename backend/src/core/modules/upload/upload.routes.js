@@ -23,11 +23,10 @@ router.post(
 /**
  * @route GET /api/system/upload/stream?path={minioPath}
  * @desc 获取文件流（支持在 img src 中直接使用）
- * @access Private - 已认证用户
+ * @access Public - 无需认证（用于公开显示的文件如 logo、background）
  */
 router.get(
   '/stream',
-  authenticate,
   uploadStreamController.getFileStream
 );
 

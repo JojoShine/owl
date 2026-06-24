@@ -25,6 +25,9 @@ export const uploadApi = {
    * @returns {string} - 文件流 URL
    */
   getFileStreamUrl: (path) => {
-    return `/api/system/upload/stream?path=${encodeURIComponent(path)}`;
+    // axios baseURL 已经是 http://localhost:3001/api/system
+    // 所以相对于 baseURL 的完整路径是 /upload/stream
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/system';
+    return `${apiUrl}/upload/stream?path=${encodeURIComponent(path)}`;
   },
 };

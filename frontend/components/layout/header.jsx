@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/lib/utils/auth';
 import { ThemeToggle } from '@/components/layout/theme/theme-toggle';
 import NotificationIcon from '@/components/notification/NotificationIcon';
-import { Button } from '@/components/ui/button';
+import { getFileUrl } from '@/lib/utils/image';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,14 +29,9 @@ export default function Header() {
       if (response.success) {
         setEnableThemeSwitch(response.data?.enable_theme_switch ?? true);
         setSystemName(response.data?.system_name || 'Owl 管理平台');
-        // 处理 logo - 如果是相对路径，补全为完整 URL
+        // 处理 logo - 支持 Minio 路径和本地路径
         if (response.data?.logo_url) {
-          const logoUrl = response.data.logo_url;
-          const { getApiBaseUrl } = await import('@/lib/utils/http-client');
-          const fullUrl = logoUrl.startsWith('http')
-            ? logoUrl
-            : `${getApiBaseUrl()}${logoUrl}`;
-          setLogoUrl(fullUrl);
+          setLogoUrl(getFileUrl(response.data.logo_url));
         }
       }
     } catch (error) {
