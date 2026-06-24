@@ -195,6 +195,63 @@ function parseRange(rangeHeader, fileSize) {
   };
 }
 
+/**
+ * 根据文件扩展名获取 MIME 类型
+ * @param {string} filename - 文件名或路径
+ * @returns {string} - MIME 类型
+ */
+function getMimeType(filename) {
+  const ext = path.extname(filename).toLowerCase();
+
+  const mimeTypes = {
+    // 图片
+    '.jpg': 'image/jpeg',
+    '.jpeg': 'image/jpeg',
+    '.png': 'image/png',
+    '.gif': 'image/gif',
+    '.webp': 'image/webp',
+    '.svg': 'image/svg+xml',
+    '.bmp': 'image/bmp',
+    // 文档
+    '.pdf': 'application/pdf',
+    '.doc': 'application/msword',
+    '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    '.xls': 'application/vnd.ms-excel',
+    '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    '.ppt': 'application/vnd.ms-powerpoint',
+    '.pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    // 文本
+    '.txt': 'text/plain',
+    '.csv': 'text/csv',
+    '.html': 'text/html',
+    '.css': 'text/css',
+    '.js': 'text/javascript',
+    '.json': 'application/json',
+    '.xml': 'application/xml',
+    // 视频
+    '.mp4': 'video/mp4',
+    '.mpeg': 'video/mpeg',
+    '.mov': 'video/quicktime',
+    '.avi': 'video/x-msvideo',
+    '.flv': 'video/x-flv',
+    '.webm': 'video/webm',
+    '.mkv': 'video/x-matroska',
+    // 音频
+    '.mp3': 'audio/mpeg',
+    '.wav': 'audio/wav',
+    '.ogg': 'audio/ogg',
+    '.m4a': 'audio/mp4',
+    // 压缩
+    '.zip': 'application/zip',
+    '.rar': 'application/x-rar-compressed',
+    '.7z': 'application/x-7z-compressed',
+    '.tar': 'application/x-tar',
+    '.gz': 'application/gzip',
+  };
+
+  return mimeTypes[ext] || 'application/octet-stream';
+}
+
 module.exports = {
   generateUniqueFilename,
   getFileExtension,
@@ -208,4 +265,5 @@ module.exports = {
   generateFilePath,
   sanitizeFilename,
   parseRange,
+  getMimeType,
 };
