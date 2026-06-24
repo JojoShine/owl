@@ -2,38 +2,11 @@ const express = require('express');
 const router = express.Router();
 const fileController = require('./file.controller');
 const filePermissionController = require('./file-permission.controller');
-const uploadController = require('./upload.controller');
-const fileStreamController = require('./file-stream.controller');
 const { authenticate } = require('../../../middlewares/auth');
 const { checkPermission } = require('../../../middlewares/permission');
 const { uploadSingle, uploadMultiple } = require('../../../middlewares/upload');
 const validate = require('../../../middlewares/validate');
 const fileValidation = require('./file.validation');
-const uploadValidation = require('./upload.validation');
-
-/**
- * @route GET /api/system/files/stream?path={minioPath}
- * @desc 获取文件流（支持在 img src 中直接使用）
- * @access Private - 已认证用户
- */
-router.get(
-  '/stream',
-  authenticate,
-  fileStreamController.getFileStream
-);
-
-/**
- * @route POST /api/system/files/upload
- * @desc 上传文件到 Minio
- * @access Private - 已认证用户
- */
-router.post(
-  '/upload',
-  authenticate,
-  uploadSingle('file'),
-  validate(uploadValidation.uploadFile),
-  uploadController.uploadFile
-);
 
 /**
  * @route GET /api/files/:id/preview-public

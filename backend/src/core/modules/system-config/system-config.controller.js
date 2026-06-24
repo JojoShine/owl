@@ -1,5 +1,5 @@
 const systemConfigService = require('./system-config.service');
-const fileService = require('../file/file.service');
+const uploadService = require('../upload/upload.service');
 const { success } = require('../../../utils/response');
 const { logger } = require('../../../config/logger');
 
@@ -39,14 +39,21 @@ class SystemConfigController {
         return next(new Error('没有找到上传的文件'));
       }
 
-      // req.file.filename 是 multer 保存的文件名
-      // 不添加路径前缀，让前端的 basePath 来处理
-      const fileUrl = `/uploads/${req.file.filename}`;
+      const { buffer, originalname, mimetype } = req.file;
 
-      // 保存文件路径到系统配置
-      const config = await systemConfigService.uploadLogo(fileUrl);
+      // 调用通用上传服务，上传到 Minio
+      const filePath = await uploadService.uploadFile(
+        buffer,
+        originalname,
+        mimetype,
+        'logo',
+        null
+      );
 
-      success(res, { url: fileUrl }, 'Logo 上传成功', 201);
+      // 保存 Minio 路径到系统配置
+      const config = await systemConfigService.uploadLogo(filePath);
+
+      success(res, { url: filePath }, 'Logo 上传成功', 201);
     } catch (error) {
       logger.error('上传 Logo 失败:', error);
       next(error);
@@ -62,14 +69,21 @@ class SystemConfigController {
         return next(new Error('没有找到上传的文件'));
       }
 
-      // req.file.filename 是 multer 保存的文件名
-      // 不添加路径前缀，让前端的 basePath 来处理
-      const fileUrl = `/uploads/${req.file.filename}`;
+      const { buffer, originalname, mimetype } = req.file;
 
-      // 保存文件路径到系统配置
-      const config = await systemConfigService.uploadLoginBg(fileUrl);
+      // 调用通用上传服务，上传到 Minio
+      const filePath = await uploadService.uploadFile(
+        buffer,
+        originalname,
+        mimetype,
+        'background',
+        null
+      );
 
-      success(res, { url: fileUrl }, '登录背景上传成功', 201);
+      // 保存 Minio 路径到系统配置
+      const config = await systemConfigService.uploadLoginBg(filePath);
+
+      success(res, { url: filePath }, '登录背景上传成功', 201);
     } catch (error) {
       logger.error('上传登录背景失败:', error);
       next(error);

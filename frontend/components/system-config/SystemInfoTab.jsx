@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import ImageUploader from './ImageUploader';
+import FileUploader from '@/components/common/FileUploader';
 import { systemConfigApi } from '@/lib/api';
 import { toast } from 'sonner';
 
@@ -55,44 +55,22 @@ export default function SystemInfoTab({ config, onUpdate }) {
     }
   };
 
-  const handleLogoUpload = async (file) => {
-    try {
-      if (file === null) {
-        setFormData({ ...formData, logo_url: '' });
-        toast.success('Logo 已删除');
-        return;
-      }
-
-      const response = await systemConfigApi.uploadLogo(file);
-      if (response.success) {
-        // Backend 返回预览URL
-        const previewUrl = response.data.url;
-        setFormData({ ...formData, logo_url: previewUrl });
-        toast.success('Logo 上传成功');
-      }
-    } catch (error) {
-      toast.error('Logo 上传失败：' + error.message);
+  const handleLogoUpload = (path) => {
+    if (path === null) {
+      setFormData({ ...formData, logo_url: '' });
+      toast.success('Logo 已删除');
+      return;
     }
+    setFormData({ ...formData, logo_url: path });
   };
 
-  const handleBgUpload = async (file) => {
-    try {
-      if (file === null) {
-        setFormData({ ...formData, login_bg_url: '' });
-        toast.success('登录背景已删除');
-        return;
-      }
-
-      const response = await systemConfigApi.uploadLoginBg(file);
-      if (response.success) {
-        // Backend 返回预览URL
-        const previewUrl = response.data.url;
-        setFormData({ ...formData, login_bg_url: previewUrl });
-        toast.success('登录背景上传成功');
-      }
-    } catch (error) {
-      toast.error('登录背景上传失败：' + error.message);
+  const handleBgUpload = (path) => {
+    if (path === null) {
+      setFormData({ ...formData, login_bg_url: '' });
+      toast.success('登录背景已删除');
+      return;
     }
+    setFormData({ ...formData, login_bg_url: path });
   };
 
   return (
@@ -221,19 +199,21 @@ export default function SystemInfoTab({ config, onUpdate }) {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-6">
-            <ImageUploader
+            <FileUploader
               label="系统 Logo"
               value={formData.logo_url}
               onUpload={handleLogoUpload}
+              category="logo"
               aspectRatio="square"
               maxSize={2}
               height="h-32"
             />
 
-            <ImageUploader
+            <FileUploader
               label="登录背景"
               value={formData.login_bg_url}
               onUpload={handleBgUpload}
+              category="background"
               aspectRatio="video"
               maxSize={5}
               height="h-32"
