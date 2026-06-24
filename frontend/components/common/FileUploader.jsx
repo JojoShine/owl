@@ -4,7 +4,7 @@ import { useState, useRef } from 'react';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Upload, X } from 'lucide-react';
-import axios from '@/lib/utils/http-client';
+import { uploadApi } from '@/lib/api/system/upload.api';
 import { toast } from 'sonner';
 
 /**
@@ -45,15 +45,7 @@ export default function FileUploader({
     setUploading(true);
     try {
       // 上传文件到通用上传接口
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('category', category);
-
-      const response = await axios.post('/system/upload/file', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      const response = await uploadApi.uploadFile(file, category);
 
       if (response.data?.data?.path) {
         const path = response.data.data.path;
@@ -80,7 +72,7 @@ export default function FileUploader({
     // 如果已经是完整 URL，直接返回
     if (path.startsWith('http')) return path;
     // 否则使用流接口获取
-    return `/api/system/upload/stream?path=${encodeURIComponent(path)}`;
+    return uploadApi.getFileStreamUrl(path);
   };
 
   // 判断是否是图片文件（用于预览）
