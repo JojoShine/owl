@@ -1,0 +1,75 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 30
+    },
+    "auditLog": "/Users/jojoshine/projects/owl_platform/backend/logs/access/.dcc57ec03cccbda2e789199f5ddebd90da092e31-audit.json",
+    "files": [
+        {
+            "date": 1779864062686,
+            "name": "/Users/jojoshine/projects/owl_platform/backend/logs/access/access-2026-05-27.log",
+            "hash": "d71a14f1a9c9cc628db7f1a2b3eccc91cbf5a52711c775a39691389c04ab6a6e"
+        },
+        {
+            "date": 1780362834736,
+            "name": "/Users/jojoshine/projects/owl_platform/backend/logs/access/access-2026-06-02.log",
+            "hash": "721ffb6f7544a2f90c7a325b1b27c4fab811a6d11fb953413cf606e7564df7d0"
+        },
+        {
+            "date": 1780453890089,
+            "name": "/Users/jojoshine/projects/owl_platform/backend/logs/access/access-2026-06-03.log",
+            "hash": "fc10a4803af4de3c166776d466d0db69d86f60cbcec2df65b3f4eaefaed6d064"
+        },
+        {
+            "date": 1780534369154,
+            "name": "/Users/jojoshine/projects/owl_platform/backend/logs/access/access-2026-06-04.log",
+            "hash": "9c3316e6abb22615a48d0a8bedf75b5c07b0b3e885c7bdf5111cb0243637506e"
+        },
+        {
+            "date": 1780716010472,
+            "name": "/Users/jojoshine/projects/owl_platform/backend/logs/access/access-2026-06-06.log",
+            "hash": "d25b6891c48fe45e18ca0da4ec17ff6acd62f2284e7dbbddd4cccbc1c954d551"
+        },
+        {
+            "date": 1780883841195,
+            "name": "/Users/jojoshine/projects/owl_platform/backend/logs/access/access-2026-06-08.log",
+            "hash": "33259ad395371be133502b2b9f89cfd7c1358f90a577fad275b9294e09f099f3"
+        },
+        {
+            "date": 1780984099512,
+            "name": "/Users/jojoshine/projects/owl_platform/backend/logs/access/access-2026-06-09.log",
+            "hash": "1908776466e3ce66fccae97f4556fdee850e80d9729df97e06c716c57e3906ac"
+        },
+        {
+            "date": 1781052622173,
+            "name": "/Users/jojoshine/projects/owl_platform/backend/logs/access/access-2026-06-10.log",
+            "hash": "4b816aee7c718669ad2f523d8fe55f30a7bbd8135d4bb04f0554f46c0dd43235"
+        },
+        {
+            "date": 1781138267498,
+            "name": "/Users/jojoshine/projects/owl_platform/backend/logs/access/access-2026-06-11.log",
+            "hash": "7695409a31915532ce415552f5309da4bb4cb89e2d99561ea062b852dbcf0cf5"
+        },
+        {
+            "date": 1781832555297,
+            "name": "/Users/jojoshine/projects/owl_platform/backend/logs/access/access-2026-06-19.log",
+            "hash": "13746b853dbdd37090f1dd88340c790007dc2afda491ee2ef8edd27621fe26d8"
+        },
+        {
+            "date": 1781915501916,
+            "name": "/Users/jojoshine/projects/owl_platform/backend/logs/access/access-2026-06-20.log",
+            "hash": "c9d0395212771e9637ddabfd3a78f64b19193e1da31dde02f29da992dd1f5310"
+        },
+        {
+            "date": 1782002316057,
+            "name": "/Users/jojoshine/projects/owl_platform/backend/logs/access/access-2026-06-21.log",
+            "hash": "a446863322ce8317e3e2716e10b2f6244fcac02b8e4d092c392154a35b0b9081"
+        },
+        {
+            "date": 1782279362153,
+            "name": "/Users/jojoshine/projects/owl_platform/backend/logs/access/access-2026-06-24.log",
+            "hash": "1ddf67ceb399bf42fe2ef8b7c340e632a41db92b660d51936e5bffc5f79ef3ce"
+        }
+    ],
+    "hashType": "sha256"
+}

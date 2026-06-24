@@ -1,0 +1,40 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 30
+    },
+    "auditLog": "/Users/jojoshine/projects/ykt_owl_platform/backend/logs/error/.148b04ad95107f59ec91f368011c118d16a33cdc-audit.json",
+    "files": [
+        {
+            "date": 1768993234607,
+            "name": "/Users/jojoshine/projects/ykt_owl_platform/backend/logs/error/error-2026-01-21.log",
+            "hash": "7d734523e4db36171c26d67fca7f4b37775d7deedf905c933e5c99c8e5869ae5"
+        },
+        {
+            "date": 1769042039721,
+            "name": "/Users/jojoshine/projects/ykt_owl_platform/backend/logs/error/error-2026-01-22.log",
+            "hash": "8585cac437db135a8587534e1fafb39277ef59ede3d8c7f501441310dab31b8e"
+        },
+        {
+            "date": 1769128532723,
+            "name": "/Users/jojoshine/projects/ykt_owl_platform/backend/logs/error/error-2026-01-23.log",
+            "hash": "07ce6350c5b3023276686532a3d58f97be928cf41edb8a8a13c1910a887fe4f0"
+        },
+        {
+            "date": 1769228329032,
+            "name": "/Users/jojoshine/projects/ykt_owl_platform/backend/logs/error/error-2026-01-24.log",
+            "hash": "472c61bff37f3d22f3bd8b51fd025e7b67c67a7a68401f808fc69bc0c1bb08b0"
+        },
+        {
+            "date": 1769387744033,
+            "name": "/Users/jojoshine/projects/ykt_owl_platform/backend/logs/error/error-2026-01-26.log",
+            "hash": "44e4d9118c506566107fc3602677f98cc7987827a9079480af0f756bd0eca910"
+        },
+        {
+            "date": 1769473929492,
+            "name": "/Users/jojoshine/projects/ykt_owl_platform/backend/logs/error/error-2026-01-27.log",
+            "hash": "018c603162ff69106c7f66cad45ba88df7055cdc33f383a0e3c854c41409f59d"
+        }
+    ],
+    "hashType": "sha256"
+}

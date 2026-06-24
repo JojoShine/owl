@@ -1,0 +1,20 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 30
+    },
+    "auditLog": "/Users/jojoshine/projects/ha_smartCity_owl_platform/backend/logs/system/.d71fb4ddd07ccf2745679d6b188f0bfde9422797-audit.json",
+    "files": [
+        {
+            "date": 1774867696711,
+            "name": "/Users/jojoshine/projects/ha_smartCity_owl_platform/backend/logs/system/system-2026-03-30.log",
+            "hash": "d0f44839228cc257f5a93d6903f0860814ab052e9a51785763aa89baceb29d4f"
+        },
+        {
+            "date": 1775180184933,
+            "name": "/Users/jojoshine/projects/ha_smartCity_owl_platform/backend/logs/system/system-2026-04-03.log",
+            "hash": "f159e73133dd85c5330099f185a210480d36c4b6e2ad04104fe7b293e59fb94b"
+        }
+    ],
+    "hashType": "sha256"
+}

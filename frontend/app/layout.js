@@ -18,7 +18,7 @@ export const metadata = {
   title: "Owl Platform",
   description: "Owl管理平台",
   icons: {
-    icon: "/logo.png",
+    icon: "/favicon.ico",
   },
 };
 
