@@ -5,6 +5,7 @@ import { useAuth } from '@/lib/utils/auth';
 import { ThemeToggle } from '@/components/layout/theme/theme-toggle';
 import NotificationIcon from '@/components/notification/NotificationIcon';
 import { getFileUrl } from '@/lib/utils/image';
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
