@@ -69,6 +69,9 @@ const createUser = {
     status: Joi.string()
       .valid('active', 'inactive', 'banned')
       .default('active'),
+    access_level: Joi.string()
+      .valid('ALL', 'DEPARTMENT', 'SELF')
+      .default('SELF'),
     role_ids: Joi.array()
       .items(Joi.string().uuid())
       .default([]),
@@ -98,6 +101,7 @@ const updateUser = {
       .allow(null, ''),
     avatar: Joi.string().uri().allow(null, ''),
     status: Joi.string().valid('active', 'inactive', 'banned'),
+    access_level: Joi.string().valid('ALL', 'DEPARTMENT', 'SELF'),
     role_ids: Joi.array().items(Joi.string().uuid()),
   }).min(1), // 至少要有一个字段
 };

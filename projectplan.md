@@ -363,3 +363,26 @@ UPDATE owl_users SET access_level = 'SELF' WHERE username = 'user';
 - 新用户创建业务模块时无需再修改文件夹名称
 - 目录名称与后端 `/api/biz/*` 路由保持一致
 - 代码示例与实际使用路径对应
+
+---
+
+# 用户管理 access_level 维护
+
+## 目标
+在用户管理模块中添加 access_level 的维护和展示功能。access_level 是数据访问权限级别（ALL、DEPARTMENT、SELF）。
+
+## 变更项清单
+
+### 第一阶段：后端验证和服务层
+- [x] 更新 `user.validation.js`：添加 access_level 验证
+- [x] 更新 `user.service.js`：创建/更新用户时处理 access_level
+- [x] 验证 access_level 的有效值（ALL、DEPARTMENT、SELF）
+
+### 第二阶段：后端路由和控制器
+- [x] 确保 access_level 在用户列表中展示
+- [x] 确保 access_level 在用户详情中返回
+
+### 第三阶段：前端表单和展示
+- [ ] 更新前端用户编辑表单，添加 access_level 字段
+- [ ] 在用户列表中展示 access_level
+- [ ] 提供 access_level 的下拉选择（ALL、DEPARTMENT、SELF）

@@ -76,7 +76,7 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING(50),
       defaultValue: 'SELF',
       allowNull: false,
-      comment: '数据访问权限级别：ALL-所有数据，DEPARTMENT-本部门，DEPARTMENT_CHILDREN-本部门及下级，SELF-本人',
+      comment: '数据访问权限级别：ALL-所有数据，DEPARTMENT-本部门及下级，SELF-本人',
     },
   }, {
     tableName: 'owl_users',

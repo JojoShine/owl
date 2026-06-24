@@ -95,7 +95,7 @@ class UserService {
    * 创建用户
    */
   async createUser(userData) {
-    const { username, email, password, real_name, phone, status, role_ids } = userData;
+    const { username, email, password, real_name, phone, status, access_level, role_ids } = userData;
 
     // 检查用户名是否已存在
     const existingUser = await db.User.findOne({ where: { username } });
@@ -125,6 +125,7 @@ class UserService {
       real_name,
       phone,
       status,
+      access_level,
     });
 
     // 分配角色
@@ -159,7 +160,7 @@ class UserService {
       throw ApiError.notFound('用户不存在');
     }
 
-    const { username, email, password, phone, real_name, avatar, status, role_ids } = updateData;
+    const { username, email, password, phone, real_name, avatar, status, access_level, role_ids } = updateData;
 
     // 检查用户名是否被其他用户占用
     if (username && username !== user.username) {
@@ -193,6 +194,7 @@ class UserService {
       real_name,
       avatar,
       status,
+      access_level,
     };
 
     // 只有提供了密码才更新密码
