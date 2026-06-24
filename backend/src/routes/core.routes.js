@@ -31,6 +31,7 @@ const generatorRoutes = require('../core/modules/generator/generator.routes');
 const dataSecurityRoutes = require('../core/modules/data-security/data-security.routes');
 const thirdPartyKeysRoutes = require('../core/modules/third_party_keys/third-party-keys.routes');
 const emailTaskRoutes = require('../core/modules/notification/email-task.routes');
+const uploadRoutes = require('../core/modules/upload/upload.routes');
 
 // 挂载核心路由
 router.use('/auth', authRoutes);
@@ -39,6 +40,7 @@ router.use('/roles', roleRoutes);
 router.use('/permissions', permissionRoutes);
 router.use('/menus', menuRoutes);
 router.use('/departments', departmentRoutes);
+router.use('/upload', uploadRoutes);
 router.use('/files', fileRoutes);
 router.use('/folders', folderRoutes);
 router.use('/file-shares', fileShareRoutes);
