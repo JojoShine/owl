@@ -487,17 +487,47 @@ class GenericService {
   _buildWhereClause(moduleConfig, searchParams) {
     const conditions = [];
     const replacements = {};
+    const processedFields = new Set(); // 记录已处理的字段
 
     // 获取可搜索字段
     const searchableFields = moduleConfig.fields.filter(f => f.is_searchable);
 
+    // 首先处理字段配置中的搜索
     searchableFields.forEach(field => {
       const fieldName = field.field_name;
       const searchValue = searchParams[fieldName];
+      const searchType = field.search_type || 'like';
 
+      // 对于日期时间字段，优先使用范围查询
+      const isDateTimeField = ['date', 'timestamp', 'timestamp without time zone', 'timestamp with time zone'].includes(
+        field.field_type?.toLowerCase()
+      );
+
+      if (isDateTimeField || searchType === 'range') {
+        // 范围查询（用于数字和日期）
+        const startValue = searchParams[`${fieldName}_start`];
+        const endValue = searchParams[`${fieldName}_end`];
+
+        if (startValue !== undefined && startValue !== null && startValue !== '') {
+          conditions.push(`${fieldName} >= :${fieldName}_start`);
+          replacements[`${fieldName}_start`] = startValue;
+          processedFields.add(fieldName);
+        }
+
+        if (endValue !== undefined && endValue !== null && endValue !== '') {
+          conditions.push(`${fieldName} <= :${fieldName}_end`);
+          replacements[`${fieldName}_end`] = endValue;
+          processedFields.add(fieldName);
+        }
+
+        // 如果已经处理了范围查询，跳过后续的单值查询
+        if (startValue || endValue) {
+          return;
+        }
+      }
+
+      // 处理单值查询
       if (searchValue !== undefined && searchValue !== null && searchValue !== '') {
-        const searchType = field.search_type || 'like';
-
         switch (searchType) {
           case 'like':
             // 模糊搜索
@@ -512,19 +542,7 @@ class GenericService {
             break;
 
           case 'range':
-            // 范围查询（用于数字和日期）
-            const startValue = searchParams[`${fieldName}_start`];
-            const endValue = searchParams[`${fieldName}_end`];
-
-            if (startValue !== undefined && startValue !== null && startValue !== '') {
-              conditions.push(`${fieldName} >= :${fieldName}_start`);
-              replacements[`${fieldName}_start`] = startValue;
-            }
-
-            if (endValue !== undefined && endValue !== null && endValue !== '') {
-              conditions.push(`${fieldName} <= :${fieldName}_end`);
-              replacements[`${fieldName}_end`] = endValue;
-            }
+            // range 类型已在上面处理
             break;
 
           default:
@@ -532,6 +550,7 @@ class GenericService {
             conditions.push(`${fieldName} ILIKE :${fieldName}`);
             replacements[fieldName] = `%${searchValue}%`;
         }
+        processedFields.add(fieldName);
       }
     });
 
