@@ -39,13 +39,13 @@ class ApiBuilderExecutorService {
         this.validateParameters(params, interface_.parameters);
       }
 
-      // 替换SQL中的参数
-      const sqlQuery = this.bindParameters(interface_.sql_query, params, interface_.parameters);
+      // 准备参数化查询的替换值
+      const replacements = this.prepareReplacements(params, interface_.parameters);
 
       // 获取操作类型
-      const operationType = this.getOperationType(sqlQuery);
+      const operationType = this.getOperationType(interface_.sql_query);
 
-      // 执行SQL查询
+      // 执行SQL查询（使用参数化查询，防止SQL注入）
       const QueryTypes = require('sequelize').QueryTypes;
       let queryType = QueryTypes.SELECT;
 
@@ -53,7 +53,8 @@ class ApiBuilderExecutorService {
       else if (operationType === 'UPDATE') queryType = QueryTypes.UPDATE;
       else if (operationType === 'DELETE') queryType = QueryTypes.DELETE;
 
-      const queryResult = await db.sequelize.query(sqlQuery, {
+      const queryResult = await db.sequelize.query(interface_.sql_query, {
+        replacements,
         type: queryType,
       });
 
@@ -107,13 +108,13 @@ class ApiBuilderExecutorService {
         this.validateParameters(params, interface_.parameters);
       }
 
-      // 替换SQL中的参数
-      const sqlQuery = this.bindParameters(interface_.sql_query, params, interface_.parameters);
+      // 准备参数化查询的替换值
+      const replacements = this.prepareReplacements(params, interface_.parameters);
 
       // 获取操作类型
-      const operationType = this.getOperationType(sqlQuery);
+      const operationType = this.getOperationType(interface_.sql_query);
 
-      // 执行SQL查询
+      // 执行SQL查询（使用参数化查询，防止SQL注入）
       const QueryTypes = require('sequelize').QueryTypes;
       let queryType = QueryTypes.SELECT;
 
@@ -121,7 +122,8 @@ class ApiBuilderExecutorService {
       else if (operationType === 'UPDATE') queryType = QueryTypes.UPDATE;
       else if (operationType === 'DELETE') queryType = QueryTypes.DELETE;
 
-      const queryResult = await db.sequelize.query(sqlQuery, {
+      const queryResult = await db.sequelize.query(interface_.sql_query, {
+        replacements,
         type: queryType,
       });
 
@@ -240,60 +242,34 @@ class ApiBuilderExecutorService {
   }
 
   /**
-   * 将参数绑定到SQL查询中
-   * 使用 :paramName 的格式进行参数替换
+   * 准备参数化查询的替换值（使用 Sequelize 参数化查询，防止 SQL 注入）
+   * @param {Object} requestParams - 请求参数
+   * @param {Array} paramDefinitions - 参数定义
+   * @returns {Object} replacements 对象
    */
-  bindParameters(sqlQuery, requestParams = {}, paramDefinitions = []) {
-    let boundSql = sqlQuery;
+  prepareReplacements(requestParams = {}, paramDefinitions = []) {
+    const replacements = {};
 
-    // 如果有参数定义，遍历它们进行替换
+    // 如果有参数定义，使用定义的参数
     if (paramDefinitions && Array.isArray(paramDefinitions)) {
       for (const paramDef of paramDefinitions) {
         const { name } = paramDef;
         const value = requestParams[name];
 
         if (value !== undefined && value !== null) {
-          // 转义参数值以防止SQL注入
-          const escapedValue = this.escapeSqlValue(value);
-          const placeholder = new RegExp(`:${name}\\b`, 'g');
-          boundSql = boundSql.replace(placeholder, escapedValue);
+          replacements[name] = value;
         }
       }
     }
 
-    // 替换所有剩余的参数占位符（如果有的话）
-    boundSql = boundSql.replace(/:([a-zA-Z_][a-zA-Z0-9_]*)/g, (match, paramName) => {
-      const value = requestParams[paramName];
-      if (value !== undefined && value !== null) {
-        return this.escapeSqlValue(value);
+    // 同时添加所有请求参数（兼容没有定义的情况）
+    Object.keys(requestParams).forEach(key => {
+      if (requestParams[key] !== undefined && requestParams[key] !== null) {
+        replacements[key] = requestParams[key];
       }
-      return match; // 保留未找到的占位符
     });
 
-    return boundSql;
-  }
-
-  /**
-   * 转义SQL值，防止SQL注入
-   */
-  escapeSqlValue(value) {
-    if (value === null || value === undefined) {
-      return 'NULL';
-    }
-
-    if (typeof value === 'number') {
-      return String(value);
-    }
-
-    if (typeof value === 'boolean') {
-      return value ? 'true' : 'false';
-    }
-
-    // 对字符串进行转义
-    const stringValue = String(value);
-    // 双引号转义（PostgreSQL）
-    const escaped = stringValue.replace(/'/g, "''");
-    return `'${escaped}'`;
+    return replacements;
   }
 
   /**
