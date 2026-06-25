@@ -37,7 +37,7 @@ function SearchField({ field, value, onChange }) {
   switch (type) {
     case 'text':
       return (
-        <div className="flex-[2] min-w-[200px]">
+        <div className="flex-1 min-w-[200px]">
           {renderLabel()}
           <Input
             placeholder={placeholder || '请输入'}
@@ -49,7 +49,7 @@ function SearchField({ field, value, onChange }) {
 
     case 'select':
       return (
-        <div className="flex-1 min-w-[180px] flex flex-col items-center">
+        <div className="flex-shrink-0">
           {renderLabel()}
           <Select value={value || ''} onValueChange={handleChange}>
             <SelectTrigger className="w-[180px]">
@@ -71,7 +71,7 @@ function SearchField({ field, value, onChange }) {
 
     case 'combobox':
       return (
-        <div className="flex-1 min-w-[180px] flex flex-col items-center">
+        <div className="flex-shrink-0">
           {renderLabel()}
           <Combobox
             options={options}
@@ -86,7 +86,7 @@ function SearchField({ field, value, onChange }) {
 
     case 'date':
       return (
-        <div className="flex-1 min-w-[180px] flex flex-col items-center">
+        <div className="flex-shrink-0">
           {renderLabel()}
           <DatePicker
             date={value}

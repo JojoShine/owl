@@ -65,7 +65,7 @@ export default function ConfigsSection({
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">状态：</span>
-                {config.generated_files?.length > 0 ? (
+                {config.page_config ? (
                   <Badge className="bg-emerald-500/15 text-emerald-600 text-xs">已生成</Badge>
                 ) : (
                   <Badge variant="outline" className="text-xs">未生成</Badge>

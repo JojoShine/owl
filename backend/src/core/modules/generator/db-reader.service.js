@@ -57,6 +57,7 @@ class DbReaderService {
                   SELECT 1
                   FROM owl_generated_modules gm
                   WHERE gm.table_name = t.table_name
+                    AND gm.deleted_at IS NULL
                 )
                 AND EXISTS(
                   SELECT 1

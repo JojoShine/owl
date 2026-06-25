@@ -262,8 +262,13 @@ class DepartmentService {
       throw ApiError.notFound('部门不存在');
     }
 
-    // 检查是否有子部门
-    const childCount = await db.Department.count({ where: { parent_id: id } });
+    // 检查是否有子部门（排除已软删除的）
+    const childCount = await db.Department.count({
+      where: {
+        parent_id: id,
+        deleted_at: null
+      }
+    });
     if (childCount > 0) {
       throw ApiError.badRequest(`该部门有 ${childCount} 个子部门，请先删除子部门`);
     }

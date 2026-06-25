@@ -300,7 +300,6 @@ export default function GeneratorPage() {
    */
   const handleInitializeConfig = async (tableName) => {
     try {
-      setLoading(true);
       const response = await generatorApi.initializeModuleConfig(tableName);
       toast.success(`模块配置初始化成功: ${response.data.module_name}`);
       setActiveTab('configs');
@@ -308,8 +307,6 @@ export default function GeneratorPage() {
     } catch (error) {
       console.error('Failed to initialize config:', error);
       toast.error(error.response?.data?.message || '初始化模块配置失败');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -374,7 +371,6 @@ export default function GeneratorPage() {
    */
   const handleSaveConfig = async () => {
     try {
-      setLoading(true);
       await generatorApi.updateModuleConfig(selectedConfig.id, {
         ...selectedConfig,
         fields: configFields,
@@ -385,8 +381,6 @@ export default function GeneratorPage() {
     } catch (error) {
       console.error('Failed to save config:', error);
       toast.error('保存配置失败');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -400,16 +394,14 @@ export default function GeneratorPage() {
 
   const handleConfirmGenerate = async () => {
     try {
-      setLoading(true);
       const response = await generatorApi.generateCode(selectedConfig.id, generateOptions);
-      toast.success(`代码生成成功！共生成 ${response.data.filesGenerated} 个文件`);
+      toast.success('代码生成成功！');
       setGenerateDialogOpen(false);
+      loadModuleConfigs(); // 刷新模块配置列表，更新状态
       loadHistory();
     } catch (error) {
       console.error('Failed to generate code:', error);
       toast.error(error.response?.data?.message || '代码生成失败');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -428,16 +420,14 @@ export default function GeneratorPage() {
    */
   const handleConfirmDeleteConfig = async () => {
     try {
-      setLoading(true);
       await generatorApi.deleteModuleConfig(deleteConfigDialog.configId);
       toast.success('模块配置删除成功');
       setDeleteConfigDialog({ open: false, configId: null });
       loadModuleConfigs();
+      loadTables(); // 刷新表列表，更新表的生成状态
     } catch (error) {
       console.error('Failed to delete config:', error);
       toast.error('删除模块配置失败');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -456,16 +446,14 @@ export default function GeneratorPage() {
    */
   const handleConfirmDeleteCode = async () => {
     try {
-      setLoading(true);
       await generatorApi.deleteGeneratedCode(deleteCodeDialog.configId);
       toast.success('生成的代码已删除');
       setDeleteCodeDialog({ open: false, configId: null });
       loadModuleConfigs();
+      loadTables(); // 刷新表列表，更新表的生成状态
     } catch (error) {
       console.error('Failed to delete generated code:', error);
       toast.error('删除生成的代码失败');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -488,6 +476,13 @@ export default function GeneratorPage() {
    */
   const handleHistoryPageChange = (newPage) => {
     setHistoryPagination(prev => ({ ...prev, page: newPage }));
+  };
+
+  /**
+   * 处理生成历史每页数量变化
+   */
+  const handleHistoryPageSizeChange = (newPageSize) => {
+    setHistoryPagination(prev => ({ ...prev, pageSize: newPageSize, page: 1 }));
   };
 
   return (
@@ -568,6 +563,7 @@ export default function GeneratorPage() {
                 loading={loading && activeTab === 'history'}
                 pagination={historyPagination}
                 onPageChange={handleHistoryPageChange}
+                onPageSizeChange={handleHistoryPageSizeChange}
               />
             </CardContent>
           </Card>
