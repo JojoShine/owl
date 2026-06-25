@@ -141,6 +141,15 @@ export function DynamicCrudPage({ config }) {
     });
   };
 
+  // 打开查看对话框
+  const handleView = (row) => {
+    setFormDialog({
+      open: true,
+      mode: 'view',
+      data: row,
+    });
+  };
+
   // 提交表单
   const handleFormSubmit = async (formData) => {
     try {
@@ -488,6 +497,7 @@ export function DynamicCrudPage({ config }) {
             data={data}
             fields={config.fields}
             loading={loading}
+            onView={handleView}
             onEdit={handleEdit}
             onDelete={handleDelete}
             selectedRows={selectedRows}
@@ -525,6 +535,8 @@ export function DynamicCrudPage({ config }) {
         title={
           formDialog.mode === 'create'
             ? `新增${config.description || ''}`
+            : formDialog.mode === 'view'
+            ? `查看${config.description || ''}`
             : `编辑${config.description || ''}`
         }
       />

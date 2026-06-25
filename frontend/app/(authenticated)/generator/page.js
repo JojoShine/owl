@@ -367,6 +367,16 @@ export default function GeneratorPage() {
   };
 
   /**
+   * 更新模块配置
+   */
+  const handleModuleConfigChange = (field, value) => {
+    setSelectedConfig(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  /**
    * 保存配置
    */
   const handleSaveConfig = async () => {
@@ -578,6 +588,7 @@ export default function GeneratorPage() {
         jsonInputs={jsonInputs}
         onFieldChange={handleFieldChange}
         onFormatOptionChange={handleFormatOptionChange}
+        onModuleConfigChange={handleModuleConfigChange}
         onJsonInputChange={(index, type, value) => {
           setJsonInputs(prev => ({
             ...prev,

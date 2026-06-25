@@ -39,6 +39,7 @@ export default function ConfigDialog({
   onJsonInputChange,
   onSave,
   loading,
+  onModuleConfigChange, // 新增：处理模块配置变化
   // 生成 dialog
   generateOpen,
   onGenerateOpenChange,
@@ -67,6 +68,86 @@ export default function ConfigDialog({
 
           <ScrollArea className="h-[calc(85vh-180px)] pr-4">
             <div className="space-y-6">
+              {/* 模块功能配置 */}
+              <Card className="border-2 bg-muted/30">
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-base font-semibold">模块功能配置</CardTitle>
+                  <CardDescription className="text-xs">
+                    配置该模块支持的功能操作（查询功能默认支持）
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    <div className="flex items-center space-x-3">
+                      <Switch
+                        id="enable-create"
+                        checked={config?.enable_create ?? true}
+                        onCheckedChange={(checked) => {
+                          onModuleConfigChange('enable_create', checked);
+                          // 如果禁用新增，也禁用导入
+                          if (!checked && config?.enable_import) {
+                            onModuleConfigChange('enable_import', false);
+                          }
+                        }}
+                      />
+                      <Label htmlFor="enable-create" className="cursor-pointer">
+                        支持新增
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                      <Switch
+                        id="enable-update"
+                        checked={config?.enable_update ?? true}
+                        onCheckedChange={(checked) => onModuleConfigChange('enable_update', checked)}
+                      />
+                      <Label htmlFor="enable-update" className="cursor-pointer">
+                        支持编辑
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                      <Switch
+                        id="enable-delete"
+                        checked={config?.enable_delete ?? true}
+                        onCheckedChange={(checked) => onModuleConfigChange('enable_delete', checked)}
+                      />
+                      <Label htmlFor="enable-delete" className="cursor-pointer">
+                        支持删除
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                      <Switch
+                        id="enable-batch-delete"
+                        checked={config?.enable_batch_delete ?? true}
+                        onCheckedChange={(checked) => onModuleConfigChange('enable_batch_delete', checked)}
+                      />
+                      <Label htmlFor="enable-batch-delete" className="cursor-pointer">
+                        支持批量删除
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                      <Switch
+                        id="enable-import"
+                        checked={config?.enable_import ?? false}
+                        onCheckedChange={(checked) => onModuleConfigChange('enable_import', checked)}
+                        disabled={!config?.enable_create}
+                      />
+                      <Label
+                        htmlFor="enable-import"
+                        className={config?.enable_create ? "cursor-pointer" : "cursor-not-allowed opacity-50"}
+                      >
+                        支持导入
+                        {!config?.enable_create && (
+                          <span className="text-xs text-muted-foreground ml-1">(需先启用新增)</span>
+                        )}
+                      </Label>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Separator />
+
+              {/* 字段配置 */}
               {fields.map((field, index) => {
                 const formatOptions = field.format_options || {};
                 const displayName = formatOptions.displayName || {};

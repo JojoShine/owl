@@ -13,7 +13,7 @@ import {
 import { TableLoading } from '@/components/ui/table-loading';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Edit, Trash2 } from 'lucide-react';
+import { Edit, Trash2, Eye } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 /**
@@ -26,6 +26,7 @@ export function DynamicTable({
   loading = false,
   onEdit,
   onDelete,
+  onView, // 新增：查看回调
   onBatchDelete,
   selectedRows = [],
   onSelectRows,
@@ -158,7 +159,7 @@ export function DynamicTable({
       <div className="border rounded-lg overflow-hidden">
         <Table>
           <TableBody>
-            <TableLoading colSpan={listFields.length + (features.batchDelete ? 1 : 0) + ((features.update || features.delete) ? 1 : 0)} />
+            <TableLoading colSpan={listFields.length + (features.batchDelete ? 1 : 0) + 1} />
           </TableBody>
         </Table>
       </div>
@@ -206,10 +207,8 @@ export function DynamicTable({
               </TableHead>
             ))}
 
-            {/* 操作列 */}
-            {(features.update || features.delete) && (
-              <TableHead className="text-right">操作</TableHead>
-            )}
+            {/* 操作列 - 查看按钮始终显示 */}
+            <TableHead className="text-right">操作</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -242,33 +241,39 @@ export function DynamicTable({
                 </TableCell>
               ))}
 
-              {/* 操作按钮 */}
-              {(features.update || features.delete) && (
-                <TableCell className="text-right">
-                  <div className="flex justify-end gap-2">
-                    {features.update && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => onEdit?.(row)}
-                        title="编辑"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                    )}
-                    {features.delete && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => onDelete?.(row)}
-                        title="删除"
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    )}
-                  </div>
-                </TableCell>
-              )}
+              {/* 操作按钮 - 查看按钮始终显示 */}
+              <TableCell className="text-right">
+                <div className="flex justify-end gap-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onView?.(row)}
+                    title="查看"
+                  >
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                  {features.update && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => onEdit?.(row)}
+                      title="编辑"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                  )}
+                  {features.delete && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => onDelete?.(row)}
+                      title="删除"
+                    >
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  )}
+                </div>
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>

@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { toDateTimeLocalString, fromDateTimeLocalString } from '@/lib/utils/date';
+import { toDateTimeLocalString, fromDateTimeLocalString, formatDateTime } from '@/lib/utils/date';
 import {
   Dialog,
   DialogContent,
@@ -19,6 +19,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { DatePicker } from '@/components/ui/date-picker';
+import { Separator } from '@/components/ui/separator';
 import {
   Select,
   SelectContent,
@@ -42,6 +43,7 @@ export function DynamicForm({
   description,
 }) {
   const isEdit = mode === 'edit' && data !== null;
+  const isView = mode === 'view';
 
   // 只显示在表单中的字段
   const formFields = fields.filter((f) => f.showInForm);
@@ -139,7 +141,7 @@ export function DynamicForm({
   const generateDefaultValues = () => {
     const defaults = {};
     formFields.forEach((field) => {
-      if (isEdit && data && data[field.name] !== undefined) {
+      if ((isEdit || isView) && data && data[field.name] !== undefined) {
         // 对于日期字段，转换为 datetime-local 格式
         if (field.type === 'date' && data[field.name]) {
           defaults[field.name] = toDateTimeLocalString(data[field.name]);
@@ -205,16 +207,63 @@ export function DynamicForm({
     return field.type === 'date' || (isEdit && isDateTimeString(value));
   };
 
+  // 格式化显示值（用于查看模式）
+  const formatDisplayValue = (field, value) => {
+    // 空值处理
+    if (value === null || value === undefined || value === '') {
+      return '-';
+    }
+
+    // 布尔值
+    if (field.type === 'boolean') {
+      return value === true || value === 'TRUE' || value === 'true' ? '是' : '否';
+    }
+
+    // 枚举值（使用 codeMapping）
+    if (field.codeMapping?.mappings) {
+      const mapping = field.codeMapping.mappings[value];
+      return mapping?.label || value;
+    }
+
+    // Select 选项
+    if (field.selectOptions) {
+      const option = field.selectOptions.find(opt => String(opt.value) === String(value));
+      return option?.label || value;
+    }
+
+    // 日期时间字段
+    if (field.type === 'date' || isDateTimeString(value)) {
+      return formatDateTime(value);
+    }
+
+    // 默认返回值
+    return value;
+  };
+
   // 渲染不同类型的表单控件
   const renderFormField = (field) => {
     const error = errors[field.name];
     const fieldValue = watch(field.name);
 
+    // 查看模式：直接显示文本
+    if (isView) {
+      return (
+        <div key={field.name} className="space-y-2">
+          <Label className="text-sm font-medium text-muted-foreground">
+            {field.formLabel || field.label}
+          </Label>
+          <div className="text-sm text-foreground py-2">
+            {formatDisplayValue(field, fieldValue)}
+          </div>
+        </div>
+      );
+    }
+
     switch (field.formComponent) {
       case 'textarea':
         return (
-          <div key={field.name} className="space-y-2">
-            <Label htmlFor={field.name}>
+          <div key={field.name} className="space-y-2.5">
+            <Label htmlFor={field.name} className="text-sm font-medium">
               {field.formLabel || field.label}
               {field.rules?.required && <span className="text-destructive ml-1">*</span>}
             </Label>
@@ -231,8 +280,8 @@ export function DynamicForm({
 
       case 'switch':
         return (
-          <div key={field.name} className="flex items-center justify-between">
-            <Label htmlFor={field.name}>{field.formLabel || field.label}</Label>
+          <div key={field.name} className="flex items-center justify-between py-1">
+            <Label htmlFor={field.name} className="text-sm font-medium">{field.formLabel || field.label}</Label>
             <Switch
               id={field.name}
               checked={fieldValue}
@@ -250,8 +299,8 @@ export function DynamicForm({
         })) : []);
 
         return (
-          <div key={field.name} className="space-y-2">
-            <Label htmlFor={field.name}>
+          <div key={field.name} className="space-y-2.5">
+            <Label htmlFor={field.name} className="text-sm font-medium">
               {field.formLabel || field.label}
               {field.rules?.required && <span className="text-destructive ml-1">*</span>}
             </Label>
@@ -284,8 +333,8 @@ export function DynamicForm({
 
       case 'number':
         return (
-          <div key={field.name} className="space-y-2">
-            <Label htmlFor={field.name}>
+          <div key={field.name} className="space-y-2.5">
+            <Label htmlFor={field.name} className="text-sm font-medium">
               {field.formLabel || field.label}
               {field.rules?.required && <span className="text-destructive ml-1">*</span>}
             </Label>
@@ -302,8 +351,8 @@ export function DynamicForm({
 
       case 'date':
         return (
-          <div key={field.name} className="space-y-2">
-            <Label htmlFor={field.name}>
+          <div key={field.name} className="space-y-2.5">
+            <Label htmlFor={field.name} className="text-sm font-medium">
               {field.formLabel || field.label}
               {field.rules?.required && <span className="text-destructive ml-1">*</span>}
             </Label>
@@ -333,8 +382,8 @@ export function DynamicForm({
         const useDateTime = shouldUseDateTimeInput(field, fieldValue);
 
         return (
-          <div key={field.name} className="space-y-2">
-            <Label htmlFor={field.name}>
+          <div key={field.name} className="space-y-2.5">
+            <Label htmlFor={field.name} className="text-sm font-medium">
               {field.formLabel || field.label}
               {field.rules?.required && <span className="text-destructive ml-1">*</span>}
             </Label>
@@ -382,30 +431,45 @@ export function DynamicForm({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={formFields.length > 10 ? "max-w-4xl max-h-[90vh] overflow-y-auto" : "max-w-3xl max-h-[90vh] overflow-y-auto"}>
-        <DialogHeader>
-          <DialogTitle>{title || (isEdit ? '编辑' : '新增')}</DialogTitle>
+      <DialogContent className={formFields.length > 10 ? "max-w-4xl max-h-[90vh] flex flex-col p-0" : "max-w-3xl max-h-[90vh] flex flex-col p-0"}>
+        <DialogHeader className="flex-shrink-0 px-6 pt-6 pb-4">
+          <DialogTitle>{title || (isView ? '查看' : isEdit ? '编辑' : '新增')}</DialogTitle>
           {description && <DialogDescription>{description}</DialogDescription>}
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
-          {/* 动态渲染表单字段 */}
-          <div className={formFields.length > 10 ? "grid grid-cols-2 gap-4" : "space-y-4"}>
+        <Separator />
+
+        <form onSubmit={handleSubmit(handleFormSubmit)} className="flex flex-col flex-1 min-h-0">
+          {/* 动态渲染表单字段 - 可滚动区域 */}
+          <div className={`flex-1 overflow-y-auto px-6 py-4 scrollbar-hide ${formFields.length > 10 ? "grid grid-cols-2 gap-4 content-start" : "space-y-4"}`}>
             {formFields.map((field) => renderFormField(field))}
           </div>
 
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange?.(false)}
-              disabled={isSubmitting}
-            >
-              取消
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? '提交中...' : isEdit ? '保存' : '创建'}
-            </Button>
+          <Separator />
+
+          <DialogFooter className="flex-shrink-0 px-6 py-4">
+            {!isView ? (
+              <>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => onOpenChange?.(false)}
+                  disabled={isSubmitting}
+                >
+                  取消
+                </Button>
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? '提交中...' : isEdit ? '保存' : '创建'}
+                </Button>
+              </>
+            ) : (
+              <Button
+                type="button"
+                onClick={() => onOpenChange?.(false)}
+              >
+                关闭
+              </Button>
+            )}
           </DialogFooter>
         </form>
       </DialogContent>
