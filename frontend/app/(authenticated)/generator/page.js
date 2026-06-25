@@ -75,6 +75,7 @@ export default function GeneratorPage() {
   const [selectedConfig, setSelectedConfig] = useState(null);
   const [configFields, setConfigFields] = useState([]);
   const [jsonInputs, setJsonInputs] = useState({}); // 存储每个字段的JSON输入文本
+  const [isLoadingConfig, setIsLoadingConfig] = useState(false); // 仅用于编辑配置的加载状态
 
   // 生成对话框状态
   const [generateDialogOpen, setGenerateDialogOpen] = useState(false);
@@ -317,7 +318,7 @@ export default function GeneratorPage() {
    */
   const handleEditConfig = async (config) => {
     try {
-      setLoading(true);
+      setIsLoadingConfig(true);
       const response = await generatorApi.getModuleConfig(config.id);
       setSelectedConfig(response.data);
       setConfigFields(response.data.fields || []);
@@ -326,7 +327,7 @@ export default function GeneratorPage() {
       console.error('Failed to load config:', error);
       toast.error('加载配置失败');
     } finally {
-      setLoading(false);
+      setIsLoadingConfig(false);
     }
   };
 
@@ -588,7 +589,7 @@ export default function GeneratorPage() {
           }));
         }}
         onSave={handleSaveConfig}
-        loading={loading}
+        loading={isLoadingConfig}
         // 生成 dialog
         generateOpen={generateDialogOpen}
         onGenerateOpenChange={setGenerateDialogOpen}
