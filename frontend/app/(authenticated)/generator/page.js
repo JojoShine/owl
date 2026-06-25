@@ -539,12 +539,10 @@ export default function GeneratorPage() {
               <ConfigsSection
                 configs={moduleConfigs}
                 loading={loading && activeTab === 'configs'}
-                pagination={configPagination}
                 onEdit={handleEditConfig}
                 onGenerate={handleGenerate}
                 onDeleteCode={handleDeleteGeneratedCode}
                 onDeleteConfig={handleDeleteConfig}
-                onPageChange={handleConfigPageChange}
               />
             </CardContent>
           </Card>
