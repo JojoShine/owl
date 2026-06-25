@@ -29,12 +29,13 @@ export function DateTimePicker({
   // 将 ISO 日期时间字符串转换为 Date 对象
   const dateValue = value ? new Date(value) : undefined;
 
-  // 提取时间部分
+  // 提取时间部分，如果没有值则使用当前时间
+  const now = new Date();
   const [hours, setHours] = React.useState(
-    dateValue ? String(dateValue.getHours()).padStart(2, '0') : '00'
+    dateValue ? String(dateValue.getHours()).padStart(2, '0') : String(now.getHours()).padStart(2, '0')
   );
   const [minutes, setMinutes] = React.useState(
-    dateValue ? String(dateValue.getMinutes()).padStart(2, '0') : '00'
+    dateValue ? String(dateValue.getMinutes()).padStart(2, '0') : String(now.getMinutes()).padStart(2, '0')
   );
 
   // 当弹窗打开且没有值时，默认选择当天
@@ -60,8 +61,10 @@ export function DateTimePicker({
       setHours(String(dateValue.getHours()).padStart(2, '0'));
       setMinutes(String(dateValue.getMinutes()).padStart(2, '0'));
     } else {
-      setHours('00');
-      setMinutes('00');
+      // 没有值时使用当前时间
+      const now = new Date();
+      setHours(String(now.getHours()).padStart(2, '0'));
+      setMinutes(String(now.getMinutes()).padStart(2, '0'));
     }
   }, [value]);
 

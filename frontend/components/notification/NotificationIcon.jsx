@@ -41,11 +41,12 @@ export default function NotificationIcon() {
   const fetchUnreadCount = useCallback(async () => {
     try {
       const response = await notificationApi.getUnreadCount();
-      if (response.data.success) {
-        setUnreadCount(response.data.data.count || 0);
+      if (response?.data?.success && typeof response.data.data?.count === 'number') {
+        setUnreadCount(response.data.data.count);
       }
     } catch (error) {
       console.error('Failed to fetch unread count:', error);
+      // 静默失败，不显示错误提示
     }
   }, []);
 
@@ -58,8 +59,8 @@ export default function NotificationIcon() {
         limit: 5,
         isRead: false,
       });
-      if (response.data.success) {
-        setNotifications(response.data.data.notifications || []);
+      if (response?.data?.success && Array.isArray(response.data.data?.notifications)) {
+        setNotifications(response.data.data.notifications);
       }
     } catch (error) {
       console.error('Failed to fetch notifications:', error);
@@ -71,7 +72,7 @@ export default function NotificationIcon() {
 
   // 标记为已读
   const markAsRead = async (id, event) => {
-    event.stopPropagation();
+    event?.stopPropagation();
     try {
       await notificationApi.markAsRead(id);
       setNotifications((prev) => prev.filter((n) => n.id !== id));
@@ -110,15 +111,21 @@ export default function NotificationIcon() {
 
   // 处理通知点击
   const handleNotificationClick = async (notification) => {
+    if (!notification?.id) return;
+
     // 如果未读，标记为已读
     if (!notification.is_read) {
-      await notificationApi.markAsRead(notification.id);
-      setNotifications((prev) => prev.filter((n) => n.id !== notification.id));
-      setUnreadCount((prev) => Math.max(0, prev - 1));
+      try {
+        await notificationApi.markAsRead(notification.id);
+        setNotifications((prev) => prev.filter((n) => n.id !== notification.id));
+        setUnreadCount((prev) => Math.max(0, prev - 1));
 
-      // 触发自定义事件，通知其他组件更新
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('notification:read', { detail: { id: notification.id } }));
+        // 触发自定义事件，通知其他组件更新
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('notification:read', { detail: { id: notification.id } }));
+        }
+      } catch (error) {
+        console.error('Failed to mark as read:', error);
       }
     }
 
@@ -130,43 +137,42 @@ export default function NotificationIcon() {
     setIsOpen(false);
   };
 
-  // 组件挂载时只加载一次未读数量
+  // 初始化：只在组件挂载时加载一次未读数量
   useEffect(() => {
     fetchUnreadCount();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [fetchUnreadCount]);
 
-  // 初始化：监听 WebSocket 推送
+  // 监听 WebSocket 推送
   useEffect(() => {
-    // 初始加载未读数量（仅在挂载时一次）
-    fetchUnreadCount();
+    if (!isConnected || !socket) return;
 
-    // 监听实时通知推送
-    if (isConnected && socket) {
-      const handleNewNotification = (notification) => {
-        // console.log('Received new notification:', notification);
+    const handleNewNotification = (notification) => {
+      if (!notification) return;
 
-        // 更新未读数量
-        setUnreadCount((prev) => prev + 1);
+      // console.log('Received new notification:', notification);
 
-        // 添加到通知列表（只保留最近5条）
-        setNotifications((prev) => {
-          const newNotifications = [notification, ...prev];
-          return newNotifications.slice(0, 5);
-        });
+      // 更新未读数量
+      setUnreadCount((prev) => prev + 1);
 
-        // 显示桌面通知
+      // 添加到通知列表（只保留最近5条）
+      setNotifications((prev) => {
+        const newNotifications = [notification, ...prev];
+        return newNotifications.slice(0, 5);
+      });
+
+      // 显示桌面通知
+      if (notification.title) {
         toast.info(notification.title, {
           description: notification.content,
         });
-      };
+      }
+    };
 
-      on('notification', handleNewNotification);
+    on('notification', handleNewNotification);
 
-      return () => {
-        off('notification', handleNewNotification);
-      };
-    }
+    return () => {
+      off('notification', handleNewNotification);
+    };
   }, [isConnected, socket, on, off]);
 
   // 下拉菜单打开时加载最新通知
@@ -242,10 +248,16 @@ export default function NotificationIcon() {
                     </p>
                     <span className="text-xs text-muted-foreground mt-1">
                       {notification.created_at
-                        ? formatDistanceToNow(new Date(notification.created_at), {
-                            addSuffix: true,
-                            locale: zhCN,
-                          })
+                        ? (() => {
+                            try {
+                              return formatDistanceToNow(new Date(notification.created_at), {
+                                addSuffix: true,
+                                locale: zhCN,
+                              });
+                            } catch (e) {
+                              return '刚刚';
+                            }
+                          })()
                         : '刚刚'}
                     </span>
                   </div>

@@ -44,6 +44,16 @@ class NotificationService {
    */
   async getUserNotifications(userId, options = {}) {
     try {
+      if (!userId) {
+        return {
+          notifications: [],
+          total: 0,
+          page: 1,
+          pageSize: 20,
+          totalPages: 0,
+        };
+      }
+
       const {
         page = 1,
         limit = 20,
@@ -61,7 +71,7 @@ class NotificationService {
       }
 
       if (isRead !== undefined) {
-        where.is_read = isRead;
+        where.is_read = isRead === 'true' || isRead === true;
       }
 
       // 查询通知列表
@@ -80,14 +90,22 @@ class NotificationService {
       });
 
       return {
-        notifications,
-        total,
+        notifications: notifications || [],
+        total: total || 0,
         page: parseInt(page),
         pageSize: parseInt(limit),
-        totalPages: Math.ceil(total / limit),
+        totalPages: Math.ceil((total || 0) / limit),
       };
     } catch (error) {
-      throw new Error(`获取通知列表失败: ${error.message}`);
+      console.error(`获取通知列表失败: ${error.message}`);
+      // 返回空数据而不是抛出错误
+      return {
+        notifications: [],
+        total: 0,
+        page: 1,
+        pageSize: 20,
+        totalPages: 0,
+      };
     }
   }
 
@@ -98,6 +116,10 @@ class NotificationService {
    */
   async getUnreadCount(userId) {
     try {
+      if (!userId) {
+        return 0;
+      }
+
       const count = await Notification.count({
         where: {
           user_id: userId,
@@ -105,9 +127,11 @@ class NotificationService {
         },
       });
 
-      return count;
+      return count || 0;
     } catch (error) {
-      throw new Error(`获取未读消息数量失败: ${error.message}`);
+      console.error(`获取未读消息数量失败: ${error.message}`);
+      // 返回 0 而不是抛出错误，避免影响用户体验
+      return 0;
     }
   }
 

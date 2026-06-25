@@ -29,10 +29,27 @@ export function DynamicFilters({ fields = [], filters = {}, onChange, onSearch, 
     });
   };
 
+  // 处理日期范围筛选
+  const handleDateRangeChange = (fieldName, type, value) => {
+    const startKey = `${fieldName}_start`;
+    const endKey = `${fieldName}_end`;
+
+    onChange?.({
+      ...filters,
+      [type === 'start' ? startKey : endKey]: value,
+    });
+  };
+
   const handleReset = () => {
     const emptyFilters = {};
     searchableFields.forEach((field) => {
-      emptyFilters[field.name] = '';
+      // 对于日期时间字段，需要清空开始和结束时间
+      if (field.searchComponent === 'date' || field.searchComponent === 'datetime') {
+        emptyFilters[`${field.name}_start`] = '';
+        emptyFilters[`${field.name}_end`] = '';
+      } else {
+        emptyFilters[field.name] = '';
+      }
     });
     onChange?.(emptyFilters);
     onReset?.();
@@ -66,14 +83,31 @@ export function DynamicFilters({ fields = [], filters = {}, onChange, onSearch, 
 
       case 'date':
       case 'datetime':
-        // 日期时间选择
+        // 日期时间范围选择（开始时间 - 结束时间）
+        const startKey = `${field.name}_start`;
+        const endKey = `${field.name}_end`;
+        const startValue = filters[startKey] || '';
+        const endValue = filters[endKey] || '';
+        const showTime = field.searchComponent === 'datetime';
+
         return (
-          <DateTimePicker
-            value={value}
-            onChange={(e) => handleFilterChange(field.name, e.target.value)}
-            placeholder={`选择${field.label}`}
-            showTime={field.searchComponent === 'datetime'}
-          />
+          <div className="flex gap-2 items-center">
+            <DateTimePicker
+              value={startValue}
+              onChange={(e) => handleDateRangeChange(field.name, 'start', e.target.value)}
+              placeholder="开始时间"
+              showTime={showTime}
+              className="flex-1"
+            />
+            <span className="text-muted-foreground">-</span>
+            <DateTimePicker
+              value={endValue}
+              onChange={(e) => handleDateRangeChange(field.name, 'end', e.target.value)}
+              placeholder="结束时间"
+              showTime={showTime}
+              className="flex-1"
+            />
+          </div>
         );
 
       case 'number':
