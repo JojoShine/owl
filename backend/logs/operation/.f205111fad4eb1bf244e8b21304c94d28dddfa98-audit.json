@@ -69,6 +69,11 @@
             "date": 1782279362147,
             "name": "/Users/jojoshine/projects/owl_platform/backend/logs/operation/operation-2026-06-24.log",
             "hash": "7743fdb8df863b54a10f4cc82071a9eed9dfd649eeed64727481afed96e296f2"
+        },
+        {
+            "date": 1782347615473,
+            "name": "/Users/jojoshine/projects/owl_platform/backend/logs/operation/operation-2026-06-25.log",
+            "hash": "7eace11bd4d55f057cfd2724ad2d8b5a28bc379a9227ab2907501ac3a5e5073e"
         }
     ],
     "hashType": "sha256"

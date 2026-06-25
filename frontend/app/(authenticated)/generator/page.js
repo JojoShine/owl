@@ -12,7 +12,6 @@ import {
   RefreshCwIcon,
   CheckCircleIcon,
   XCircleIcon,
-  EyeIcon,
 } from 'lucide-react';
 import { generatorApi } from '@/lib/api';
 import { toast } from 'sonner';
@@ -541,7 +540,6 @@ export default function GeneratorPage() {
                 configs={moduleConfigs}
                 loading={loading && activeTab === 'configs'}
                 pagination={configPagination}
-                onView={handleEditConfig}
                 onEdit={handleEditConfig}
                 onGenerate={handleGenerate}
                 onDeleteCode={handleDeleteGeneratedCode}

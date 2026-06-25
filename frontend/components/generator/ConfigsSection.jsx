@@ -12,13 +12,12 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Pagination } from '@/components/ui/pagination';
-import { Settings2Icon, CodeIcon, TrashIcon, Trash2Icon, EyeIcon } from 'lucide-react';
+import { Settings2Icon, CodeIcon, TrashIcon, Trash2Icon } from 'lucide-react';
 
 export default function ConfigsSection({
   configs,
   loading,
   pagination,
-  onView,
   onEdit,
   onGenerate,
   onDeleteCode,
@@ -92,14 +91,6 @@ export default function ConfigsSection({
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => onView(config)}
-                            title="查看详情"
-                          >
-                            <EyeIcon className="w-4 h-4" />
-                          </Button>
                           <Button
                             size="sm"
                             variant="outline"

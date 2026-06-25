@@ -359,7 +359,7 @@ class ModuleConfigService {
     const fieldConfigs = fields.map((field, index) => {
       const dbColumn = columnMap.get(field.field_name);
 
-      return {
+      const config = {
         module_id: moduleId,
         field_order: index + 1,
         list_sort: field.list_sort || index + 1,
@@ -371,6 +371,11 @@ class ModuleConfigService {
         max_length: dbColumn ? dbColumn.length : field.max_length,
         default_value: dbColumn ? dbColumn.defaultValue : field.default_value,
       };
+
+      // 删除旧的 GeneratedField id，让 Sequelize 生成新的
+      delete config.id;
+
+      return config;
     });
 
     return await db.GeneratedField.bulkCreate(fieldConfigs);
