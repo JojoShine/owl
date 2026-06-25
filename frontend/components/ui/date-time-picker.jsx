@@ -47,9 +47,18 @@ export function DateTimePicker({
       today.setSeconds(0);
       today.setMilliseconds(0);
 
+      // 转换为本地时间字符串（不转UTC）
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, '0');
+      const day = String(today.getDate()).padStart(2, '0');
+      const hrs = String(today.getHours()).padStart(2, '0');
+      const mins = String(today.getMinutes()).padStart(2, '0');
+      const secs = String(today.getSeconds()).padStart(2, '0');
+      const localTimeString = `${year}-${month}-${day} ${hrs}:${mins}:${secs}`;
+
       onChange?.({
         target: {
-          value: today.toISOString(),
+          value: localTimeString,
         },
       });
     }
@@ -78,12 +87,18 @@ export function DateTimePicker({
       newDate.setSeconds(0);
       newDate.setMilliseconds(0);
 
-      // 转换为 ISO 字符串
-      const isoString = newDate.toISOString();
+      // 转换为本地时间字符串（不转UTC）
+      const year = newDate.getFullYear();
+      const month = String(newDate.getMonth() + 1).padStart(2, '0');
+      const day = String(newDate.getDate()).padStart(2, '0');
+      const hrs = String(newDate.getHours()).padStart(2, '0');
+      const mins = String(newDate.getMinutes()).padStart(2, '0');
+      const secs = String(newDate.getSeconds()).padStart(2, '0');
+      const localTimeString = `${year}-${month}-${day} ${hrs}:${mins}:${secs}`;
 
       onChange?.({
         target: {
-          value: isoString,
+          value: localTimeString,
         },
       });
     } else {
@@ -111,11 +126,18 @@ export function DateTimePicker({
       newDate.setSeconds(0);
       newDate.setMilliseconds(0);
 
-      const isoString = newDate.toISOString();
+      // 转换为本地时间字符串（不转UTC）
+      const year = newDate.getFullYear();
+      const month = String(newDate.getMonth() + 1).padStart(2, '0');
+      const day = String(newDate.getDate()).padStart(2, '0');
+      const hrs = String(newDate.getHours()).padStart(2, '0');
+      const mins = String(newDate.getMinutes()).padStart(2, '0');
+      const secs = String(newDate.getSeconds()).padStart(2, '0');
+      const localTimeString = `${year}-${month}-${day} ${hrs}:${mins}:${secs}`;
 
       onChange?.({
         target: {
-          value: isoString,
+          value: localTimeString,
         },
       });
     }

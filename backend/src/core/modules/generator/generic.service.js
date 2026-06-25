@@ -34,13 +34,34 @@ class GenericService {
     // 构建搜索条件
     const { whereClause, replacements } = this._buildWhereClause(moduleConfig, searchParams);
 
+    // 获取字段配置，找出 timestamp 类型字段
+    const timestampFields = moduleConfig.fields.filter(f => {
+      const fieldType = f.field_type?.toLowerCase();
+      return fieldType === 'timestamp' ||
+             fieldType === 'timestamp without time zone' ||
+             fieldType === 'timestamp with time zone';
+    }).map(f => f.field_name);
+
+    // 构建 SELECT 子句，将 timestamp 字段转换为本地时区
+    let selectClause = '*';
+    if (timestampFields.length > 0) {
+      const allFields = moduleConfig.fields.map(f => {
+        if (timestampFields.includes(f.field_name)) {
+          // 将 UTC 时间转换为 Asia/Shanghai 时区
+          return `${f.field_name} AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Shanghai' AS ${f.field_name}`;
+        }
+        return f.field_name;
+      });
+      selectClause = allFields.join(', ');
+    }
+
     // 添加分页参数
     replacements.limit = parseInt(limit);
     replacements.offset = offset;
 
     // 查询数据
     const dataQuery = `
-      SELECT * FROM ${tableName}
+      SELECT ${selectClause} FROM ${tableName}
       ${whereClause}
       ORDER BY ${sort} ${order.toUpperCase()}
       LIMIT :limit OFFSET :offset
@@ -87,7 +108,29 @@ class GenericService {
     }
 
     const tableName = moduleConfig.table_name;
-    const query = `SELECT * FROM ${tableName} WHERE id = :id LIMIT 1`;
+
+    // 获取字段配置，找出 timestamp 类型字段
+    const timestampFields = moduleConfig.fields.filter(f => {
+      const fieldType = f.field_type?.toLowerCase();
+      return fieldType === 'timestamp' ||
+             fieldType === 'timestamp without time zone' ||
+             fieldType === 'timestamp with time zone';
+    }).map(f => f.field_name);
+
+    // 构建 SELECT 子句，将 timestamp 字段转换为本地时区
+    let selectClause = '*';
+    if (timestampFields.length > 0) {
+      const allFields = moduleConfig.fields.map(f => {
+        if (timestampFields.includes(f.field_name)) {
+          // 将 UTC 时间转换为 Asia/Shanghai 时区
+          return `${f.field_name} AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Shanghai' AS ${f.field_name}`;
+        }
+        return f.field_name;
+      });
+      selectClause = allFields.join(', ');
+    }
+
+    const query = `SELECT ${selectClause} FROM ${tableName} WHERE id = :id LIMIT 1`;
 
     const [item] = await sequelize.query(query, {
       replacements: { id },
