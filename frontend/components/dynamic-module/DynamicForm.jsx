@@ -53,7 +53,8 @@ export function DynamicForm({
     const schema = {};
 
     formFields.forEach((field) => {
-      const rules = field.rules || {};
+      // 支持 rules 和 formRules 两种命名
+      const rules = field.rules || field.formRules || {};
       let fieldSchema;
 
       // 根据字段类型创建基础schema
@@ -244,6 +245,8 @@ export function DynamicForm({
   const renderFormField = (field) => {
     const error = errors[field.name];
     const fieldValue = watch(field.name);
+    // 支持 rules 和 formRules 两种命名
+    const rules = field.rules || field.formRules || {};
 
     // 查看模式：直接显示文本
     if (isView) {
@@ -265,7 +268,7 @@ export function DynamicForm({
           <div key={field.name} className="space-y-2.5">
             <Label htmlFor={field.name} className="text-sm font-medium">
               {field.formLabel || field.label}
-              {field.rules?.required && <span className="text-destructive ml-1">*</span>}
+              {rules.required && <span className="text-destructive ml-1">*</span>}
             </Label>
             <Textarea
               id={field.name}
@@ -302,7 +305,7 @@ export function DynamicForm({
           <div key={field.name} className="space-y-2.5">
             <Label htmlFor={field.name} className="text-sm font-medium">
               {field.formLabel || field.label}
-              {field.rules?.required && <span className="text-destructive ml-1">*</span>}
+              {rules.required && <span className="text-destructive ml-1">*</span>}
             </Label>
             <Select
               value={String(fieldValue)}
@@ -336,7 +339,7 @@ export function DynamicForm({
           <div key={field.name} className="space-y-2.5">
             <Label htmlFor={field.name} className="text-sm font-medium">
               {field.formLabel || field.label}
-              {field.rules?.required && <span className="text-destructive ml-1">*</span>}
+              {rules.required && <span className="text-destructive ml-1">*</span>}
             </Label>
             <Input
               id={field.name}
@@ -354,7 +357,7 @@ export function DynamicForm({
           <div key={field.name} className="space-y-2.5">
             <Label htmlFor={field.name} className="text-sm font-medium">
               {field.formLabel || field.label}
-              {field.rules?.required && <span className="text-destructive ml-1">*</span>}
+              {rules.required && <span className="text-destructive ml-1">*</span>}
             </Label>
             <DatePicker
               value={fieldValue}
@@ -385,7 +388,7 @@ export function DynamicForm({
           <div key={field.name} className="space-y-2.5">
             <Label htmlFor={field.name} className="text-sm font-medium">
               {field.formLabel || field.label}
-              {field.rules?.required && <span className="text-destructive ml-1">*</span>}
+              {rules.required && <span className="text-destructive ml-1">*</span>}
             </Label>
             <Input
               id={field.name}

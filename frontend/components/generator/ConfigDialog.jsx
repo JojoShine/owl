@@ -176,7 +176,7 @@ export default function ConfigDialog({
                       {/* 基础开关 - 优化布局 */}
                       <div>
                         <Label className="text-sm font-semibold mb-3 block">显示配置</Label>
-                        <div className="grid grid-cols-3 gap-6">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                           <div className="flex items-center space-x-3">
                             <Switch
                               id={`search-${field.field_name}`}
@@ -205,6 +205,19 @@ export default function ConfigDialog({
                             />
                             <Label htmlFor={`form-${field.field_name}`} className="cursor-pointer">
                               表单显示
+                            </Label>
+                          </div>
+                          <div className="flex items-center space-x-3">
+                            <Switch
+                              id={`required-${field.field_name}`}
+                              checked={field.form_rules?.required || false}
+                              onCheckedChange={(checked) => {
+                                const updatedRules = { ...field.form_rules, required: checked };
+                                onFieldChange(index, 'form_rules', updatedRules);
+                              }}
+                            />
+                            <Label htmlFor={`required-${field.field_name}`} className="cursor-pointer">
+                              <span className={field.form_rules?.required ? "text-destructive" : ""}>必填</span>
                             </Label>
                           </div>
                         </div>
