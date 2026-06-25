@@ -335,12 +335,15 @@ export function DynamicCrudPage({ config }) {
     try {
       setImportLoading(true);
       setImportResult(null);
+      setImportProgress(0);
 
       // 读取 Excel 文件
       const reader = new FileReader();
 
       reader.onload = async (e) => {
         try {
+          setImportProgress(20); // 文件读取完成
+
           const data = e.target?.result;
           const workbook = XLSX.read(data, { type: 'array' });
           const worksheet = workbook.Sheets['数据'] || workbook.Sheets[workbook.SheetNames[0]];
@@ -349,8 +352,11 @@ export function DynamicCrudPage({ config }) {
           if (rows.length === 0) {
             toast.error('Excel 文件中没有数据');
             setImportLoading(false);
+            setImportProgress(0);
             return;
           }
+
+          setImportProgress(40); // 数据解析完成
 
           // 跳过前两行（注释行和示例数据行），只保留实际数据
           // sheet_to_json 会自动使用第一行作为列名，所以返回的数据从第二行开始
@@ -360,30 +366,40 @@ export function DynamicCrudPage({ config }) {
           if (actualData.length === 0) {
             toast.error('Excel 文件中没有实际数据，请从第四行开始填入数据');
             setImportLoading(false);
+            setImportProgress(0);
             return;
           }
+
+          setImportProgress(60); // 数据准备完成
 
           // 调用导入接口
           const result = await axios.post(config.api.import, { rows: actualData });
 
+          setImportProgress(90); // 导入完成
           setImportResult(result.data);
-          setImportProgress(100);
+
+          setTimeout(() => {
+            setImportProgress(100); // 处理完成
+          }, 300);
 
           if (result.data.success) {
             toast.success(result.data.message);
-            // 延迟1秒后刷新数据，让用户看到导入完成的提示
+            // 延迟1秒后刷新数据和关闭进度，让用户看到导入完成的提示
             setTimeout(() => {
               fetchData();
+              setImportLoading(false);
               setImportProgress(0);
-            }, 1000);
+            }, 1200);
           } else {
             setImportDialogOpen(true);
+            setImportLoading(false);
           }
         } catch (error) {
           console.error('导入失败:', error);
-          toast.error('导入失败');
-        } finally {
+          toast.error(error.response?.data?.message || '导入失败');
           setImportLoading(false);
+          setImportProgress(0);
+        } finally {
           if (fileInputRef.current) {
             fileInputRef.current.value = '';
           }
@@ -395,6 +411,7 @@ export function DynamicCrudPage({ config }) {
       console.error('处理文件失败:', error);
       toast.error('处理文件失败');
       setImportLoading(false);
+      setImportProgress(0);
     }
   };
 
@@ -430,7 +447,7 @@ export function DynamicCrudPage({ config }) {
                 </Button>
                 <Button variant="outline" onClick={handleImportClick} disabled={importLoading}>
                   <Upload className="h-4 w-4 mr-2" />
-                  {importLoading ? '导入中...' : '导入数据'}
+                  导入数据
                 </Button>
                 <input
                   ref={fileInputRef}
@@ -439,12 +456,6 @@ export function DynamicCrudPage({ config }) {
                   onChange={handleFileSelect}
                   className="hidden"
                 />
-                {importLoading && (
-                  <div className="w-48">
-                    <Progress value={importProgress} className="h-2" />
-                    <p className="text-xs text-muted-foreground mt-1">导入中...</p>
-                  </div>
-                )}
               </>
             )}
             {config.features?.create && canCreate && (
@@ -457,29 +468,83 @@ export function DynamicCrudPage({ config }) {
         </CardHeader>
 
         <CardContent className="space-y-4">
+          {/* 导入进度遮罩层 */}
+          {importLoading && (
+            <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center">
+              <Card className="w-[400px] p-6 shadow-lg">
+                <div className="space-y-4">
+                  <div className="text-center">
+                    <h3 className="text-lg font-semibold">数据导入中</h3>
+                    <p className="text-sm text-muted-foreground mt-2">正在处理您的文件，请稍候...</p>
+                  </div>
+                  <Progress value={importProgress} className="h-2" />
+                  <p className="text-sm text-center text-muted-foreground">
+                    {importProgress === 0 ? '准备中...' : importProgress === 100 ? '处理完成' : `${importProgress}%`}
+                  </p>
+                </div>
+              </Card>
+            </div>
+          )}
+
           {/* 导入结果 Dialog */}
           <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
-            <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>导入结果</DialogTitle>
-                <DialogDescription>
+            <DialogContent className="max-w-4xl max-h-[85vh] flex flex-col p-0">
+              <DialogHeader className="px-6 pt-6 pb-4 flex-shrink-0">
+                <DialogTitle className="text-xl">导入结果</DialogTitle>
+                <DialogDescription className="text-base">
                   {importResult?.message}
                 </DialogDescription>
               </DialogHeader>
+
               {importResult?.errors && importResult.errors.length > 0 && (
-                <div className="space-y-2">
-                  <p className="font-semibold text-sm">异常信息：</p>
-                  <div className="space-y-1 max-h-[60vh] overflow-y-auto">
-                    {importResult.errors.map((error, idx) => (
-                      <div key={idx} className="text-sm p-2 bg-red-50 rounded border border-red-200">
-                        <span className="font-semibold">第 {error.row} 行 第 {error.columnNum} 列</span>
-                        {error.field && <span className="ml-2">({error.field})</span>}
-                        <span className="ml-2 text-red-600">{error.message}</span>
-                      </div>
-                    ))}
+                <>
+                  <div className="px-6 pb-2 flex-shrink-0">
+                    <div className="flex items-center justify-between">
+                      <p className="font-semibold text-sm text-destructive">
+                        共发现 {importResult.errors.length} 个错误
+                      </p>
+                    </div>
                   </div>
-                </div>
+
+                  <div className="flex-1 overflow-y-auto px-6 pb-6 scrollbar-hide">
+                    <div className="space-y-2">
+                      {importResult.errors.map((error, idx) => (
+                        <div
+                          key={idx}
+                          className="p-3 bg-destructive/10 rounded-lg border border-destructive/20 hover:bg-destructive/15 transition-colors"
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="flex-shrink-0 w-6 h-6 rounded-full bg-destructive/20 flex items-center justify-center text-destructive text-xs font-semibold mt-0.5">
+                              {idx + 1}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-baseline gap-2 mb-1">
+                                <span className="font-semibold text-sm">
+                                  第 {error.row} 行 第 {error.columnNum} 列
+                                </span>
+                                {error.field && (
+                                  <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
+                                    {error.field}
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-sm text-destructive break-words">
+                                {error.message}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </>
               )}
+
+              <div className="px-6 py-4 border-t flex-shrink-0">
+                <Button onClick={() => setImportDialogOpen(false)} className="w-full">
+                  确定
+                </Button>
+              </div>
             </DialogContent>
           </Dialog>
 
