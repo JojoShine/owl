@@ -31,6 +31,10 @@ class GenericService {
     const offset = (page - 1) * limit;
     const tableName = moduleConfig.table_name;
 
+    // 验证 sort 和 order 参数防止 SQL 注入
+    const validSort = this._validateSortField(moduleConfig, sort);
+    const validOrder = this._validateOrder(order);
+
     // 构建搜索条件
     const { whereClause, replacements } = this._buildWhereClause(moduleConfig, searchParams);
 
@@ -46,11 +50,13 @@ class GenericService {
     let selectClause = '*';
     if (timestampFields.length > 0) {
       const allFields = moduleConfig.fields.map(f => {
+        // 验证字段名防止 SQL 注入
+        const safeFieldName = this._escapeIdentifier(f.field_name);
         if (timestampFields.includes(f.field_name)) {
           // 将 UTC 时间转换为 Asia/Shanghai 时区
-          return `${f.field_name} AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Shanghai' AS ${f.field_name}`;
+          return `${safeFieldName} AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Shanghai' AS ${safeFieldName}`;
         }
-        return f.field_name;
+        return safeFieldName;
       });
       selectClause = allFields.join(', ');
     }
@@ -59,11 +65,14 @@ class GenericService {
     replacements.limit = parseInt(limit);
     replacements.offset = offset;
 
+    // 使用安全的表名
+    const safeTableName = this._escapeIdentifier(tableName);
+
     // 查询数据
     const dataQuery = `
-      SELECT ${selectClause} FROM ${tableName}
+      SELECT ${selectClause} FROM ${safeTableName}
       ${whereClause}
-      ORDER BY ${sort} ${order.toUpperCase()}
+      ORDER BY ${this._escapeIdentifier(validSort)} ${validOrder}
       LIMIT :limit OFFSET :offset
     `;
 
@@ -74,7 +83,7 @@ class GenericService {
 
     // 查询总数
     const countQuery = `
-      SELECT COUNT(*) as count FROM ${tableName}
+      SELECT COUNT(*) as count FROM ${safeTableName}
       ${whereClause}
     `;
 
@@ -121,16 +130,19 @@ class GenericService {
     let selectClause = '*';
     if (timestampFields.length > 0) {
       const allFields = moduleConfig.fields.map(f => {
+        // 验证字段名防止 SQL 注入
+        const safeFieldName = this._escapeIdentifier(f.field_name);
         if (timestampFields.includes(f.field_name)) {
           // 将 UTC 时间转换为 Asia/Shanghai 时区
-          return `${f.field_name} AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Shanghai' AS ${f.field_name}`;
+          return `${safeFieldName} AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Shanghai' AS ${safeFieldName}`;
         }
-        return f.field_name;
+        return safeFieldName;
       });
       selectClause = allFields.join(', ');
     }
 
-    const query = `SELECT ${selectClause} FROM ${tableName} WHERE id = :id LIMIT 1`;
+    const safeTableName = this._escapeIdentifier(tableName);
+    const query = `SELECT ${selectClause} FROM ${safeTableName} WHERE id = :id LIMIT 1`;
 
     const [item] = await sequelize.query(query, {
       replacements: { id },
@@ -166,11 +178,12 @@ class GenericService {
 
     // 构建插入SQL
     const fields = Object.keys(validData);
-    const fieldNames = fields.join(', ');
+    const fieldNames = fields.map(f => this._escapeIdentifier(f)).join(', ');
     const fieldPlaceholders = fields.map(f => `:${f}`).join(', ');
 
+    const safeTableName = this._escapeIdentifier(tableName);
     const query = `
-      INSERT INTO ${tableName} (${fieldNames}, created_at, updated_at)
+      INSERT INTO ${safeTableName} (${fieldNames}, created_at, updated_at)
       VALUES (${fieldPlaceholders}, NOW(), NOW())
       RETURNING *
     `;
@@ -212,10 +225,11 @@ class GenericService {
       throw ApiError.badRequest('没有可更新的字段');
     }
 
-    const setClause = fields.map(f => `${f} = :${f}`).join(', ');
+    const setClause = fields.map(f => `${this._escapeIdentifier(f)} = :${f}`).join(', ');
 
+    const safeTableName = this._escapeIdentifier(tableName);
     const query = `
-      UPDATE ${tableName}
+      UPDATE ${safeTableName}
       SET ${setClause}, updated_at = NOW()
       WHERE id = :id
       RETURNING *
@@ -248,7 +262,8 @@ class GenericService {
     // 先检查记录是否存在
     await this.getById(moduleConfig, id);
 
-    const query = `DELETE FROM ${tableName} WHERE id = :id`;
+    const safeTableName = this._escapeIdentifier(tableName);
+    const query = `DELETE FROM ${safeTableName} WHERE id = :id`;
 
     await sequelize.query(query, {
       replacements: { id },
@@ -283,7 +298,8 @@ class GenericService {
       replacements[`id${i}`] = id;
     });
 
-    const query = `DELETE FROM ${tableName} WHERE id IN (${placeholders})`;
+    const safeTableName = this._escapeIdentifier(tableName);
+    const query = `DELETE FROM ${safeTableName} WHERE id IN (${placeholders})`;
 
     const [, count] = await sequelize.query(query, {
       replacements,
@@ -538,6 +554,7 @@ class GenericService {
     // 首先处理字段配置中的搜索
     searchableFields.forEach(field => {
       const fieldName = field.field_name;
+      const safeFieldName = this._escapeIdentifier(fieldName);
       const searchValue = searchParams[fieldName];
       const searchType = field.search_type || 'like';
 
@@ -552,13 +569,13 @@ class GenericService {
         const endValue = searchParams[`${fieldName}_end`];
 
         if (startValue !== undefined && startValue !== null && startValue !== '') {
-          conditions.push(`${fieldName} >= :${fieldName}_start`);
+          conditions.push(`${safeFieldName} >= :${fieldName}_start`);
           replacements[`${fieldName}_start`] = startValue;
           processedFields.add(fieldName);
         }
 
         if (endValue !== undefined && endValue !== null && endValue !== '') {
-          conditions.push(`${fieldName} <= :${fieldName}_end`);
+          conditions.push(`${safeFieldName} <= :${fieldName}_end`);
           replacements[`${fieldName}_end`] = endValue;
           processedFields.add(fieldName);
         }
@@ -574,13 +591,13 @@ class GenericService {
         switch (searchType) {
           case 'like':
             // 模糊搜索
-            conditions.push(`${fieldName} ILIKE :${fieldName}`);
+            conditions.push(`${safeFieldName} ILIKE :${fieldName}`);
             replacements[fieldName] = `%${searchValue}%`;
             break;
 
           case 'exact':
             // 精确匹配
-            conditions.push(`${fieldName} = :${fieldName}`);
+            conditions.push(`${safeFieldName} = :${fieldName}`);
             replacements[fieldName] = searchValue;
             break;
 
@@ -590,7 +607,7 @@ class GenericService {
 
           default:
             // 默认使用 LIKE
-            conditions.push(`${fieldName} ILIKE :${fieldName}`);
+            conditions.push(`${safeFieldName} ILIKE :${fieldName}`);
             replacements[fieldName] = `%${searchValue}%`;
         }
         processedFields.add(fieldName);
@@ -799,6 +816,57 @@ class GenericService {
     });
 
     return { whereConditions, replacements };
+  }
+
+  /**
+   * 转义标识符（表名、字段名）防止 SQL 注入
+   * PostgreSQL 使用双引号转义标识符
+   * @param {String} identifier - 标识符
+   * @returns {String} 转义后的标识符
+   */
+  _escapeIdentifier(identifier) {
+    if (!identifier) {
+      throw new Error('Identifier cannot be empty');
+    }
+
+    // 只允许字母、数字、下划线
+    if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(identifier)) {
+      throw ApiError.badRequest(`Invalid identifier: ${identifier}`);
+    }
+
+    // PostgreSQL 使用双引号转义标识符
+    return `"${identifier}"`;
+  }
+
+  /**
+   * 验证排序字段是否在允许的字段列表中
+   * @param {Object} moduleConfig - 模块配置
+   * @param {String} sortField - 排序字段
+   * @returns {String} 验证后的排序字段
+   */
+  _validateSortField(moduleConfig, sortField) {
+    const validFields = moduleConfig.fields.map(f => f.field_name);
+    validFields.push('created_at', 'updated_at', 'id'); // 添加系统字段
+
+    if (!validFields.includes(sortField)) {
+      logger.warn(`Invalid sort field: ${sortField}, using default: created_at`);
+      return 'created_at';
+    }
+
+    return sortField;
+  }
+
+  /**
+   * 验证排序顺序
+   * @param {String} order - 排序顺序
+   * @returns {String} 验证后的排序顺序（ASC 或 DESC）
+   */
+  _validateOrder(order) {
+    const upperOrder = order?.toUpperCase();
+    if (upperOrder !== 'ASC' && upperOrder !== 'DESC') {
+      return 'DESC';
+    }
+    return upperOrder;
   }
 }
 
