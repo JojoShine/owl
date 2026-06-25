@@ -101,11 +101,21 @@ export function DynamicForm({
           break;
 
         case 'date':
-          fieldSchema = z.string();
+          if (rules.required) {
+            fieldSchema = z.string().min(1, `${fieldLabel}不能为空`);
+          } else {
+            fieldSchema = z.string().optional().or(z.literal(''));
+          }
           break;
 
         default:
           fieldSchema = z.string();
+
+          // 处理必填
+          if (rules.required) {
+            fieldSchema = fieldSchema.min(1, `${fieldLabel}不能为空`);
+          }
+
           if (rules.min) {
             fieldSchema = fieldSchema.min(rules.min, `${fieldLabel}至少${rules.min}个字符`);
           }

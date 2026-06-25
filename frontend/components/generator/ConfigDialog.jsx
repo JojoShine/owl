@@ -217,7 +217,7 @@ export default function ConfigDialog({
                               }}
                             />
                             <Label htmlFor={`required-${field.field_name}`} className="cursor-pointer">
-                              <span className={field.form_rules?.required ? "text-destructive" : ""}>必填</span>
+                              必填
                             </Label>
                           </div>
                         </div>
