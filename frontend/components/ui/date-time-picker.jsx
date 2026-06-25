@@ -194,19 +194,31 @@ export function DateTimePicker({
   };
 
   const handleHoursChange = (e) => {
-    const validated = validateHours(e.target.value);
-    setHours(validated);
-    if (validated !== '') {
-      handleTimeChange(validated.padStart(2, '0'), minutes);
+    const value = e.target.value;
+
+    // 允许空值
+    if (value === '') {
+      setHours('');
+      return;
     }
+
+    // 只做基本验证，不补0
+    const validated = validateHours(value);
+    setHours(validated);
   };
 
   const handleMinutesChange = (e) => {
-    const validated = validateMinutes(e.target.value);
-    setMinutes(validated);
-    if (validated !== '') {
-      handleTimeChange(hours, validated.padStart(2, '0'));
+    const value = e.target.value;
+
+    // 允许空值
+    if (value === '') {
+      setMinutes('');
+      return;
     }
+
+    // 只做基本验证，不补0
+    const validated = validateMinutes(value);
+    setMinutes(validated);
   };
 
   // 失焦时补齐0
