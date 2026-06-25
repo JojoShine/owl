@@ -12,6 +12,7 @@ import {
   RefreshCwIcon,
   CheckCircleIcon,
   XCircleIcon,
+  EyeIcon,
 } from 'lucide-react';
 import { generatorApi } from '@/lib/api';
 import { toast } from 'sonner';
@@ -701,14 +702,24 @@ export default function GeneratorPage() {
                               <div className="flex justify-end gap-2">
                                 <Button
                                   size="sm"
+                                  variant="ghost"
+                                  onClick={() => handleEditConfig(config)}
+                                  title="查看详情"
+                                >
+                                  <EyeIcon className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  size="sm"
                                   variant="outline"
                                   onClick={() => handleEditConfig(config)}
+                                  title="编辑配置"
                                 >
                                   <Settings2Icon className="w-4 h-4" />
                                 </Button>
                                 <Button
                                   size="sm"
                                   onClick={() => handleGenerate(config)}
+                                  title="生成代码"
                                 >
                                   <CodeIcon className="w-4 h-4" />
                                 </Button>
@@ -717,6 +728,7 @@ export default function GeneratorPage() {
                                     size="sm"
                                     variant="destructive"
                                     onClick={() => handleDeleteGeneratedCode(config.id)}
+                                    title="删除生成的代码"
                                   >
                                     <TrashIcon className="w-4 h-4" />
                                   </Button>
@@ -725,6 +737,7 @@ export default function GeneratorPage() {
                                   size="sm"
                                   variant="ghost"
                                   onClick={() => handleDeleteConfig(config.id)}
+                                  title="删除配置"
                                 >
                                   <Trash2Icon className="w-4 h-4 text-destructive" />
                                 </Button>
