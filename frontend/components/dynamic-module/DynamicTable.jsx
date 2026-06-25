@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { formatDateTime } from '@/lib/utils/date';
+import { maskByType } from '@/lib/utils/mask';
 import {
   Table,
   TableBody,
@@ -113,7 +114,7 @@ export function DynamicTable({
         );
 
       case 'mask':
-        // 脱敏处理
+        // 脱敏处理 - 兼容旧配置
         if (field.formatOptions?.maskType === 'phone') {
           return value.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2');
         }
@@ -123,6 +124,12 @@ export function DynamicTable({
         return value;
 
       default:
+        // 优先检查新的 displayRule 配置
+        const displayRule = field.formatOptions?.displayRule;
+        if (displayRule?.type === 'mask' && displayRule?.maskType) {
+          return maskByType(value, displayRule.maskType);
+        }
+
         // 自动检测 ISO 日期字符串并格式化为本地时间
         // 匹配格式如：2026-01-12T07:34:00.000Z 或 2026-01-12 07:34:00.000000 +00:00
         if (typeof value === 'string' && (

@@ -337,6 +337,142 @@ export default function ConfigDialog({
                           </div>
                         )}
                       </div>
+
+                      <Separator />
+
+                      {/* 展示配置 */}
+                      <div className="space-y-3">
+                        <Label className="text-sm font-semibold">
+                          展示配置
+                          <span className="text-xs text-muted-foreground font-normal ml-2">
+                            (控制字段值的展示样式，如脱敏)
+                          </span>
+                        </Label>
+                        <Select
+                          value={formatOptions.displayRule?.type || 'none'}
+                          onValueChange={(val) => {
+                            if (val === 'none') {
+                              const updatedFields = [...fields];
+                              const updatedField = { ...updatedFields[index] };
+                              const opts = { ...updatedField.format_options };
+                              delete opts.displayRule;
+                              updatedField.format_options = opts;
+                              updatedFields[index] = updatedField;
+                              onFieldChange(index, 'format_options', opts);
+                            } else {
+                              onFormatOptionChange(index, 'displayRule.type', val);
+                            }
+                          }}
+                        >
+                          <SelectTrigger className="h-10">
+                            <SelectValue placeholder="选择展示规则" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">不使用脱敏</SelectItem>
+                            <SelectItem value="mask">数据脱敏</SelectItem>
+                          </SelectContent>
+                        </Select>
+
+                        {formatOptions.displayRule?.type === 'mask' && (
+                          <div className="space-y-2 pt-2">
+                            <Label className="text-xs text-muted-foreground">脱敏类型</Label>
+                            <Select
+                              value={formatOptions.displayRule?.maskType || 'mobile'}
+                              onValueChange={(val) => onFormatOptionChange(index, 'displayRule.maskType', val)}
+                            >
+                              <SelectTrigger className="h-9">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="mobile">手机号 (138****5678)</SelectItem>
+                                <SelectItem value="idCard">身份证 (110***********1234)</SelectItem>
+                                <SelectItem value="email">邮箱 (a***@example.com)</SelectItem>
+                                <SelectItem value="bankCard">银行卡 (6222 **** **** 1234)</SelectItem>
+                                <SelectItem value="name">姓名 (张*)</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        )}
+                      </div>
+
+                      <Separator />
+
+                      {/* 值校验规则 */}
+                      <div className="space-y-3">
+                        <Label className="text-sm font-semibold">
+                          值校验规则
+                          <span className="text-xs text-muted-foreground font-normal ml-2">
+                            (配置字段输入值的校验规则)
+                          </span>
+                        </Label>
+                        <div className="grid grid-cols-3 gap-4">
+                          <div className="space-y-2">
+                            <Label className="text-xs text-muted-foreground">最小长度</Label>
+                            <Input
+                              type="number"
+                              placeholder="如: 1"
+                              value={field.form_rules?.minLength || ''}
+                              onChange={(e) => {
+                                const value = e.target.value === '' ? undefined : parseInt(e.target.value);
+                                const updatedRules = { ...field.form_rules, minLength: value };
+                                if (value === undefined) delete updatedRules.minLength;
+                                onFieldChange(index, 'form_rules', updatedRules);
+                              }}
+                              className="h-9"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-xs text-muted-foreground">最大长度</Label>
+                            <Input
+                              type="number"
+                              placeholder="如: 100"
+                              value={field.form_rules?.maxLength || ''}
+                              onChange={(e) => {
+                                const value = e.target.value === '' ? undefined : parseInt(e.target.value);
+                                const updatedRules = { ...field.form_rules, maxLength: value };
+                                if (value === undefined) delete updatedRules.maxLength;
+                                onFieldChange(index, 'form_rules', updatedRules);
+                              }}
+                              className="h-9"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-xs text-muted-foreground">精确长度</Label>
+                            <Input
+                              type="number"
+                              placeholder="如: 18"
+                              value={field.form_rules?.exactLength || ''}
+                              onChange={(e) => {
+                                const value = e.target.value === '' ? undefined : parseInt(e.target.value);
+                                const updatedRules = { ...field.form_rules, exactLength: value };
+                                if (value === undefined) delete updatedRules.exactLength;
+                                onFieldChange(index, 'form_rules', updatedRules);
+                              }}
+                              className="h-9"
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs text-muted-foreground">正则表达式</Label>
+                          <Input
+                            placeholder="如: ^[0-9]{18}$"
+                            value={field.form_rules?.pattern || ''}
+                            onChange={(e) => {
+                              const value = e.target.value.trim() === '' ? undefined : e.target.value;
+                              const updatedRules = { ...field.form_rules, pattern: value };
+                              if (value === undefined) delete updatedRules.pattern;
+                              onFieldChange(index, 'form_rules', updatedRules);
+                            }}
+                            className="h-9 font-mono text-xs"
+                          />
+                        </div>
+                        <p className="text-xs text-muted-foreground bg-muted/50 p-2 rounded">
+                          常用规则示例：<br />
+                          • 身份证：<code className="bg-background px-1">精确长度 = 18</code><br />
+                          • 手机号：<code className="bg-background px-1">精确长度 = 11，正则 = ^1[3-9]\d{'{9}'}$</code><br />
+                          • 邮政编码：<code className="bg-background px-1">精确长度 = 6，正则 = ^\d{'{6}'}$</code>
+                        </p>
+                      </div>
                     </CardContent>
                   </Card>
                 );

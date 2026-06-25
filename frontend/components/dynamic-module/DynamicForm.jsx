@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { toDateTimeLocalString, fromDateTimeLocalString, formatDateTime } from '@/lib/utils/date';
+import { maskByType } from '@/lib/utils/mask';
 import {
   Dialog,
   DialogContent,
@@ -116,18 +117,26 @@ export function DynamicForm({
             fieldSchema = fieldSchema.min(1, `${fieldLabel}不能为空`);
           }
 
-          if (rules.min) {
-            fieldSchema = fieldSchema.min(rules.min, `${fieldLabel}至少${rules.min}个字符`);
+          // 最小长度
+          if (rules.minLength !== undefined) {
+            fieldSchema = fieldSchema.min(rules.minLength, `${fieldLabel}至少${rules.minLength}个字符`);
           }
-          if (rules.max) {
-            fieldSchema = fieldSchema.max(rules.max, `${fieldLabel}最多${rules.max}个字符`);
+          // 最大长度
+          if (rules.maxLength !== undefined) {
+            fieldSchema = fieldSchema.max(rules.maxLength, `${fieldLabel}最多${rules.maxLength}个字符`);
           }
+          // 精确长度
+          if (rules.exactLength !== undefined) {
+            fieldSchema = fieldSchema.length(rules.exactLength, `${fieldLabel}必须是${rules.exactLength}个字符`);
+          }
+          // 正则表达式
           if (rules.pattern) {
             fieldSchema = fieldSchema.regex(
               new RegExp(rules.pattern),
               `${fieldLabel}格式不正确`
             );
           }
+          // 邮箱格式
           if (rules.email) {
             fieldSchema = z.string().email(`${fieldLabel}格式不正确`);
           }
@@ -245,6 +254,12 @@ export function DynamicForm({
     // 日期时间字段
     if (field.type === 'date' || isDateTimeString(value)) {
       return formatDateTime(value);
+    }
+
+    // 脱敏处理
+    const displayRule = field.formatOptions?.displayRule;
+    if (displayRule?.type === 'mask' && displayRule?.maskType) {
+      return maskByType(value, displayRule.maskType);
     }
 
     // 默认返回值
