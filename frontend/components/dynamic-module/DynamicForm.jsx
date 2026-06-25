@@ -20,6 +20,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { DatePicker } from '@/components/ui/date-picker';
+import { DateTimePicker } from '@/components/ui/date-time-picker';
 import { Separator } from '@/components/ui/separator';
 import {
   Select,
@@ -222,11 +223,6 @@ export function DynamicForm({
     );
   };
 
-  // 判断字段是否应该使用 datetime-local 输入
-  const shouldUseDateTimeInput = (field, value) => {
-    return field.type === 'date' || (isEdit && isDateTimeString(value));
-  };
-
   // 格式化显示值（用于查看模式）
   const formatDisplayValue = (field, value) => {
     // 空值处理
@@ -378,13 +374,14 @@ export function DynamicForm({
         );
 
       case 'date':
+      case 'datetime':
         return (
           <div key={field.name} className="space-y-2.5">
             <Label htmlFor={field.name} className="text-sm font-medium">
               {field.formLabel || field.label}
               {rules.required && <span className="text-destructive ml-1">*</span>}
             </Label>
-            <DatePicker
+            <DateTimePicker
               value={fieldValue}
               onChange={(e) => {
                 const event = {
@@ -399,6 +396,7 @@ export function DynamicForm({
               }}
               placeholder={field.placeholder || `请选择${field.formLabel || field.label}`}
               disabled={field.readonly}
+              showTime={field.formComponent === 'datetime'}
             />
             {error && <p className="text-sm text-destructive">{error.message}</p>}
           </div>
@@ -406,9 +404,7 @@ export function DynamicForm({
 
       case 'input':
       default:
-        // 检查是否应该使用 datetime-local 输入
-        const useDateTime = shouldUseDateTimeInput(field, fieldValue);
-
+        // 默认文本输入
         return (
           <div key={field.name} className="space-y-2.5">
             <Label htmlFor={field.name} className="text-sm font-medium">
@@ -417,7 +413,7 @@ export function DynamicForm({
             </Label>
             <Input
               id={field.name}
-              type={useDateTime ? 'datetime-local' : 'text'}
+              type="text"
               {...register(field.name)}
               placeholder={field.placeholder || `请输入${field.formLabel || field.label}`}
               disabled={field.readonly}

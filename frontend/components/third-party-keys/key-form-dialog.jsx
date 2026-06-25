@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
 import {
   Dialog,
   DialogContent,
@@ -25,15 +24,7 @@ import {
 import { DatePicker } from '@/components/ui/date-picker';
 import { thirdPartyKeysApi } from '@/lib/api';
 import { toast } from 'sonner';
-
-// 表单验证规则
-const keySchema = z.object({
-  client_name: z.string().min(2, '客户端名称至少2个字符').max(255, '客户端名称最多255个字符'),
-  description: z.string().max(500, '描述最多500个字符').optional(),
-  expires_at: z.string().optional(),
-  remark: z.string().max(500, '备注最多500个字符').optional(),
-  status: z.enum(['active', 'inactive']).optional(),
-});
+import { thirdPartyKeySchema as keySchema } from '@/lib/schemas';
 
 export default function KeyFormDialog({ open, onOpenChange, editingKey, onSuccess }) {
   const isEdit = !!editingKey;

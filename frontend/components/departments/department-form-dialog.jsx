@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
 import {
   Dialog,
   DialogContent,
@@ -25,16 +24,7 @@ import {
 } from '@/components/ui/select';
 import { departmentApi, userApi } from '@/lib/api';
 import { toast } from 'sonner';
-
-// 表单验证规则
-const departmentSchema = z.object({
-  name: z.string().min(2, '部门名称至少2个字符').max(100, '部门名称最多100个字符'),
-  code: z.string().regex(/^[A-Za-z0-9_-]*$/, '部门代码只能包含字母、数字、下划线和连字符').optional().or(z.literal('')),
-  leader_id: z.string().optional(),
-  description: z.string().max(500, '描述最多500个字符').optional(),
-  sort: z.number().int().min(0).max(9999),
-  status: z.enum(['active', 'inactive']),
-});
+import { departmentSchema } from '@/lib/schemas';
 
 export default function DepartmentFormDialog({ open, onOpenChange, department, onSuccess }) {
   const isEdit = !!department?.id;

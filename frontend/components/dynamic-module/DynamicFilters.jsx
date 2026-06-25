@@ -11,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { DateTimePicker } from '@/components/ui/date-time-picker';
 import { Search, RotateCcw } from 'lucide-react';
 
 /**
@@ -61,6 +62,18 @@ export function DynamicFilters({ fields = [], filters = {}, onChange, onSearch, 
               ))}
             </SelectContent>
           </Select>
+        );
+
+      case 'date':
+      case 'datetime':
+        // 日期时间选择
+        return (
+          <DateTimePicker
+            value={value}
+            onChange={(e) => handleFilterChange(field.name, e.target.value)}
+            placeholder={`选择${field.label}`}
+            showTime={field.searchComponent === 'datetime'}
+          />
         );
 
       case 'number':

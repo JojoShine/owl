@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
 import {
   Dialog,
   DialogContent,
@@ -25,34 +24,8 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { userApi, departmentApi, roleApi } from '@/lib/api';
 import { toast } from 'sonner';
-
-// 表单验证规则
-const userSchema = z.object({
-  username: z.string()
-    .min(1, '用户名是必填项')
-    .min(3, '用户名至少3个字符')
-    .max(50, '用户名最多50个字符')
-    .regex(/^[a-zA-Z0-9]+$/, '用户名只能包含字母和数字'),
-  email: z.string()
-    .min(1, '邮箱是必填项')
-    .email('请提供有效的邮箱地址'),
-  password: z.string()
-    .min(1, '密码是必填项')
-    .min(6, '密码至少6个字符')
-    .max(50, '密码最多50个字符')
-    .optional()
-    .or(z.literal('')),
-  real_name: z.string()
-    .max(50, '真实姓名最多50个字符')
-    .optional(),
-  phone: z.string()
-    .regex(/^1[3-9]\d{9}$/, '请提供有效的手机号码（11位中国手机号）')
-    .optional()
-    .or(z.literal('')),
-  department_id: z.string().optional(),
-  status: z.enum(['active', 'inactive', 'banned']),
-  role_ids: z.array(z.string()).optional(),
-});
+import { SensitiveInput } from '@/components/form/SensitiveInput';
+import { userSchema, filterMaskedFields } from '@/lib/schemas';
 
 export default function UserFormDialog({ open, onOpenChange, user, onSuccess }) {
   const isEdit = !!user;
@@ -77,6 +50,7 @@ export default function UserFormDialog({ open, onOpenChange, user, onSuccess }) 
       department_id: '',
       status: 'active',
       role_ids: [],
+      access_level: 'SELF',
     },
   });
 
@@ -112,7 +86,7 @@ export default function UserFormDialog({ open, onOpenChange, user, onSuccess }) 
     }
   }, [open]);
 
-  // 当user变化时，更新表单
+  // 当user变化或弹窗打开/关闭时，更新表单
   useEffect(() => {
     if (user) {
       // 提取用户的角色ID列表
@@ -127,6 +101,7 @@ export default function UserFormDialog({ open, onOpenChange, user, onSuccess }) 
         department_id: user.department_id || '',
         status: user.status || 'active',
         role_ids: userRoleIds,
+        access_level: user.access_level || 'SELF',
       });
     } else {
       reset({
@@ -138,6 +113,7 @@ export default function UserFormDialog({ open, onOpenChange, user, onSuccess }) 
         department_id: '',
         status: 'active',
         role_ids: [],
+        access_level: 'SELF',
       });
     }
   }, [user, reset]);
@@ -155,6 +131,10 @@ export default function UserFormDialog({ open, onOpenChange, user, onSuccess }) 
   };
 
   const onSubmit = async (data) => {
+    console.log('=== onSubmit 开始 ===');
+    console.log('isEdit:', isEdit);
+    console.log('原始表单数据:', data);
+
     try {
       // 如果是编辑且密码为空，则不传递密码字段
       const submitData = { ...data };
@@ -170,10 +150,15 @@ export default function UserFormDialog({ open, onOpenChange, user, onSuccess }) 
         submitData.role_ids = [];
       }
 
+      // 移除所有包含脱敏标记的字段（编辑模式下）
+      const finalData = isEdit ? filterMaskedFields(submitData) : submitData;
+
+      console.log('最终提交数据:', finalData);
+
       if (isEdit) {
-        await userApi.updateUser(user.id, submitData);
+        await userApi.updateUser(user.id, finalData);
       } else {
-        await userApi.createUser(submitData);
+        await userApi.createUser(finalData);
       }
 
       toast.success(user ? '更新用户成功' : '创建用户成功');
@@ -189,6 +174,10 @@ export default function UserFormDialog({ open, onOpenChange, user, onSuccess }) 
 
   const statusValue = watch('status');
   const departmentIdValue = watch('department_id');
+  const accessLevelValue = watch('access_level');
+  const emailValue = watch('email');
+  const phoneValue = watch('phone');
+  const realNameValue = watch('real_name');
   const roleIdsValue = watch('role_ids') || [];
 
   return (
@@ -219,20 +208,18 @@ export default function UserFormDialog({ open, onOpenChange, user, onSuccess }) 
           </div>
 
           {/* 邮箱 */}
-          <div className="space-y-2">
-            <Label htmlFor="email">
-              邮箱 <span className="text-red-500">*</span>
-            </Label>
-            <Input
-              id="email"
-              type="email"
-              {...register('email')}
-              placeholder="请输入邮箱"
-            />
-            {errors.email && (
-              <p className="text-sm text-red-500">{errors.email.message}</p>
-            )}
-          </div>
+          <SensitiveInput
+            name="email"
+            label="邮箱"
+            value={emailValue}
+            isEdit={isEdit}
+            required={true}
+            type="email"
+            placeholder="请输入邮箱"
+            register={register}
+            setValue={setValue}
+            errors={errors}
+          />
 
           {/* 密码 */}
           <div className="space-y-2">
@@ -252,27 +239,28 @@ export default function UserFormDialog({ open, onOpenChange, user, onSuccess }) 
           </div>
 
           {/* 真实姓名 */}
-          <div className="space-y-2">
-            <Label htmlFor="real_name">真实姓名</Label>
-            <Input
-              id="real_name"
-              {...register('real_name')}
-              placeholder="请输入真实姓名"
-            />
-          </div>
+          <SensitiveInput
+            name="real_name"
+            label="真实姓名"
+            value={realNameValue}
+            isEdit={isEdit}
+            placeholder="请输入真实姓名"
+            register={register}
+            setValue={setValue}
+            errors={errors}
+          />
 
           {/* 手机号 */}
-          <div className="space-y-2">
-            <Label htmlFor="phone">手机号</Label>
-            <Input
-              id="phone"
-              {...register('phone')}
-              placeholder="请输入手机号（11位中国手机号）"
-            />
-            {errors.phone && (
-              <p className="text-sm text-red-500">{errors.phone.message}</p>
-            )}
-          </div>
+          <SensitiveInput
+            name="phone"
+            label="手机号"
+            value={phoneValue}
+            isEdit={isEdit}
+            placeholder="请输入手机号（11位中国手机号）"
+            register={register}
+            setValue={setValue}
+            errors={errors}
+          />
 
           {/* 所属部门 */}
           <div className="space-y-2">
@@ -291,6 +279,24 @@ export default function UserFormDialog({ open, onOpenChange, user, onSuccess }) 
                     {'　'.repeat(dept.level)}{dept.name}
                   </SelectItem>
                 ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* 数据查询权限 */}
+          <div className="space-y-2">
+            <Label>数据查询权限</Label>
+            <Select
+              value={accessLevelValue}
+              onValueChange={(value) => setValue('access_level', value)}
+            >
+              <SelectTrigger className="!h-10">
+                <SelectValue placeholder="选择数据查询权限" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="SELF">只能查看本人数据</SelectItem>
+                <SelectItem value="DEPARTMENT">可查看本部门及下级数据</SelectItem>
+                <SelectItem value="ALL">可查看所有数据</SelectItem>
               </SelectContent>
             </Select>
           </div>

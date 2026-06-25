@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
 import {
   Dialog,
   DialogContent,
@@ -30,19 +29,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Info, Eye, CheckCircle2 } from 'lucide-react';
 import { menuApi } from '@/lib/api';
 import { toast } from 'sonner';
-
-// 表单验证规则
-const menuSchema = z.object({
-  name: z.string().min(2, '菜单名称至少2个字符').max(50, '菜单名称最多50个字符'),
-  path: z.string().optional(),
-  component: z.string().optional(),
-  icon: z.string().optional(),
-  type: z.enum(['menu', 'button', 'link']),
-  visible: z.boolean(),
-  sort: z.number().int().min(0).max(9999),
-  status: z.enum(['active', 'inactive']),
-  permission_code: z.string().optional(),
-});
+import { menuSchema } from '@/lib/schemas';
 
 export default function MenuFormDialog({ open, onOpenChange, menu, onSuccess }) {
   const isEdit = !!menu?.id;

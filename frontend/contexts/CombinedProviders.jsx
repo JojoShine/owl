@@ -2,6 +2,7 @@
 
 import { SocketProvider } from './SocketContext';
 import { WatermarkProvider } from './WatermarkContext';
+import { SensitiveFieldProvider } from './SensitiveFieldContext';
 
 /**
  * 组合所有第三方Provider，避免深层嵌套导致的性能问题
@@ -11,7 +12,9 @@ export function CombinedProviders({ children }) {
   return (
     <SocketProvider>
       <WatermarkProvider>
-        {children}
+        <SensitiveFieldProvider>
+          {children}
+        </SensitiveFieldProvider>
       </WatermarkProvider>
     </SocketProvider>
   );

@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
 import {
   Dialog,
   DialogContent,
@@ -28,15 +27,7 @@ import { roleApi, permissionApi, menuApi } from '@/lib/api';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { ScrollArea } from '@/components/ui/scroll-area';
-
-// 表单验证规则
-const roleSchema = z.object({
-  name: z.string().min(2, '角色名称至少2个字符').max(50, '角色名称最多50个字符'),
-  code: z.string().min(2, '角色代码至少2个字符').max(50, '角色代码最多50个字符'),
-  description: z.string().optional(),
-  status: z.enum(['active', 'inactive']),
-  sort: z.number().int().min(0).max(9999),
-});
+import { roleSchema } from '@/lib/schemas';
 
 export default function RoleFormDialog({ open, onOpenChange, role, onSuccess }) {
   const isEdit = !!role;

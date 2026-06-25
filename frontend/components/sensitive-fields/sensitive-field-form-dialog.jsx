@@ -3,7 +3,6 @@
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
 import {
   Dialog,
   DialogContent,
@@ -26,26 +25,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { sensitiveFieldApi } from '@/lib/api';
 import { toast } from 'sonner';
-
-// 表单验证规则
-const sensitiveFieldSchema = z.object({
-  table_name: z.string()
-    .max(100, '表名最多100个字符')
-    .optional()
-    .or(z.literal('')),
-  field_name: z.string()
-    .min(1, '字段名是必填项')
-    .max(100, '字段名最多100个字符'),
-  mask_type: z.enum(['phone', 'email', 'id_card', 'bank_card', 'name', 'address', 'custom']),
-  mask_rule: z.string()
-    .optional()
-    .or(z.literal('')),
-  description: z.string()
-    .max(255, '描述最多255个字符')
-    .optional()
-    .or(z.literal('')),
-  is_active: z.boolean().default(true),
-});
+import { sensitiveFieldSchema } from '@/lib/schemas';
 
 export default function SensitiveFieldFormDialog({ open, onOpenChange, field, onSuccess }) {
   const isEdit = !!field;

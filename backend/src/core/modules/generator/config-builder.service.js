@@ -183,10 +183,10 @@ class ConfigBuilderService {
   _getDefaultFormComponent(fieldType) {
     const componentMap = {
       'boolean': 'select',
-      'date': 'date-picker',
-      'timestamp': 'datetime-picker',
-      'timestamp without time zone': 'datetime-picker',
-      'timestamp with time zone': 'datetime-picker',
+      'date': 'date',
+      'timestamp': 'datetime',
+      'timestamp without time zone': 'datetime',
+      'timestamp with time zone': 'datetime',
       'text': 'textarea',
       'json': 'textarea',
       'jsonb': 'textarea',
