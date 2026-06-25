@@ -50,6 +50,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import TablesSection from '@/components/generator/TablesSection';
+import ConfigsSection from '@/components/generator/ConfigsSection';
+import HistorySection from '@/components/generator/HistorySection';
+import ConfigDialog from '@/components/generator/ConfigDialog';
 
 export default function GeneratorPage() {
   const [activeTab, setActiveTab] = useState('tables');
@@ -507,96 +511,16 @@ export default function GeneratorPage() {
 
         {/* 数据库表列表 */}
         <TabsContent value="tables" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>数据库表列表</CardTitle>
-              <CardDescription>
-                选择表来初始化模块配置
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* 搜索栏 */}
-              <div className="bg-card border rounded-lg p-4">
-                <div className="flex flex-wrap items-end gap-4">
-                  <div className="flex-1 min-w-[180px]">
-                    <Input
-                      placeholder="搜索表名..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                  </div>
-                  <div className="flex-shrink-0">
-                    <Button onClick={loadTables} variant="outline" size="lg">
-                      <RefreshCwIcon className="w-4 h-4 mr-2" />
-                      刷新
-                    </Button>
-                  </div>
-                </div>
-              </div>
-
-              <div className="border rounded-lg overflow-hidden">
-                <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>表名</TableHead>
-                    <TableHead>注释</TableHead>
-                    <TableHead>字段数</TableHead>
-                    <TableHead>状态</TableHead>
-                    <TableHead className="text-right">操作</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {loading && activeTab === 'tables' ? (
-                    <TableRow>
-                      <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
-                        加载中...
-                      </TableCell>
-                    </TableRow>
-                  ) : tables.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
-                        暂无数据
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    tables.map((table) => (
-                      <TableRow key={table.tableName} className="h-12">
-                        <TableCell className="font-mono">{table.tableName}</TableCell>
-                        <TableCell>{table.comment || '-'}</TableCell>
-                        <TableCell>{table.columnCount}</TableCell>
-                        <TableCell>
-                          {table.isGenerated ? (
-                            <Badge variant="secondary">已生成</Badge>
-                          ) : (
-                            <Badge variant="outline">未生成</Badge>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Button
-                            size="sm"
-                            onClick={() => handleInitializeConfig(table.tableName)}
-                            disabled={table.isGenerated || loading}
-                          >
-                            初始化配置
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-              </div>
-
-              {tablePagination.total > 0 && (
-                <Pagination
-                  page={tablePagination.page}
-                  total={tablePagination.total}
-                  pageSize={tablePagination.pageSize}
-                  onPageChange={handleTablePageChange}
-                />
-              )}
-            </CardContent>
-          </Card>
+          <TablesSection
+            tables={tables}
+            loading={loading && activeTab === 'tables'}
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+            onRefresh={loadTables}
+            onInitialize={handleInitializeConfig}
+            pagination={tablePagination}
+            onPageChange={handleTablePageChange}
+          />
         </TabsContent>
 
         {/* 模块配置列表 */}
@@ -612,154 +536,18 @@ export default function GeneratorPage() {
                 刷新
               </Button>
             </CardHeader>
-            <CardContent className="space-y-4">
-              {/* 搜索/操作栏 */}
-              <div className="bg-card border rounded-lg p-4">
-                <div className="flex flex-wrap items-end gap-4">
-                  <div className="flex-shrink-0 text-sm text-muted-foreground">
-                    共 {configPagination.total} 个配置
-                  </div>
-                </div>
-              </div>
-
-              {loading && activeTab === 'configs' ? (
-                <div className="border rounded-lg overflow-hidden">
-                  <Table>
-                    <TableBody>
-                      <TableRow>
-                        <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
-                          加载中...
-                        </TableCell>
-                      </TableRow>
-                    </TableBody>
-                  </Table>
-                </div>
-              ) : moduleConfigs.length === 0 ? (
-                <div className="border rounded-lg overflow-hidden">
-                  <Table>
-                    <TableBody>
-                      <TableRow>
-                        <TableCell colSpan={6} className="py-12 text-center text-muted-foreground">
-                          暂无模块配置，请先从&ldquo;数据库表&rdquo;标签页初始化配置
-                        </TableCell>
-                      </TableRow>
-                    </TableBody>
-                  </Table>
-                </div>
-              ) : (
-                <>
-                  <div className="border rounded-lg overflow-hidden">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>模块名称</TableHead>
-                          <TableHead>表名</TableHead>
-                          <TableHead>字段数</TableHead>
-                          <TableHead>生成状态</TableHead>
-                          <TableHead>支持功能</TableHead>
-                          <TableHead className="text-right">操作</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {moduleConfigs.map((config) => (
-                          <TableRow key={config.id}>
-                            <TableCell>
-                              <div className="flex flex-col">
-                                <span className="font-medium">{config.module_name}</span>
-                                {config.description && (
-                                  <span className="text-xs text-muted-foreground">{config.description}</span>
-                                )}
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <code className="text-xs bg-muted px-1.5 py-0.5 rounded">
-                                {config.table_name}
-                              </code>
-                            </TableCell>
-                            <TableCell>{config.fields?.length || 0}</TableCell>
-                            <TableCell>
-                              {config.generated_files?.length > 0 ? (
-                                <Badge className="bg-emerald-500/15 text-emerald-600">已生成</Badge>
-                              ) : (
-                                <Badge variant="outline">未生成</Badge>
-                              )}
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex flex-wrap gap-1">
-                                {config.enable_create && <Badge variant="secondary" className="text-xs">新增</Badge>}
-                                {config.enable_update && <Badge variant="secondary" className="text-xs">编辑</Badge>}
-                                {config.enable_delete && <Badge variant="secondary" className="text-xs">删除</Badge>}
-                                {config.enable_batch_delete && <Badge variant="secondary" className="text-xs">批量删除</Badge>}
-                                {config.enable_export && <Badge variant="secondary" className="text-xs">导出</Badge>}
-                                {config.enable_import && <Badge variant="secondary" className="text-xs">导入</Badge>}
-                                {!config.enable_create && !config.enable_update && !config.enable_delete &&
-                                 !config.enable_batch_delete && !config.enable_export && !config.enable_import && (
-                                  <span className="text-xs text-muted-foreground">-</span>
-                                )}
-                              </div>
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <div className="flex justify-end gap-2">
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={() => handleEditConfig(config)}
-                                  title="查看详情"
-                                >
-                                  <EyeIcon className="w-4 h-4" />
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => handleEditConfig(config)}
-                                  title="编辑配置"
-                                >
-                                  <Settings2Icon className="w-4 h-4" />
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  onClick={() => handleGenerate(config)}
-                                  title="生成代码"
-                                >
-                                  <CodeIcon className="w-4 h-4" />
-                                </Button>
-                                {config.generated_files?.length > 0 && (
-                                  <Button
-                                    size="sm"
-                                    variant="destructive"
-                                    onClick={() => handleDeleteGeneratedCode(config.id)}
-                                    title="删除生成的代码"
-                                  >
-                                    <TrashIcon className="w-4 h-4" />
-                                  </Button>
-                                )}
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={() => handleDeleteConfig(config.id)}
-                                  title="删除配置"
-                                >
-                                  <Trash2Icon className="w-4 h-4 text-destructive" />
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-
-                  {/* 分页组件 */}
-                  {configPagination.total > configPagination.pageSize && (
-                    <Pagination
-                      page={configPagination.page}
-                      total={configPagination.total}
-                      pageSize={configPagination.pageSize}
-                      onPageChange={handleConfigPageChange}
-                    />
-                  )}
-                </>
-              )}
+            <CardContent>
+              <ConfigsSection
+                configs={moduleConfigs}
+                loading={loading && activeTab === 'configs'}
+                pagination={configPagination}
+                onView={handleEditConfig}
+                onEdit={handleEditConfig}
+                onGenerate={handleGenerate}
+                onDeleteCode={handleDeleteGeneratedCode}
+                onDeleteConfig={handleDeleteConfig}
+                onPageChange={handleConfigPageChange}
+              />
             </CardContent>
           </Card>
         </TabsContent>
@@ -770,351 +558,54 @@ export default function GeneratorPage() {
             <CardHeader>
               <CardTitle>生成历史</CardTitle>
               <CardDescription>最近的代码生成记录</CardDescription>
+              <div className="pt-2">
+                <Button onClick={loadHistory} variant="outline" size="lg">
+                  <RefreshCwIcon className="w-4 h-4 mr-2" />
+                  刷新
+                </Button>
+              </div>
             </CardHeader>
-            <CardContent className="space-y-4">
-              {/* 操作栏 */}
-              <div className="bg-card border rounded-lg p-4">
-                <div className="flex flex-wrap items-end gap-4">
-                  <div className="flex-shrink-0">
-                    <Button onClick={loadHistory} variant="outline" size="lg">
-                      <RefreshCwIcon className="w-4 h-4 mr-2" />
-                      刷新
-                    </Button>
-                  </div>
-                </div>
-              </div>
-
-              <div className="border rounded-lg overflow-hidden">
-                <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>模块名称</TableHead>
-                        <TableHead>操作类型</TableHead>
-                        <TableHead>状态</TableHead>
-                        <TableHead>生成文件数</TableHead>
-                        <TableHead>生成时间</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {loading && activeTab === 'history' ? (
-                        <TableRow>
-                          <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
-                            加载中...
-                          </TableCell>
-                        </TableRow>
-                      ) : history.length === 0 ? (
-                        <TableRow>
-                          <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
-                            暂无数据
-                          </TableCell>
-                        </TableRow>
-                      ) : (
-                        history.map((item) => (
-                          <TableRow key={item.id} className="h-12">
-                            <TableCell>{item.module?.module_name || item.module_name || '-'}</TableCell>
-                            <TableCell>
-                              <Badge variant="outline">{item.operation_type}</Badge>
-                            </TableCell>
-                            <TableCell>
-                              {item.success ? (
-                                <Badge className="flex items-center gap-1 bg-emerald-500/15 text-emerald-600">
-                                  <CheckCircleIcon className="h-4 w-4" />
-                                  成功
-                                </Badge>
-                              ) : (
-                                <Badge className="flex items-center gap-1 bg-red-500/10 text-red-600">
-                                  <XCircleIcon className="h-4 w-4" />
-                                  失败
-                                </Badge>
-                              )}
-                            </TableCell>
-                            <TableCell>{item.files_generated?.length || 0}</TableCell>
-                            <TableCell>
-                              {item.createdAt ? new Date(item.createdAt).toLocaleString('zh-CN', {
-                                year: 'numeric',
-                                month: '2-digit',
-                                day: '2-digit',
-                                hour: '2-digit',
-                                minute: '2-digit',
-                                second: '2-digit',
-                                hour12: false
-                              }) : '-'}
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      )}
-                    </TableBody>
-                  </Table>
-              </div>
-
-              {historyPagination.total > historyPagination.pageSize && (
-                <Pagination
-                  page={historyPagination.page}
-                  total={historyPagination.total}
-                  pageSize={historyPagination.pageSize}
-                  onPageChange={handleHistoryPageChange}
-                />
-              )}
+            <CardContent>
+              <HistorySection
+                history={history}
+                loading={loading && activeTab === 'history'}
+                pagination={historyPagination}
+                onPageChange={handleHistoryPageChange}
+              />
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
 
-      {/* 配置对话框 */}
-      <Dialog open={configDialogOpen} onOpenChange={setConfigDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[80vh]">
-          <DialogHeader>
-            <DialogTitle>配置模块: {selectedConfig?.module_name}</DialogTitle>
-            <DialogDescription>
-              配置字段的搜索、显示和表单属性
-            </DialogDescription>
-          </DialogHeader>
-
-          <ScrollArea className="h-[500px] pr-4">
-            <div className="space-y-4">
-              {configFields.map((field, index) => {
-                const formatOptions = field.format_options || {};
-                const displayName = formatOptions.displayName || {};
-                const codeMapping = formatOptions.codeMapping || {};
-
-                return (
-                  <Card key={field.field_name}>
-                    <CardHeader>
-                      <CardTitle className="text-sm">{field.field_comment || field.field_name}</CardTitle>
-                      <CardDescription className="text-xs font-mono">
-                        {field.field_name} ({field.field_type})
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      {/* 基础开关 */}
-                      <div className="grid grid-cols-3 gap-4">
-                        <div className="flex items-center space-x-2">
-                          <Switch
-                            checked={field.is_searchable}
-                            onCheckedChange={(checked) => handleFieldChange(index, 'is_searchable', checked)}
-                          />
-                          <Label>可搜索</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Switch
-                            checked={field.show_in_list}
-                            onCheckedChange={(checked) => handleFieldChange(index, 'show_in_list', checked)}
-                          />
-                          <Label>列表显示</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Switch
-                            checked={field.show_in_form}
-                            onCheckedChange={(checked) => handleFieldChange(index, 'show_in_form', checked)}
-                          />
-                          <Label>表单显示</Label>
-                        </div>
-                      </div>
-
-                      {/* 自定义显示名称 */}
-                      <div className="space-y-2">
-                        <Label className="text-xs font-semibold text-muted-foreground">
-                          自定义显示名称 (可选)
-                        </Label>
-                        <div className="grid grid-cols-3 gap-2">
-                          <div className="space-y-1">
-                            <Label className="text-xs">列表列标题</Label>
-                            <Input
-                              placeholder="如: 状态"
-                              value={displayName.list || ''}
-                              onChange={(e) => handleFormatOptionChange(index, 'displayName.list', e.target.value)}
-                              className="h-8 text-sm"
-                            />
-                          </div>
-                          <div className="space-y-1">
-                            <Label className="text-xs">搜索条件标签</Label>
-                            <Input
-                              placeholder="如: 按状态筛选"
-                              value={displayName.search || ''}
-                              onChange={(e) => handleFormatOptionChange(index, 'displayName.search', e.target.value)}
-                              className="h-8 text-sm"
-                            />
-                          </div>
-                          <div className="space-y-1">
-                            <Label className="text-xs">表单字段标签</Label>
-                            <Input
-                              placeholder="如: 选择状态"
-                              value={displayName.form || ''}
-                              onChange={(e) => handleFormatOptionChange(index, 'displayName.form', e.target.value)}
-                              className="h-8 text-sm"
-                            />
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* 代码值映射 */}
-                      <div className="space-y-2">
-                        <Label className="text-xs font-semibold text-muted-foreground">
-                          代码值映射 (用于状态/类型等枚举字段)
-                        </Label>
-                        <Select
-                          value={codeMapping.type || 'none'}
-                          onValueChange={(val) => {
-                            if (val === 'none') {
-                              // 清除 codeMapping
-                              const updatedFields = [...configFields];
-                              const updatedField = { ...updatedFields[index] };
-                              const opts = { ...updatedField.format_options };
-                              delete opts.codeMapping;
-                              updatedField.format_options = opts;
-                              updatedFields[index] = updatedField;
-                              setConfigFields(updatedFields);
-                            } else {
-                              handleFormatOptionChange(index, 'codeMapping.type', val);
-                            }
-                          }}
-                        >
-                          <SelectTrigger className="h-8">
-                            <SelectValue placeholder="选择映射类型" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="none">不使用</SelectItem>
-                            <SelectItem value="enum">枚举映射</SelectItem>
-                          </SelectContent>
-                        </Select>
-
-                        {codeMapping.type === 'enum' && (
-                          <div className="space-y-1">
-                            <Label className="text-xs">映射配置 (JSON格式)</Label>
-                            <Textarea
-                              placeholder='{"1": {"label": "启用", "variant": "default", "color": "#52c41a"}, "0": {"label": "禁用", "variant": "secondary", "color": "#d9d9d9"}}'
-                              value={
-                                jsonInputs[`${index}-codeMapping`] !== undefined
-                                  ? jsonInputs[`${index}-codeMapping`]
-                                  : codeMapping.mappings ? JSON.stringify(codeMapping.mappings, null, 2) : ''
-                              }
-                              onChange={(e) => {
-                                // 保存用户输入的原始文本
-                                setJsonInputs(prev => ({
-                                  ...prev,
-                                  [`${index}-codeMapping`]: e.target.value
-                                }));
-                              }}
-                              onBlur={(e) => {
-                                const inputValue = e.target.value.trim();
-
-                                // 如果为空，清除映射
-                                if (!inputValue) {
-                                  handleFormatOptionChange(index, 'codeMapping.mappings', {});
-                                  setJsonInputs(prev => {
-                                    const newInputs = { ...prev };
-                                    delete newInputs[`${index}-codeMapping`];
-                                    return newInputs;
-                                  });
-                                  return;
-                                }
-
-                                // 失去焦点时验证并保存
-                                try {
-                                  const mappings = JSON.parse(inputValue);
-                                  handleFormatOptionChange(index, 'codeMapping.mappings', mappings);
-                                  // 验证成功，清除本地输入缓存
-                                  setJsonInputs(prev => {
-                                    const newInputs = { ...prev };
-                                    delete newInputs[`${index}-codeMapping`];
-                                    return newInputs;
-                                  });
-                                } catch (err) {
-                                  toast.error(`字段 ${field.field_name} 的映射配置 JSON 格式错误`);
-                                }
-                              }}
-                              rows={4}
-                              className="font-mono text-xs"
-                            />
-                            <p className="text-xs text-muted-foreground">
-                              示例: 每个代码对应一个对象,包含 label(显示文本)、variant(样式)、color(颜色)
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          </ScrollArea>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setConfigDialogOpen(false)}>
-              取消
-            </Button>
-            <Button onClick={handleSaveConfig} disabled={loading}>
-              保存配置
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* 生成代码对话框 */}
-      <Dialog open={generateDialogOpen} onOpenChange={setGenerateDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>生成代码</DialogTitle>
-            <DialogDescription>
-              为 {selectedConfig?.module_name} 生成 CRUD 代码
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            <div className="flex items-center space-x-2">
-              <Switch
-                checked={generateOptions.generateBackend}
-                onCheckedChange={(checked) =>
-                  setGenerateOptions({ ...generateOptions, generateBackend: checked })
-                }
-              />
-              <Label>生成后端代码</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Switch
-                checked={generateOptions.generateFrontend}
-                onCheckedChange={(checked) =>
-                  setGenerateOptions({ ...generateOptions, generateFrontend: checked })
-                }
-              />
-              <Label>生成前端代码</Label>
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setGenerateDialogOpen(false)}>
-              取消
-            </Button>
-            <Button onClick={handleConfirmGenerate} disabled={loading}>
-              <PlayIcon className="w-4 h-4 mr-2" />
-              开始生成
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* 删除配置确认对话框 */}
-      <ConfirmDialog
-        open={deleteConfigDialog.open}
-        onOpenChange={(open) => setDeleteConfigDialog({ open, configId: null })}
-        onConfirm={handleConfirmDeleteConfig}
-        title="删除模块配置"
-        description="确定要删除这个模块配置吗？删除后无法恢复。"
-        confirmText="删除"
-        cancelText="取消"
-        variant="destructive"
-      />
-
-      {/* 删除生成代码确认对话框 */}
-      <ConfirmDialog
-        open={deleteCodeDialog.open}
-        onOpenChange={(open) => setDeleteCodeDialog({ open, configId: null })}
-        onConfirm={handleConfirmDeleteCode}
-        title="删除生成的代码"
-        description="确定要删除生成的代码吗？此操作无法撤销！"
-        confirmText="删除"
-        cancelText="取消"
-        variant="destructive"
+      <ConfigDialog
+        open={configDialogOpen}
+        onOpenChange={setConfigDialogOpen}
+        config={selectedConfig}
+        fields={configFields}
+        jsonInputs={jsonInputs}
+        onFieldChange={handleFieldChange}
+        onFormatOptionChange={handleFormatOptionChange}
+        onJsonInputChange={(index, type, value) => {
+          setJsonInputs(prev => ({
+            ...prev,
+            [`${index}-${type}`]: value
+          }));
+        }}
+        onSave={handleSaveConfig}
+        loading={loading}
+        // 生成 dialog
+        generateOpen={generateDialogOpen}
+        onGenerateOpenChange={setGenerateDialogOpen}
+        generateOptions={generateOptions}
+        onGenerateOptionsChange={setGenerateOptions}
+        onConfirmGenerate={handleConfirmGenerate}
+        // 确认 dialog
+        deleteConfigDialogOpen={deleteConfigDialog.open}
+        onDeleteConfigDialogOpenChange={(open) => setDeleteConfigDialog({ open, configId: null })}
+        onConfirmDeleteConfig={handleConfirmDeleteConfig}
+        deleteCodeDialogOpen={deleteCodeDialog.open}
+        onDeleteCodeDialogOpenChange={(open) => setDeleteCodeDialog({ open, configId: null })}
+        onConfirmDeleteCode={handleConfirmDeleteCode}
       />
     </div>
   );
