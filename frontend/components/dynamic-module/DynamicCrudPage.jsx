@@ -508,33 +508,47 @@ export function DynamicCrudPage({ config }) {
 
                   <div className="flex-1 overflow-y-auto px-6 pb-6 scrollbar-hide">
                     <div className="space-y-2">
-                      {importResult.errors.map((error, idx) => (
-                        <div
-                          key={idx}
-                          className="p-3 bg-destructive/10 rounded-lg border border-destructive/20 hover:bg-destructive/15 transition-colors"
-                        >
-                          <div className="flex items-start gap-3">
-                            <div className="flex-shrink-0 w-6 h-6 rounded-full bg-destructive/20 flex items-center justify-center text-destructive text-xs font-semibold mt-0.5">
-                              {idx + 1}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-baseline gap-2 mb-1">
-                                <span className="font-semibold text-sm">
-                                  第 {error.row} 行 第 {error.columnNum} 列
-                                </span>
-                                {error.field && (
-                                  <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
-                                    {error.field}
-                                  </span>
-                                )}
+                      {importResult.errors.map((error, idx) => {
+                        // 查找字段配置以获取中文注释
+                        const fieldConfig = config.fields?.find(f => f.name === error.field);
+                        const fieldLabel = fieldConfig?.label || fieldConfig?.formLabel || error.field;
+
+                        return (
+                          <div
+                            key={idx}
+                            className="p-3 bg-destructive/10 rounded-lg border border-destructive/20 hover:bg-destructive/15 transition-colors"
+                          >
+                            <div className="flex items-start gap-3">
+                              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-destructive/20 flex items-center justify-center text-destructive text-xs font-semibold mt-0.5">
+                                {idx + 1}
                               </div>
-                              <p className="text-sm text-destructive break-words">
-                                {error.message}
-                              </p>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-baseline gap-2 mb-1 flex-wrap">
+                                  <span className="font-semibold text-sm">
+                                    第 {error.row} 行
+                                  </span>
+                                  {error.columnNum && (
+                                    <span className="text-xs text-muted-foreground">
+                                      第 {error.columnNum} 列
+                                    </span>
+                                  )}
+                                  {error.field && (
+                                    <span className="text-xs bg-muted px-2 py-0.5 rounded">
+                                      {fieldLabel}
+                                      {error.field !== fieldLabel && (
+                                        <span className="text-muted-foreground ml-1">({error.field})</span>
+                                      )}
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-sm text-destructive break-words">
+                                  {error.message}
+                                </p>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 </>

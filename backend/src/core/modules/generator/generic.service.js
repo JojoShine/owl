@@ -329,12 +329,14 @@ class GenericService {
       // 检查必填字段
       moduleConfig.fields
         .filter(f => f.is_required && f.show_in_form)
-        .forEach(field => {
+        .forEach((field, fieldIndex) => {
           if (!row[field.field_name]) {
             errors.push({
               row: rowNum,
               field: field.field_name,
-              message: `${field.field_comment}不能为空`,
+              fieldLabel: field.field_comment || field.field_name,
+              columnNum: fieldIndex + 1,
+              message: `${field.field_comment || field.field_name}不能为空`,
             });
           }
         });
@@ -348,9 +350,9 @@ class GenericService {
     // 批量插入成功的数据
     let successCount = 0;
     if (successRows.length > 0) {
-      const fields = moduleConfig.fields
-        .filter(f => f.show_in_form && f.field_name !== 'id')
-        .map(f => f.field_name);
+      // 保留完整的字段配置，便于错误时获取字段注释
+      const fieldConfigs = moduleConfig.fields.filter(f => f.show_in_form && f.field_name !== 'id');
+      const fields = fieldConfigs.map(f => f.field_name);
 
       // 批量插入配置：每次插入1000条
       const BATCH_SIZE = 1000;
@@ -419,36 +421,46 @@ class GenericService {
 
               successCount++;
             } catch (rowError) {
-              // 解析错误信息，提取列名
-              let fieldName = '未知字段';
+              // 从错误消息中提取值，通过值反查字段
+              let fieldName = null;
+              let fieldLabel = '未知字段';
               let columnNum = 0;
-              let errorMessage = rowError.message;
 
-              // 尝试从错误信息中提取列名
-              const columnMatch = rowError.message.match(/column "([^"]+)"/);
-              if (columnMatch) {
-                fieldName = columnMatch[1];
-                // 根据字段名找到列号
-                const fieldIndex = fields.indexOf(fieldName);
-                if (fieldIndex !== -1) {
-                  columnNum = fieldIndex + 1;
+              // 提取错误消息中引号内的值
+              const valueMatch = rowError.message.match(/: "([^"]+)"/);
+              const errorValue = valueMatch ? valueMatch[1] : null;
+
+              // 如果找到错误值，遍历字段查找匹配
+              if (errorValue) {
+                for (let i = 0; i < fieldConfigs.length; i++) {
+                  const fieldConfig = fieldConfigs[i];
+                  const rowValue = successRow[fieldConfig.field_name];
+                  if (rowValue && String(rowValue) === errorValue) {
+                    fieldName = fieldConfig.field_name;
+                    fieldLabel = fieldConfig.field_comment || fieldConfig.field_name;
+                    columnNum = i + 1;
+                    break;
+                  }
                 }
               }
 
-              // 尝试从错误信息中提取具体的错误原因
-              const typeMatch = rowError.message.match(/invalid input syntax for type (\w+)/);
-              if (typeMatch) {
-                errorMessage = `数据类型错误，期望 ${typeMatch[1]} 类型`;
+              // 优化错误提示
+              let errorMessage = rowError.message;
+              if (rowError.message.includes('date/time field value out of range')) {
+                errorMessage = `日期时间格式错误: "${errorValue}"`;
+              } else if (rowError.message.includes('invalid input syntax')) {
+                errorMessage = `数据格式错误: "${errorValue}"`;
               }
 
               errors.push({
                 row: successRow.rowNum,
-                field: fieldName,
+                field: fieldName || '未知字段',
+                fieldLabel: fieldLabel,
                 columnNum: columnNum,
                 message: errorMessage,
               });
 
-              logger.error(`Import error for row ${successRow.rowNum}:`, rowError);
+              logger.error(`Import error row ${successRow.rowNum}:`, rowError.message);
             }
           }
         }
