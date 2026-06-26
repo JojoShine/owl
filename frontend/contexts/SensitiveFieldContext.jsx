@@ -40,7 +40,6 @@ export function SensitiveFieldProvider({ children }) {
       }
 
       setSensitiveFields(allFields);
-      console.log('敏感字段配置加载完成:', allFields);
     } catch (error) {
       console.error('加载敏感字段配置失败:', error);
     } finally {
