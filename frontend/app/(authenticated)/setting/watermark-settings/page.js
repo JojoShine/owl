@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Slider } from '@/components/ui/slider';
 import {
   Select,
   SelectContent,
@@ -183,34 +184,32 @@ export default function WatermarkSettingsPage() {
               {/* 透明度 */}
               <div className="space-y-2">
                 <Label>透明度</Label>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="range"
-                    min="0.05"
-                    max="0.5"
-                    step="0.05"
-                    value={config.opacity}
-                    onChange={(e) => setConfig({ ...config, opacity: parseFloat(e.target.value) })}
+                <div className="flex items-center gap-4">
+                  <Slider
+                    min={0.05}
+                    max={0.5}
+                    step={0.05}
+                    value={[config.opacity]}
+                    onValueChange={(value) => setConfig({ ...config, opacity: value[0] })}
                     className="flex-1"
                   />
-                  <span className="text-sm w-12">{(config.opacity * 100).toFixed(0)}%</span>
+                  <span className="text-sm w-12 text-right">{(config.opacity * 100).toFixed(0)}%</span>
                 </div>
               </div>
 
               {/* 旋转角度 */}
               <div className="space-y-2">
                 <Label>旋转角度 (度)</Label>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="range"
-                    min="0"
-                    max="360"
-                    step="1"
-                    value={config.rotation}
-                    onChange={(e) => setConfig({ ...config, rotation: parseInt(e.target.value) })}
+                <div className="flex items-center gap-4">
+                  <Slider
+                    min={0}
+                    max={360}
+                    step={1}
+                    value={[config.rotation]}
+                    onValueChange={(value) => setConfig({ ...config, rotation: value[0] })}
                     className="flex-1"
                   />
-                  <span className="text-sm w-12">{config.rotation}°</span>
+                  <span className="text-sm w-12 text-right">{config.rotation}°</span>
                 </div>
               </div>
 
