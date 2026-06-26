@@ -13,6 +13,17 @@ function escapeXml(text) {
     .replace(/'/g, '&apos;');
 }
 
+// 格式化时间戳（精确到分钟）
+function formatTimestamp() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  return `${year}-${month}-${day} ${hours}:${minutes}`;
+}
+
 export function Watermark({
   lines = [],
   fontSize = 24,
@@ -24,6 +35,7 @@ export function Watermark({
   enabled = true,
 }) {
   const [isDark, setIsDark] = useState(false);
+  const [currentTime, setCurrentTime] = useState(formatTimestamp());
 
   // 检测暗黑模式
   useEffect(() => {
@@ -40,6 +52,27 @@ export function Watermark({
     return () => observer.disconnect();
   }, []);
 
+  // 每分钟更新时间戳
+  useEffect(() => {
+    // 计算距离下一分钟的毫秒数
+    const now = new Date();
+    const msUntilNextMinute = (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
+
+    // 首次在下一分钟开始时更新
+    const initialTimeout = setTimeout(() => {
+      setCurrentTime(formatTimestamp());
+
+      // 之后每60秒更新一次
+      const interval = setInterval(() => {
+        setCurrentTime(formatTimestamp());
+      }, 60000);
+
+      return () => clearInterval(interval);
+    }, msUntilNextMinute);
+
+    return () => clearTimeout(initialTimeout);
+  }, []);
+
   if (!enabled) {
     return null;
   }
@@ -52,13 +85,14 @@ export function Watermark({
     watermarkColor = '#000000';
   }
 
-  // 合并所有行为单个文本
-  const watermarkText = lines.filter(l => l).join('\n') || '水印';
+  // 合并所有行为单个文本，并添加时间戳
+  const allLines = [...lines.filter(l => l), currentTime];
+  const watermarkText = allLines.join('\n') || '水印';
 
   // 计算文本所需的大概宽度（每个字符约占 fontSize * 0.6 的宽度）
-  const maxLineLength = Math.max(...lines.map(line => line.length), 1);
+  const maxLineLength = Math.max(...allLines.map(line => line.length), 1);
   const estimatedTextWidth = maxLineLength * fontSize * 0.6;
-  const textHeight = lines.length * fontSize * 1.2;
+  const textHeight = allLines.length * fontSize * 1.2;
 
   // SVG 宽度取 spacing 和估计文本宽度的较大值，加上一些padding
   const svgWidth = Math.max(spacing, estimatedTextWidth + fontSize * 2);
