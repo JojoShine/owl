@@ -31,16 +31,12 @@ class ApiBuilderAuthService {
   /**
    * 从请求头中获取API密钥
    * 支持格式：
-   * - Authorization: Bearer YOUR_API_KEY
    * - X-API-Key: YOUR_API_KEY
+   * - Query参数: ?api_key=YOUR_API_KEY
+   *
+   * 注意：不从 Authorization header 提取，避免与 JWT token 混淆
    */
   extractApiKey(req) {
-    // 从Authorization header中获取
-    const authHeader = req.get('Authorization');
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      return authHeader.substring(7);
-    }
-
     // 从X-API-Key header中获取
     const apiKey = req.get('X-API-Key');
     if (apiKey) {
