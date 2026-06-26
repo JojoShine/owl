@@ -51,6 +51,11 @@ function DialogContent({
   showCloseButton = true,
   ...props
 }) {
+  // 检查 children 中是否包含 DialogDescription
+  const hasDescription = React.Children.toArray(children).some(
+    (child) => child?.type === DialogDescription || child?.type?.displayName === 'DialogDescription'
+  );
+
   return (
     <DialogPortal data-slot="dialog-portal">
       <DialogOverlay />
@@ -60,7 +65,14 @@ function DialogContent({
           "bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200",
           className
         )}
+        aria-describedby={hasDescription ? undefined : "dialog-description-fallback"}
         {...props}>
+        {/* 如果没有 DialogDescription，添加一个隐藏的作为回退 */}
+        {!hasDescription && (
+          <DialogPrimitive.Description id="dialog-description-fallback" className="sr-only">
+            Dialog content
+          </DialogPrimitive.Description>
+        )}
         {children}
         {showCloseButton && (
           <DialogPrimitive.Close
@@ -122,6 +134,7 @@ function DialogDescription({
       {...props} />
   );
 }
+DialogDescription.displayName = 'DialogDescription';
 
 export {
   Dialog,
