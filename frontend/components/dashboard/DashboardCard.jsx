@@ -7,26 +7,72 @@ import { useTheme } from 'next-themes'
 
 const CHART_COLORS = ['#00d4ff', '#00b8ff', '#0099ff', '#0080ff', '#0066ff', '#0055ff', '#0044cc', '#0033aa']
 
-// Pie Chart 专用彩色调色板，提供丰富的颜色组合
-const PIE_COLORS = [
-  'hsl(var(--primary) / 1)',    // 主题色
-  '#ec4899',                     // 粉色
-  '#f59e0b',                     // 琥珀色
-  '#8b5cf6',                     // 紫色
-  '#10b981',                     // 翠绿
-  '#06b6d4',                     // 青色
-  '#f43f5e',                     // 玫瑰红
-  '#a855f7',                     // 紫罗兰
-  '#14b8a6',                     // 绿松
-  '#84cc16',                     // 青柠
-]
-
 // 从 Tailwind CSS 变量中获取颜色值
 const getTailwindColor = (variable) => {
-  if (typeof document === 'undefined') return '#000'
-  return getComputedStyle(document.documentElement)
+  if (typeof document === 'undefined') return '#3b82f6' // SSR 时返回默认蓝色
+  const value = getComputedStyle(document.documentElement)
     .getPropertyValue(variable)
     .trim()
+
+  // 如果是 HSL 格式，转换为 RGB
+  if (value && value.includes(' ')) {
+    // HSL 格式: "222.2 47.4% 11.2%"
+    const [h, s, l] = value.split(' ').map(v => parseFloat(v))
+    return hslToHex(h, s, l)
+  }
+
+  return value || '#3b82f6'
+}
+
+// HSL 转 HEX
+const hslToHex = (h, s, l) => {
+  s = s / 100
+  l = l / 100
+
+  const c = (1 - Math.abs(2 * l - 1)) * s
+  const x = c * (1 - Math.abs((h / 60) % 2 - 1))
+  const m = l - c / 2
+
+  let r = 0, g = 0, b = 0
+
+  if (h >= 0 && h < 60) {
+    r = c; g = x; b = 0
+  } else if (h >= 60 && h < 120) {
+    r = x; g = c; b = 0
+  } else if (h >= 120 && h < 180) {
+    r = 0; g = c; b = x
+  } else if (h >= 180 && h < 240) {
+    r = 0; g = x; b = c
+  } else if (h >= 240 && h < 300) {
+    r = x; g = 0; b = c
+  } else if (h >= 300 && h < 360) {
+    r = c; g = 0; b = x
+  }
+
+  const toHex = (n) => {
+    const hex = Math.round((n + m) * 255).toString(16)
+    return hex.length === 1 ? '0' + hex : hex
+  }
+
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`
+}
+
+// 获取饼图颜色调色板（动态获取主题色）
+const getPieColors = () => {
+  const primaryColor = getTailwindColor('--primary')
+
+  return [
+    primaryColor,                  // 主题色（从 CSS 变量获取）
+    '#ec4899',                     // 粉色
+    '#f59e0b',                     // 琥珀色
+    '#8b5cf6',                     // 紫色
+    '#10b981',                     // 翠绿
+    '#06b6d4',                     // 青色
+    '#f43f5e',                     // 玫瑰红
+    '#a855f7',                     // 紫罗兰
+    '#14b8a6',                     // 绿松
+    '#84cc16',                     // 青柠
+  ]
 }
 
 /**
@@ -208,6 +254,9 @@ function DashboardCard({
         ],
       }
     } else if (mode === 'pie') {
+      // 获取饼图颜色（动态获取主题色）
+      const pieColors = getPieColors()
+
       // 辅助函数：根据颜色的亮度决定边框颜色
       const getBorderColor = (color) => {
         // 如果背景是暗黑模式，使用深色边框
@@ -224,7 +273,7 @@ function DashboardCard({
       }
 
       option = {
-        color: PIE_COLORS,
+        color: pieColors,
         tooltip: {
           trigger: 'item',
           backgroundColor: isDark ? 'rgba(30, 30, 30, 0.9)' : 'rgba(255, 255, 255, 0.9)',
@@ -240,7 +289,7 @@ function DashboardCard({
         series: [
           {
             data: data.map((item, index) => {
-              const pieColor = PIE_COLORS[index % PIE_COLORS.length]
+              const pieColor = pieColors[index % pieColors.length]
               return {
                 name: item[xKey],
                 value: item[dataKey],
