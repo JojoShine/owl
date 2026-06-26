@@ -15,7 +15,7 @@ const pgLogging = (sql, timing) => {
       databaseAccessLogger.info(JSON.stringify({
         type: 'postgresql',
         action: 'query',
-        sql: typeof sql === 'string' ? sql.substring(0, 500) : String(sql).substring(0, 500),
+        sql: typeof sql === 'string' ? sql : String(sql),
         timing: timingValue,
         timestamp: new Date().toISOString(),
       }));

@@ -29,6 +29,8 @@ const sequelize = new Sequelize(
     pool: dbConfig.pool,
     timezone: '+08:00', // 设置时区为中国标准时间（UTC+8）
     define: config.globalSequelizeConfig, // 应用全局 Model 配置
+    benchmark: true, // 启用基准测试，提供查询执行时间
+    logQueryParameters: true, // 记录查询参数
   }
 );
 
