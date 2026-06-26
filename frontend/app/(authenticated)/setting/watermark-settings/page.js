@@ -264,7 +264,6 @@ export default function WatermarkSettingsPage() {
                           <li><code className="bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded">{'{{user:department}}'}</code> - 部门</li>
                           <li><code className="bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded">{'{{user:email}}'}</code> - 邮箱</li>
                           <li><code className="bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded">{'{{user:phone}}'}</code> - 电话</li>
-                          <li><code className="bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded">{'{{user:role}}'}</code> - 角色</li>
                         </ul>
                       </div>
                       <div className="border-t pt-2">

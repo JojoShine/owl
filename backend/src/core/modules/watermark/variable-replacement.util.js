@@ -23,7 +23,6 @@ class VariableReplacementUtil {
     'email',
     'phone',
     'department',
-    'role'
   ];
 
   /**
@@ -54,10 +53,6 @@ class VariableReplacementUtil {
       case 'department':
         // 处理嵌套的department对象
         value = user.department?.name || user.department || '';
-        break;
-      case 'role':
-        // 处理嵌套的role对象
-        value = user.role?.name || user.role || '';
         break;
       default:
         value = user[fieldName] || '';

@@ -24,8 +24,12 @@ const authenticate = async (req, res, next) => {
         {
           model: db.Role,
           as: 'roles',
-          through: { attributes: [] }, //
-            // 不返回中间表字段
+          through: { attributes: [] }, // 不返回中间表字段
+        },
+        {
+          model: db.Department,
+          as: 'department',
+          attributes: ['id', 'name'], // 只返回必要字段
         },
       ],
     });
@@ -78,6 +82,11 @@ const optionalAuth = async (req, res, next) => {
           model: db.Role,
           as: 'roles',
           through: { attributes: [] },
+        },
+        {
+          model: db.Department,
+          as: 'department',
+          attributes: ['id', 'name'],
         },
       ],
     });

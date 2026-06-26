@@ -2,6 +2,17 @@
 
 import React, { useState, useEffect } from 'react';
 
+// XML 转义函数，防止特殊字符破坏 SVG 结构
+function escapeXml(text) {
+  if (!text) return '';
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
 export function Watermark({
   lines = [],
   fontSize = 24,
@@ -44,12 +55,21 @@ export function Watermark({
   // 合并所有行为单个文本
   const watermarkText = lines.filter(l => l).join('\n') || '水印';
 
-  // 生成简单的 SVG - 尺寸与 spacing 匹配
+  // 计算文本所需的大概宽度（每个字符约占 fontSize * 0.6 的宽度）
+  const maxLineLength = Math.max(...lines.map(line => line.length), 1);
+  const estimatedTextWidth = maxLineLength * fontSize * 0.6;
+  const textHeight = lines.length * fontSize * 1.2;
+
+  // SVG 宽度取 spacing 和估计文本宽度的较大值，加上一些padding
+  const svgWidth = Math.max(spacing, estimatedTextWidth + fontSize * 2);
+  const svgHeight = Math.max(spacing, textHeight + fontSize * 2);
+
+  // 生成简单的 SVG - 宽度根据内容自适应
   const svgContent = `
-    <svg width="${spacing}" height="${spacing}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${spacing} ${spacing}">
+    <svg width="${svgWidth}" height="${svgHeight}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${svgWidth} ${svgHeight}">
       <text
-        x="${spacing / 2}"
-        y="${spacing / 2}"
+        x="${svgWidth / 2}"
+        y="${svgHeight / 2}"
         text-anchor="middle"
         dominant-baseline="middle"
         font-size="${fontSize}"
@@ -57,10 +77,10 @@ export function Watermark({
         fill="${watermarkColor}"
         opacity="${opacity}"
         font-family="Arial, sans-serif"
-        transform="rotate(${rotation} ${spacing / 2} ${spacing / 2})"
+        transform="rotate(${rotation} ${svgWidth / 2} ${svgHeight / 2})"
       >
         ${watermarkText.split('\n').map((line, i) =>
-          `<tspan x="${spacing / 2}" dy="${i === 0 ? '0' : fontSize * 1.2}">${line}</tspan>`
+          `<tspan x="${svgWidth / 2}" dy="${i === 0 ? '0' : fontSize * 1.2}">${escapeXml(line)}</tspan>`
         ).join('')}
       </text>
     </svg>
@@ -75,7 +95,7 @@ export function Watermark({
       style={{
         backgroundImage: `url('${svgDataUri}')`,
         backgroundRepeat: `repeat`,
-        backgroundSize: `${spacing}px ${spacing}px`,
+        backgroundSize: `${svgWidth}px ${svgHeight}px`,
         backgroundPosition: '0 0',
         zIndex: 99999,
       }}
