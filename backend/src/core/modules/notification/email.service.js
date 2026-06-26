@@ -4,6 +4,25 @@ const { EmailLog, EmailTemplate } = require('../../../models');
 const { logger } = require('../../../config/logger');
 
 /**
+ * HTML 转义函数 - 防止 XSS 攻击
+ * 将 HTML 特殊字符转换为实体
+ */
+function escapeHtml(text) {
+  if (!text) return '';
+  if (typeof text !== 'string') return String(text);
+
+  const map = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;',
+  };
+
+  return text.replace(/[&<>"']/g, (char) => map[char]);
+}
+
+/**
  * 邮件服务
  * 负责邮件发送、模板渲染和日志记录
  */
@@ -265,14 +284,19 @@ class EmailService {
 
   /**
    * 告警内容默认包装
+   * 注意: title 和 content 会被 HTML 转义，防止 XSS 攻击
    */
   wrapAlertContent(title, content) {
+    // 转义 HTML 特殊字符，防止 XSS
+    const escapedTitle = escapeHtml(title);
+    const escapedContent = escapeHtml(content);
+
     return `
       <div style="font-family: Arial, sans-serif; padding: 16px; background-color: #f6f8fa;">
         <div style="max-width: 640px; margin: 0 auto; background: #ffffff; border-radius: 8px; padding: 24px; box-shadow: 0 2px 6px rgba(0,0,0,0.05);">
-          <h2 style="margin-top: 0; font-size: 20px; color: #333333;">${title}</h2>
-          <div style="font-size: 14px; color: #333333; line-height: 1.6;">
-            ${content}
+          <h2 style="margin-top: 0; font-size: 20px; color: #333333;">${escapedTitle}</h2>
+          <div style="font-size: 14px; color: #333333; line-height: 1.6; white-space: pre-wrap;">
+            ${escapedContent}
           </div>
         </div>
         <p style="margin-top: 16px; font-size: 12px; color: #999999; text-align: center;">此邮件由系统自动发送，请勿回复。</p>

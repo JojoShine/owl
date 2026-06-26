@@ -1,7 +1,7 @@
 # 安全审计报告
 
 ## 审计日期
-2026-06-25
+2026-06-26（更新）
 
 ## 已修复的漏洞
 
@@ -23,8 +23,6 @@
 - 用户输入值使用参数化查询
 
 ---
-
-## 发现的严重漏洞（需要修复）
 
 ### 2. API Builder SQL 注入漏洞 ✅ 已修复
 **文件**: `backend/src/core/modules/api-builder/api-builder-executor.service.js`
@@ -53,9 +51,67 @@ const queryResult = await db.sequelize.query(interface_.sql_query, {
 
 ---
 
-## 中等风险问题
+### 4. XSS 漏洞 - 公共页面 URL 注入 ✅ 已修复
+**文件**: `frontend/app/public/pages/[slug]/page.js`
 
-### 3. 文件上传安全 ✅ 已修复
+**风险等级**: 🔴 严重（已解决）
+
+**问题描述**:
+- 图片 URL (`src` 属性) 未经验证直接使用
+- 按钮链接 (`href` 属性) 未经验证直接使用
+- 攻击者可注入 `javascript:`, `data:`, `vbscript:` 等危险协议
+
+**攻击场景**:
+```javascript
+// 恶意组件示例
+{
+  type: 'button',
+  props: {
+    link: 'javascript:alert(document.cookie)'
+  }
+}
+```
+
+**修复措施**:
+- ✅ 添加 `sanitizeUrl()` 函数验证链接 URL
+- ✅ 添加 `sanitizeImageUrl()` 函数验证图片 URL
+- ✅ 只允许 `http://`, `https://`, `mailto:`, `tel:` 和相对路径
+- ✅ 阻止 `javascript:`, `data:`, `vbscript:`, `file:` 等危险协议
+- ✅ 外部链接添加 `rel="noopener noreferrer"` 和 `target="_blank"`
+- ✅ 无效 URL 使用安全默认值 (`#` 或空字符串)
+
+---
+
+### 5. XSS 漏洞 - 邮件内容 HTML 注入 ✅ 已修复
+**文件**: `backend/src/core/modules/notification/email.service.js`
+
+**风险等级**: 🟡 中等（已解决）
+
+**问题描述**:
+- 邮件标题和内容直接插入 HTML 模板未转义
+- 用户输入可能包含 HTML/JavaScript 标签
+- 在支持 JavaScript 的邮件客户端中可能执行恶意脚本
+
+**攻击场景**:
+```javascript
+// 恶意告警内容
+{
+  title: '<script>alert("XSS")</script>',
+  content: '<img src=x onerror=alert(1)>'
+}
+```
+
+**修复措施**:
+- ✅ 添加 `escapeHtml()` 函数转义 HTML 特殊字符
+- ✅ 在 `wrapAlertContent()` 方法中转义 `title` 和 `content`
+- ✅ 转义字符: `&`, `<`, `>`, `"`, `'`
+- ✅ 添加 `white-space: pre-wrap` 保留换行符格式
+
+---
+
+## 低风险问题
+
+### 6. 文件上传安全 ✅ 已修复
 **文件**: `backend/src/middlewares/upload.js`
 
 **风险等级**: 🟡 中等（已解决）
@@ -84,7 +140,7 @@ const queryResult = await db.sequelize.query(interface_.sql_query, {
 
 ## 低风险问题
 
-### 4. 时区处理 ✅ 已优化
+### 7. 时区处理 ✅ 已优化
 **文件**: 
 - `backend/src/core/modules/generator/generic.service.js`
 - `frontend/components/ui/date-time-picker.jsx`
@@ -113,6 +169,8 @@ const queryResult = await db.sequelize.query(interface_.sql_query, {
 - ✅ Sequelize 参数化查询
 - ✅ 标识符转义和白名单验证
 - ✅ 文件上传类型限制
+- ✅ URL 清理和协议验证（防止 XSS）
+- ✅ HTML 转义（防止邮件 XSS）
 
 ### 日志与监控
 - ✅ 日志记录（winston）
@@ -134,6 +192,8 @@ const queryResult = await db.sequelize.query(interface_.sql_query, {
 2. **API Builder SQL 注入漏洞** - 已改用参数化查询
 3. **文件上传安全** - 已禁止危险文件类型上传
 4. **请求频率限制** - 已确认存在并正常工作
+5. **公共页面 URL 注入 (XSS)** - 已添加 URL 清理和协议验证
+6. **邮件内容 HTML 注入 (XSS)** - 已添加 HTML 转义
 
 ### 建议改进 🟢
 1. **中优先级**: 添加登录失败锁定机制

@@ -4,6 +4,76 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { quickPageApi } from '@/lib/api';
 
+/**
+ * URL 清理函数 - 防止 XSS 攻击
+ * 只允许 http://, https:// 和相对路径
+ */
+function sanitizeUrl(url) {
+  if (!url || typeof url !== 'string') {
+    return '#';
+  }
+
+  const trimmedUrl = url.trim();
+
+  // 检测危险的 URL scheme
+  const dangerousProtocols = /^(javascript|data|vbscript|file|about):/i;
+  if (dangerousProtocols.test(trimmedUrl)) {
+    console.warn('Blocked potentially dangerous URL:', trimmedUrl);
+    return '#';
+  }
+
+  // 允许的协议: http, https, 相对路径, mailto, tel
+  const allowedProtocolsRegex = /^(https?:\/\/|\/|\.\/|mailto:|tel:)/i;
+
+  // 如果是相对路径或允许的协议，返回
+  if (allowedProtocolsRegex.test(trimmedUrl)) {
+    return trimmedUrl;
+  }
+
+  // 如果没有协议（可能是相对路径），允许
+  if (!trimmedUrl.includes(':')) {
+    return trimmedUrl;
+  }
+
+  // 其他情况返回安全默认值
+  console.warn('Blocked URL with unrecognized protocol:', trimmedUrl);
+  return '#';
+}
+
+/**
+ * 图片 URL 清理函数 - 更严格的验证
+ * 只允许 http://, https:// 和相对路径
+ */
+function sanitizeImageUrl(url) {
+  if (!url || typeof url !== 'string') {
+    return '';
+  }
+
+  const trimmedUrl = url.trim();
+
+  // 检测危险的 URL scheme
+  const dangerousProtocols = /^(javascript|data|vbscript|file|about):/i;
+  if (dangerousProtocols.test(trimmedUrl)) {
+    console.warn('Blocked potentially dangerous image URL:', trimmedUrl);
+    return '';
+  }
+
+  // 只允许 http, https 或相对路径
+  const allowedImageUrlRegex = /^(https?:\/\/|\/|\.\/)/i;
+
+  if (allowedImageUrlRegex.test(trimmedUrl)) {
+    return trimmedUrl;
+  }
+
+  // 如果没有协议且不以 / 或 . 开头，可能是相对路径
+  if (!trimmedUrl.includes(':') && !trimmedUrl.startsWith('/')) {
+    return trimmedUrl;
+  }
+
+  console.warn('Blocked image URL with invalid format:', trimmedUrl);
+  return '';
+}
+
 export default function PublicPageRenderer() {
   const params = useParams();
   const [page, setPage] = useState(null);
@@ -131,9 +201,17 @@ function renderComponent(component) {
       );
 
     case 'image':
+      const sanitizedImageUrl = sanitizeImageUrl(props?.url);
+      if (!sanitizedImageUrl) {
+        return (
+          <div className="bg-muted rounded-lg p-4 text-center text-muted-foreground text-sm">
+            图片 URL 无效
+          </div>
+        );
+      }
       return (
         <img
-          src={props?.url}
+          src={sanitizedImageUrl}
           alt={props?.alt || '图片'}
           style={{
             width: props?.width || '100%',
@@ -144,14 +222,17 @@ function renderComponent(component) {
       );
 
     case 'button':
+      const sanitizedLink = sanitizeUrl(props?.link || '#');
       return (
         <a
-          href={props?.link || '#'}
+          href={sanitizedLink}
           className="inline-block px-4 py-2 rounded text-sm font-medium transition-colors"
           style={{
             backgroundColor: props?.bgColor || '#1677ff',
             color: props?.textColor || '#ffffff',
           }}
+          rel="noopener noreferrer"
+          target={sanitizedLink.startsWith('http') ? '_blank' : undefined}
         >
           {props?.text || '按钮'}
         </a>
