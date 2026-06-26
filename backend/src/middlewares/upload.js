@@ -9,8 +9,9 @@ const ALLOWED_MIME_TYPES = [
   'image/png',
   'image/gif',
   'image/webp',
-  'image/svg+xml',
   'image/bmp',
+  // SVG需要额外验证，暂时移除
+  // 'image/svg+xml',
   // 文档
   'application/pdf',
   'application/msword',
@@ -19,12 +20,13 @@ const ALLOWED_MIME_TYPES = [
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   'application/vnd.ms-powerpoint',
   'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-  // 文本
+  // 文本（移除危险类型）
   'text/plain',
   'text/csv',
-  'text/html',
-  'text/css',
-  'text/javascript',
+  // 移除 HTML/CSS/JS - 安全风险
+  // 'text/html',
+  // 'text/css',
+  // 'text/javascript',
   'application/json',
   'application/xml',
   // 压缩文件
@@ -49,6 +51,14 @@ const ALLOWED_MIME_TYPES = [
   'audio/webm',
 ];
 
+// 禁止的文件扩展名（额外的安全检查）
+const FORBIDDEN_EXTENSIONS = [
+  'html', 'htm', 'js', 'jsx', 'ts', 'tsx',
+  'exe', 'bat', 'cmd', 'sh', 'bash',
+  'php', 'asp', 'aspx', 'jsp',
+  'svg', // SVG可能包含XSS
+];
+
 // 文件大小限制（默认 100MB）
 const MAX_FILE_SIZE = parseInt(process.env.MAX_FILE_SIZE) || 100 * 1024 * 1024;
 
@@ -62,6 +72,23 @@ const fileFilter = (req, file, cb) => {
     file.originalname = Buffer.from(file.originalname, 'latin1').toString('utf8');
   }
 
+  // 检查文件名
+  if (!file.originalname || file.originalname.length === 0) {
+    return cb(new AppError('无效的文件名', 400), false);
+  }
+
+  // 检查文件扩展名（禁止危险扩展名）
+  const ext = path.extname(file.originalname).toLowerCase().slice(1);
+  if (FORBIDDEN_EXTENSIONS.includes(ext)) {
+    return cb(
+      new AppError(
+        `禁止上传此类型文件: .${ext}。出于安全考虑，不允许上传可执行代码文件。`,
+        400
+      ),
+      false
+    );
+  }
+
   // 检查文件类型
   if (!ALLOWED_MIME_TYPES.includes(file.mimetype)) {
     return cb(
@@ -71,11 +98,6 @@ const fileFilter = (req, file, cb) => {
       ),
       false
     );
-  }
-
-  // 检查文件名
-  if (!file.originalname || file.originalname.length === 0) {
-    return cb(new AppError('无效的文件名', 400), false);
   }
 
   cb(null, true);
@@ -190,5 +212,6 @@ module.exports = {
   validateFileExtension,
   getSafeFilename,
   ALLOWED_MIME_TYPES,
+  FORBIDDEN_EXTENSIONS,
   MAX_FILE_SIZE,
 };

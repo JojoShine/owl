@@ -102,7 +102,8 @@ export function DynamicCrudPage({ config }) {
   const handleResetFilters = () => {
     setFilters({});
     setPagination((prev) => ({ ...prev, page: 1 }));
-    setTimeout(() => fetchData(), 0);
+    // 延迟执行查询，确保状态已更新
+    setTimeout(() => fetchData(), 50);
   };
 
   // 分页变化

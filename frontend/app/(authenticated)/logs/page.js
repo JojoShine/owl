@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   FileTextIcon,
   UserCheckIcon,
@@ -58,7 +58,18 @@ const TAB_CONFIGS = [
 ];
 
 export default function LogsPage() {
-  const loadLogsTimerRef = useRef(null);
+  // 计算默认日期范围（最近7天）
+  const getDefaultDateRange = () => {
+    const now = new Date();
+    const endDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
+    const sevenDaysAgo = new Date(now);
+    sevenDaysAgo.setDate(now.getDate() - 7);
+    const startDate = `${sevenDaysAgo.getFullYear()}-${String(sevenDaysAgo.getMonth() + 1).padStart(2, '0')}-${String(sevenDaysAgo.getDate()).padStart(2, '0')}`;
+
+    return { startDate, endDate };
+  };
+
   // 状态管理
   const [activeTab, setActiveTab] = useState('operation'); // operation | login | system | access | error
   const [logs, setLogs] = useState([]);
@@ -70,8 +81,7 @@ export default function LogsPage() {
     totalPages: 0,
   });
   const [filters, setFilters] = useState({
-    startDate: '',
-    endDate: '',
+    ...getDefaultDateRange(),
     userId: '',
     username: '',
     method: '',
@@ -87,6 +97,8 @@ export default function LogsPage() {
   const loadLogs = useCallback(async () => {
     try {
       setLoading(true);
+      // 清除之前的展示
+      setLogs([]);
 
       const params = {
         page: pagination.page,
@@ -147,21 +159,7 @@ export default function LogsPage() {
 
   // 初始化：加载日志
   useEffect(() => {
-    if (loadLogsTimerRef.current) {
-      clearTimeout(loadLogsTimerRef.current);
-    }
-
-    loadLogsTimerRef.current = setTimeout(() => {
-      loadLogs();
-      loadLogsTimerRef.current = null;
-    }, 300);
-
-    return () => {
-      if (loadLogsTimerRef.current) {
-        clearTimeout(loadLogsTimerRef.current);
-        loadLogsTimerRef.current = null;
-      }
-    };
+    loadLogs();
   }, [loadLogs]);
 
   // 加载统计数据

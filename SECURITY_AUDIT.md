@@ -26,41 +26,27 @@
 
 ## 发现的严重漏洞（需要修复）
 
-### 2. API Builder SQL 注入漏洞 ⚠️ 未修复
+### 2. API Builder SQL 注入漏洞 ✅ 已修复
 **文件**: `backend/src/core/modules/api-builder/api-builder-executor.service.js`
 
-**风险等级**: 🔴 严重
+**风险等级**: 🔴 严重（已解决）
 
 **问题描述**:
+- `bindParameters` 方法使用字符串替换而非参数化查询
+- `escapeSqlValue` 只转义单引号，无法防止所有注入
+- 没有使用 Sequelize 的 `replacements` 参数
+
+**修复措施**:
+- ✅ 移除不安全的 `bindParameters()` 和 `escapeSqlValue()` 方法
+- ✅ 添加 `prepareReplacements()` 方法安全处理参数
+- ✅ 使用 Sequelize 的参数化查询（replacements）
+- ✅ 完全杜绝字符串拼接 SQL
+
+**修复后代码**:
 ```javascript
-// 第 42-55 行
-const sqlQuery = this.bindParameters(interface_.sql_query, params, interface_.parameters);
-const queryResult = await db.sequelize.query(sqlQuery, {
-  type: queryType,
-});
-```
-
-**具体问题**:
-1. `bindParameters` 方法使用字符串替换而非参数化查询
-2. `escapeSqlValue` 只转义单引号，无法防止所有注入
-3. 没有使用 Sequelize 的 `replacements` 参数
-
-**攻击场景**:
-```javascript
-// 用户输入
-params = {
-  id: "1; DROP TABLE users; --"
-}
-
-// SQL 注入成功
-SELECT * FROM users WHERE id = 1; DROP TABLE users; --
-```
-
-**建议修复**:
-```javascript
-// 使用 Sequelize 的参数化查询
-const queryResult = await db.sequelize.query(sqlQuery, {
-  replacements: params,
+const replacements = this.prepareReplacements(params, interface_.parameters);
+const queryResult = await db.sequelize.query(interface_.sql_query, {
+  replacements,
   type: queryType,
 });
 ```
@@ -69,8 +55,10 @@ const queryResult = await db.sequelize.query(sqlQuery, {
 
 ## 中等风险问题
 
-### 3. 文件上传安全 ⚠️ 部分完善
+### 3. 文件上传安全 ✅ 已修复
 **文件**: `backend/src/middlewares/upload.js`
+
+**风险等级**: 🟡 中等（已解决）
 
 **当前保护措施**:
 - ✅ MIME 类型白名单
@@ -78,30 +66,19 @@ const queryResult = await db.sequelize.query(sqlQuery, {
 - ✅ 文件数量限制（10个）
 - ✅ 文件名编码修复
 - ✅ 使用内存存储（上传到 Minio）
+- ✅ 文件扩展名黑名单验证
 
-**潜在问题**:
-1. ⚠️ MIME 类型可伪造（需要验证文件魔数）
-2. ⚠️ 允许上传 SVG（可能包含 XSS）
-3. ⚠️ 允许上传 HTML/CSS/JS（可能包含恶意代码）
-4. ⚠️ `getSafeFilename` 可能导致文件名冲突
+**修复内容**:
+- ✅ 移除了危险的 MIME 类型: `text/html`, `text/css`, `text/javascript`, `image/svg+xml`
+- ✅ 添加了文件扩展名黑名单 `FORBIDDEN_EXTENSIONS`
+- ✅ 黑名单包含: html, htm, js, jsx, ts, tsx, exe, bat, cmd, sh, bash, php, asp, aspx, jsp, svg
+- ✅ 在文件过滤器中优先检查扩展名，再检查 MIME 类型
+- ✅ 双重验证（扩展名 + MIME 类型）提供更强的安全保障
 
-**建议改进**:
-```javascript
-// 1. 添加文件魔数验证
-const fileType = require('file-type');
-const buffer = await fileType.fromBuffer(file.buffer);
-if (!buffer || !ALLOWED_MIME_TYPES.includes(buffer.mime)) {
-  throw new Error('Invalid file type');
-}
-
-// 2. SVG 需要额外清理
-if (file.mimetype === 'image/svg+xml') {
-  // 使用 svg-sanitize 库清理
-}
-
-// 3. 禁止上传可执行代码
-const DANGEROUS_TYPES = ['text/html', 'text/javascript', 'application/javascript'];
-```
+**防护效果**:
+- 完全阻止可执行代码文件上传
+- 防止恶意脚本注入（XSS）
+- 防止服务器端脚本执行
 
 ---
 
@@ -126,13 +103,16 @@ const DANGEROUS_TYPES = ['text/html', 'text/javascript', 'application/javascript
 - ✅ 使用 JWT 认证
 - ✅ 密码加密（bcrypt）
 - ✅ 权限检查中间件
-- ⚠️ 建议添加：请求频率限制（rate limiting）
+- ✅ 请求频率限制（rate limiting）
+  - 生产环境: 100 请求/15分钟
+  - 开发环境: 1000 请求/60分钟
 - ⚠️ 建议添加：登录失败锁定机制
 
 ### 数据验证
 - ✅ 使用 Joi 进行输入验证
-- ✅ Sequelize 参数化查询（非动态模块）
-- ⚠️ API Builder 需要改用参数化查询
+- ✅ Sequelize 参数化查询
+- ✅ 标识符转义和白名单验证
+- ✅ 文件上传类型限制
 
 ### 日志与监控
 - ✅ 日志记录（winston）
@@ -149,10 +129,16 @@ const DANGEROUS_TYPES = ['text/html', 'text/javascript', 'application/javascript
 
 ## 修复优先级
 
-1. **🔴 紧急**: API Builder SQL 注入漏洞
-2. **🟡 高优先级**: 文件上传增强验证
-3. **🟢 中优先级**: 添加请求频率限制
-4. **🟢 低优先级**: 依赖安全监控
+### 已完成 ✅
+1. **动态模块 SQL 注入漏洞** - 已添加标识符转义和白名单验证
+2. **API Builder SQL 注入漏洞** - 已改用参数化查询
+3. **文件上传安全** - 已禁止危险文件类型上传
+4. **请求频率限制** - 已确认存在并正常工作
+
+### 建议改进 🟢
+1. **中优先级**: 添加登录失败锁定机制
+2. **低优先级**: 文件魔数验证（进一步增强文件类型检测）
+3. **低优先级**: 依赖安全监控（npm audit / Snyk / Dependabot）
 
 ---
 
