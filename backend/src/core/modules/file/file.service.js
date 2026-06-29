@@ -16,6 +16,30 @@ const {
 } = require('../../../utils/file');
 const filePermissionService = require('./file-permission.service');
 
+/**
+ * 转换文件对象为安全 JSON（兼容 Sequelize 实例和普通对象）
+ */
+function toSafeFileJSON(file) {
+  const values = typeof file?.toJSON === 'function' ? file.toJSON() : { ...file };
+  const originalName = values.original_name || '';
+  const parts = originalName.split('.');
+  const extension = parts.length > 1 ? parts[parts.length - 1].toLowerCase() : '';
+  const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'];
+  const videoExtensions = ['mp4', 'avi', 'mov', 'wmv', 'flv', 'webm', 'mkv'];
+
+  let size = values.size || 0;
+  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+  let unitIndex = 0;
+  while (size >= 1024 && unitIndex < units.length - 1) { size /= 1024; unitIndex++; }
+
+  values.formatted_size = `${size.toFixed(2)} ${units[unitIndex]}`;
+  values.extension = extension;
+  values.is_image = imageExtensions.includes(extension);
+  values.is_video = videoExtensions.includes(extension);
+  values.is_pdf = extension === 'pdf';
+  return values;
+}
+
 class FileService {
   /**
    * 获取文件列表（分页）
@@ -71,13 +95,13 @@ class FileService {
           attributes: ['id', 'username', 'real_name'],
         },
       ],
-      pageSize: parseInt(limit),
+      limit: parseInt(limit),
       offset,
       order: [[sort, order.toUpperCase()]],
     });
 
     // 为每个文件添加格式化信息
-    const files = rows.map(file => file.toSafeJSON());
+    const files = rows.map(file => toSafeFileJSON(file));
 
     return {
       data: files,
@@ -117,7 +141,7 @@ class FileService {
       throw ApiError.notFound('文件不存在');
     }
 
-    return file.toSafeJSON();
+    return toSafeFileJSON(file);
   }
 
   /**

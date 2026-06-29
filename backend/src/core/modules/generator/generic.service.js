@@ -173,6 +173,9 @@ class GenericService {
     // 验证必填字段
     this._validateRequiredFields(moduleConfig, data);
 
+    // 验证字段值规则
+    this._validateFieldValues(moduleConfig, data, false);
+
     // 过滤掉系统字段和不存在的字段
     const validData = this._filterValidFields(moduleConfig, data);
 
@@ -218,6 +221,9 @@ class GenericService {
 
     // 过滤掉系统字段和不存在的字段
     const validData = this._filterValidFields(moduleConfig, data);
+
+    // 验证字段值规则（更新模式）
+    this._validateFieldValues(moduleConfig, validData, true);
 
     // 构建更新SQL
     const fields = Object.keys(validData);
@@ -425,12 +431,26 @@ class GenericService {
       for (const batch of batches) {
         try {
           const values = batch.map(row => {
-            return fields.map(field => {
+            return fields.map((field, idx) => {
               const value = row[field];
-              // 处理特殊类型
+              const fieldConfig = fieldConfigs[idx];
+
+              // 空值处理
               if (value === '' || value === null || value === undefined) {
                 return null;
               }
+
+              // 日期字段处理
+              const fieldType = fieldConfig.field_type?.toLowerCase();
+              if (fieldType && (fieldType.includes('date') || fieldType.includes('timestamp') || fieldType.includes('time'))) {
+                const parsedDate = this._parseDate(value);
+                if (parsedDate === null && value) {
+                  // 日期格式不正确，但有值
+                  throw new Error(`第 ${row.rowNum} 行，字段"${fieldConfig.field_comment || field}"的日期格式不正确: ${value}`);
+                }
+                return parsedDate;
+              }
+
               return value;
             });
           });
@@ -459,11 +479,25 @@ class GenericService {
 
           for (const successRow of batch) {
             try {
-              const values = fields.map(field => {
+              const values = fields.map((field, idx) => {
                 const value = successRow[field];
+                const fieldConfig = fieldConfigs[idx];
+
+                // 空值处理
                 if (value === '' || value === null || value === undefined) {
                   return null;
                 }
+
+                // 日期字段处理
+                const fieldType = fieldConfig.field_type?.toLowerCase();
+                if (fieldType && (fieldType.includes('date') || fieldType.includes('timestamp') || fieldType.includes('time'))) {
+                  const parsedDate = this._parseDate(value);
+                  if (parsedDate === null && value) {
+                    throw new Error(`第 ${successRow.rowNum} 行，字段"${fieldConfig.field_comment || field}"的日期格式不正确: ${value}`);
+                  }
+                  return parsedDate;
+                }
+
                 return value;
               });
 
@@ -635,6 +669,116 @@ class GenericService {
         throw ApiError.badRequest(`${field.field_comment}不能为空`);
       }
     });
+  }
+
+  /**
+   * 校验字段值规则
+   * @param {Object} moduleConfig - 模块配置
+   * @param {Object} data - 数据
+   * @param {Boolean} isUpdate - 是否是更新操作（更新时只校验提供的字段）
+   */
+  _validateFieldValues(moduleConfig, data, isUpdate = false) {
+    const fields = moduleConfig.fields.filter(f => f.show_in_form);
+
+    fields.forEach(field => {
+      const fieldName = field.field_name;
+      const value = data[fieldName];
+      const rules = field.form_rules;
+
+      // 更新时，如果字段未提供则跳过
+      if (isUpdate && value === undefined) {
+        return;
+      }
+
+      // 如果没有规则，跳过
+      if (!rules || Object.keys(rules).length === 0) {
+        return;
+      }
+
+      // 空值处理：如果字段有值才校验
+      if (value === null || value === '' || value === undefined) {
+        return; // 必填校验由 _validateRequiredFields 处理
+      }
+
+      const fieldLabel = field.field_comment || fieldName;
+
+      // 长度校验
+      if (rules.length && String(value).length !== rules.length) {
+        throw ApiError.badRequest(`${fieldLabel}长度必须为${rules.length}位`);
+      }
+      if (rules.minLength && String(value).length < rules.minLength) {
+        throw ApiError.badRequest(`${fieldLabel}长度不能少于${rules.minLength}位`);
+      }
+      if (rules.maxLength && String(value).length > rules.maxLength) {
+        throw ApiError.badRequest(`${fieldLabel}长度不能超过${rules.maxLength}位`);
+      }
+
+      // 正则格式校验
+      if (rules.pattern) {
+        const regex = new RegExp(rules.pattern);
+        if (!regex.test(value)) {
+          const message = rules.message || `${fieldLabel}格式不正确`;
+          throw ApiError.badRequest(message);
+        }
+      }
+
+      // 数值范围校验
+      if (typeof value === 'number') {
+        if (rules.min !== undefined && value < rules.min) {
+          throw ApiError.badRequest(`${fieldLabel}不能小于${rules.min}`);
+        }
+        if (rules.max !== undefined && value > rules.max) {
+          throw ApiError.badRequest(`${fieldLabel}不能大于${rules.max}`);
+        }
+      }
+
+      // 枚举校验
+      if (rules.enum && Array.isArray(rules.enum)) {
+        if (!rules.enum.includes(value)) {
+          throw ApiError.badRequest(`${fieldLabel}值不在允许范围内`);
+        }
+      }
+    });
+  }
+
+
+  /**
+   * 解析多种日期格式
+   * @param {string|Date} value - 日期值
+   * @returns {string|null} ISO 8601 格式的日期字符串
+   */
+  _parseDate(value) {
+    if (!value) return null;
+    if (value instanceof Date) return value.toISOString();
+
+    const str = String(value).trim();
+    if (!str) return null;
+
+    // 尝试解析多种格式
+    let date = null;
+
+    // 格式1: 中划线格式 2024-06-29 或 2024-06-29 10:30:00
+    if (/^\d{4}-\d{2}-\d{2}/.test(str)) {
+      date = new Date(str);
+    }
+    // 格式2: 斜杠格式 2024/06/29 或 2024/06/29 10:30:00
+    else if (/^\d{4}\/\d{2}\/\d{2}/.test(str)) {
+      date = new Date(str.replace(/\//g, '-'));
+    }
+    // 格式3: 纯数字格式 20240629 (YYYYMMDD)
+    else if (/^\d{8}$/.test(str)) {
+      const year = str.substring(0, 4);
+      const month = str.substring(4, 6);
+      const day = str.substring(6, 8);
+      date = new Date(`${year}-${month}-${day}`);
+    }
+
+    // 验证日期是否有效
+    if (date && !isNaN(date.getTime())) {
+      return date.toISOString();
+    }
+
+    return null;
   }
 
   /**

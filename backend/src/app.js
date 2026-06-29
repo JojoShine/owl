@@ -8,7 +8,6 @@ const rateLimit = require('express-rate-limit');
 const { logger } = require('./config/logger');
 const { connectRedis } = require('./config/redis');
 const { ensureBucketExists } = require('./config/minio');
-const { applyCacheToModels } = require('./config/cache'); // 导入缓存配置
 const { errorHandler, notFound } = require('./middlewares/error');
 const {
   accessLogMiddleware,
@@ -100,9 +99,6 @@ const startServer = async () => {
     const db = require('./models');
     await db.sequelize.authenticate();
     logger.info('Database connected successfully');
-
-    // 应用查询缓存到所有模型
-    applyCacheToModels(db);
 
     // 初始化 Minio bucket
     await ensureBucketExists();

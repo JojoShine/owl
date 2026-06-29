@@ -51,47 +51,6 @@ function getModelTTL(modelName) {
   return MODEL_TTL_CONFIG[modelName] || MODEL_TTL_CONFIG.DEFAULT;
 }
 
-// 递归重建 Sequelize 实例（包括关联数据）
-function rebuildInstance(Model, data, sequelize, depth = 0) {
-  if (!data) return null;
-  if (depth > 3) return Model.build(data, { isNewRecord: false, raw: false }); // 防止过深递归
-
-  try {
-    const instance = Model.build(data, { isNewRecord: false, raw: false });
-
-    // 处理关联数据
-    if (Model.associations) {
-      Object.keys(Model.associations).forEach(associationName => {
-        const association = Model.associations[associationName];
-        const associatedData = data[associationName];
-
-        if (associatedData !== undefined && associatedData !== null) {
-          const AssociatedModel = association.target;
-
-          if (Array.isArray(associatedData)) {
-            // 一对多或多对多关联 - 递归处理
-            instance.dataValues[associationName] = associatedData.map(item =>
-              rebuildInstance(AssociatedModel, item, sequelize, depth + 1)
-            );
-            instance[associationName] = instance.dataValues[associationName];
-          } else {
-            // 一对一关联 - 递归处理
-            const rebuiltAssociation = rebuildInstance(AssociatedModel, associatedData, sequelize, depth + 1);
-            instance.dataValues[associationName] = rebuiltAssociation;
-            instance[associationName] = rebuiltAssociation;
-          }
-        }
-      });
-    }
-
-    return instance;
-  } catch (err) {
-    logger.warn(`重建实例失败 (depth=${depth}): ${err.message}`);
-    // 降级：返回简单构建的实例
-    return Model.build(data, { isNewRecord: false, raw: false });
-  }
-}
-
 // 包装 Sequelize 模型的查询方法
 function wrapModelWithCache(Model) {
   const modelName = Model.name;
@@ -113,8 +72,8 @@ function wrapModelWithCache(Model) {
       if (cached) {
         console.log(`[Cache HIT] ${modelName} - ${cacheKey}`);
         const data = JSON.parse(cached);
-        // 将普通对象转换回 Sequelize 实例（包括关联）
-        return data.map(item => rebuildInstance(Model, item, this.sequelize));
+        // 直接返回 JSON 对象，不重建 Sequelize 实例
+        return data;
       }
 
       console.log(`[Cache MISS] ${modelName} - ${cacheKey}`);
@@ -129,7 +88,9 @@ function wrapModelWithCache(Model) {
     try {
       const ttl = getModelTTL(modelName);
       const plainData = Array.isArray(result)
-        ? result.map(item => item.get({ plain: true }))
+        ? result.map(item =>
+            typeof item.get === 'function' ? item.get({ plain: true }) : item
+          )
         : [];
       await redis.setex(cacheKey, ttl, JSON.stringify(plainData));
       console.log(`[Cache SET] ${modelName} - ${cacheKey} (TTL: ${ttl}s)`);
@@ -149,8 +110,8 @@ function wrapModelWithCache(Model) {
       if (cached) {
         console.log(`[Cache HIT] ${modelName} - ${cacheKey}`);
         const data = JSON.parse(cached);
-        // null 直接返回，否则转换为实例（包括关联）
-        return data ? rebuildInstance(Model, data, this.sequelize) : null;
+        // 直接返回 JSON 对象，不重建 Sequelize 实例
+        return data;
       }
       console.log(`[Cache MISS] ${modelName} - ${cacheKey}`);
     } catch (err) {
@@ -161,7 +122,9 @@ function wrapModelWithCache(Model) {
 
     try {
       const ttl = getModelTTL(modelName);
-      const plainData = result ? result.get({ plain: true }) : null;
+      const plainData = result
+        ? (typeof result.get === 'function' ? result.get({ plain: true }) : result)
+        : null;
       await redis.setex(cacheKey, ttl, JSON.stringify(plainData));
       console.log(`[Cache SET] ${modelName} - ${cacheKey} (TTL: ${ttl}s)`);
     } catch (err) {
@@ -180,7 +143,8 @@ function wrapModelWithCache(Model) {
       if (cached) {
         console.log(`[Cache HIT] ${modelName} - ${cacheKey}`);
         const data = JSON.parse(cached);
-        return data ? rebuildInstance(Model, data, this.sequelize) : null;
+        // 直接返回 JSON 对象，不重建 Sequelize 实例
+        return data;
       }
       console.log(`[Cache MISS] ${modelName} - ${cacheKey}`);
     } catch (err) {
@@ -191,7 +155,9 @@ function wrapModelWithCache(Model) {
 
     try {
       const ttl = getModelTTL(modelName);
-      const plainData = result ? result.get({ plain: true }) : null;
+      const plainData = result
+        ? (typeof result.get === 'function' ? result.get({ plain: true }) : result)
+        : null;
       await redis.setex(cacheKey, ttl, JSON.stringify(plainData));
       console.log(`[Cache SET] ${modelName} - ${cacheKey} (TTL: ${ttl}s)`);
     } catch (err) {
@@ -210,11 +176,8 @@ function wrapModelWithCache(Model) {
       if (cached) {
         console.log(`[Cache HIT] ${modelName} - ${cacheKey}`);
         const data = JSON.parse(cached);
-        // 将 rows 数组转换回 Sequelize 实例（包括关联）
-        return {
-          count: data.count,
-          rows: data.rows.map(item => rebuildInstance(Model, item, this.sequelize))
-        };
+        // 直接返回 JSON 对象，不重建 Sequelize 实例
+        return data;
       }
       console.log(`[Cache MISS] ${modelName} - ${cacheKey}`);
     } catch (err) {
@@ -228,7 +191,9 @@ function wrapModelWithCache(Model) {
       const plainData = {
         count: result.count || 0,
         rows: Array.isArray(result.rows)
-          ? result.rows.map(item => item.get({ plain: true }))
+          ? result.rows.map(item =>
+              typeof item.get === 'function' ? item.get({ plain: true }) : item
+            )
           : []
       };
       await redis.setex(cacheKey, ttl, JSON.stringify(plainData));
@@ -317,8 +282,27 @@ function applyCacheToModels(db) {
   logger.info('查询缓存已应用到所有模型');
 }
 
+// 清理所有缓存
+async function clearAllCache() {
+  try {
+    const pattern = 'owl:cache:*';
+    const keys = await redis.keys(pattern);
+    if (keys.length > 0) {
+      await redis.del(...keys);
+      logger.info(`[Cache CLEAR ALL] ${keys.length} keys cleared`);
+      return keys.length;
+    }
+    logger.info('[Cache CLEAR ALL] No keys to clear');
+    return 0;
+  } catch (err) {
+    logger.error(`清除所有缓存失败: ${err.message}`);
+    throw err;
+  }
+}
+
 module.exports = {
   redis,
   applyCacheToModels,
   clearModelCache,
+  clearAllCache,
 };

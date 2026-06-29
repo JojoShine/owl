@@ -52,6 +52,7 @@ class UserService {
 
     const { count, rows } = await db.User.findAndCountAll({
       where,
+      attributes: { exclude: ['password', 'deleted_at'] },
       include,
       limit: parseInt(limit),
       offset,
@@ -60,7 +61,7 @@ class UserService {
     });
 
     return {
-      data: rows.map(user => user.toSafeJSON()),
+      data: rows,
       pagination: {
         total: count,
         page: parseInt(page),
@@ -75,6 +76,7 @@ class UserService {
    */
   async getUserById(id) {
     const user = await db.User.findByPk(id, {
+      attributes: { exclude: ['password', 'deleted_at'] },
       include: [
         {
           model: db.Role,
@@ -88,7 +90,7 @@ class UserService {
       throw ApiError.notFound('用户不存在');
     }
 
-    return user.toSafeJSON();
+    return user;
   }
 
   /**
@@ -160,7 +162,7 @@ class UserService {
       throw ApiError.notFound('用户不存在');
     }
 
-    const { username, email, password, phone, real_name, avatar, status, access_level, role_ids } = updateData;
+    const { username, email, password, phone, real_name, avatar, status, access_level, department_id, role_ids } = updateData;
 
     // 检查用户名是否被其他用户占用
     if (username && username !== user.username) {
@@ -195,6 +197,7 @@ class UserService {
       avatar,
       status,
       access_level,
+      department_id,
     };
 
     // 只有提供了密码才更新密码

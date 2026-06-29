@@ -167,7 +167,7 @@ export function DynamicCrudPage({ config }) {
     } catch (error) {
       console.error('提交失败:', error);
       toast.error(error.response?.data?.message || '操作失败');
-      throw error;
+      // 错误已通过 toast 显示，不再抛出以避免重复提示
     }
   };
 
@@ -236,55 +236,6 @@ export function DynamicCrudPage({ config }) {
       const response = await axios.get(config.api.downloadTemplate);
       const template = response.data;
 
-      // 生成随机值的函数
-      const generateRandomValue = (type) => {
-        const typeStr = type.toLowerCase();
-
-        if (typeStr.includes('integer') || typeStr.includes('bigint') || typeStr.includes('smallint') || typeStr.includes('serial')) {
-          return Math.floor(Math.random() * 1000);
-        }
-
-        if (typeStr.includes('numeric') || typeStr.includes('decimal') || typeStr.includes('real') || typeStr.includes('double')) {
-          return (Math.random() * 1000).toFixed(2);
-        }
-
-        if (typeStr.includes('date')) {
-          const date = new Date();
-          date.setDate(date.getDate() + Math.floor(Math.random() * 30));
-          return date.toISOString().split('T')[0];
-        }
-
-        if (typeStr.includes('timestamp') || typeStr.includes('time')) {
-          const date = new Date();
-          date.setDate(date.getDate() + Math.floor(Math.random() * 30));
-          return date.toISOString().replace('T', ' ').split('.')[0];
-        }
-
-        if (typeStr.includes('boolean')) {
-          return Math.random() > 0.5 ? '是' : '否';
-        }
-
-        if (typeStr.includes('json') || typeStr.includes('jsonb')) {
-          return '{}';
-        }
-
-        if (typeStr.includes('uuid')) {
-          return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-            const r = Math.random() * 16 | 0;
-            const v = c === 'x' ? r : (r & 0x3 | 0x8);
-            return v.toString(16);
-          });
-        }
-
-        // 默认：字符串类型生成随机中文字符串
-        const chineseChars = '示例数据测试内容样本信息';
-        let result = '';
-        for (let i = 0; i < 4; i++) {
-          result += chineseChars.charAt(Math.floor(Math.random() * chineseChars.length));
-        }
-        return result;
-      };
-
       // 使用 ExcelJS 创建 Excel 文件
       const workbook = new ExcelJS.Workbook();
       const worksheet = workbook.addWorksheet('数据');
@@ -295,15 +246,6 @@ export function DynamicCrudPage({ config }) {
 
       // 添加第二行：中文注释
       const commentRow = worksheet.addRow(template.fields.map(f => f.comment));
-
-      // 添加第三行：示例数据（斜体灰色）
-      const exampleRow = worksheet.addRow(template.fields.map(f => generateRandomValue(f.type)));
-      exampleRow.eachCell((cell) => {
-        cell.font = {
-          italic: true,
-          color: { argb: 'FF999999' }, // 灰色
-        };
-      });
 
       // 设置列宽
       template.fields.forEach((field, index) => {
