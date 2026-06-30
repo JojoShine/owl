@@ -51,8 +51,8 @@ export function DynamicCrudPage({ config }) {
   const [importProgress, setImportProgress] = useState(0);
   const fileInputRef = useRef(null);
 
-  // 获取资源名称（从config中提取）
-  const resource = config.resource || config.moduleName?.toLowerCase();
+  // 获取资源名称（modulePath 与数据库 permission_prefix 一致，格式如 test-products）
+  const resource = config.modulePath;
 
   // 检查权限
   const canCreate = resource && checkCreate(resource);

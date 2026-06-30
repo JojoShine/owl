@@ -183,7 +183,7 @@ function getFormatType(dbType, fieldName = '') {
  * @returns {Boolean} 是否应该被排除
  */
 function isSystemField(fieldName) {
-  const systemFields = ['id', 'created_at', 'updated_at', 'deleted_at', 'created_by', 'updated_by'];
+  const systemFields = ['id', 'created_at', 'updated_at', 'deleted_at', 'created_by', 'updated_by', 'deleted_by'];
   return systemFields.includes(fieldName.toLowerCase());
 }
 
@@ -193,7 +193,7 @@ function isSystemField(fieldName) {
  * @returns {Boolean} 是否为只读字段
  */
 function isReadonlyField(fieldName) {
-  const readonlyFields = ['id', 'created_at', 'updated_at', 'created_by', 'updated_by'];
+  const readonlyFields = ['id', 'created_at', 'updated_at', 'deleted_at', 'created_by', 'updated_by', 'deleted_by'];
   return readonlyFields.includes(fieldName.toLowerCase());
 }
 

@@ -16,18 +16,20 @@ if [ ! -d ".next/standalone" ]; then
     exit 1
 fi
 
-# 动态获取项目目录名（兼容不同的项目路径）
-# 从 .next/standalone/projects/ 下获取实际的项目文件夹名
-PROJECT_DIR=$(find .next/standalone/projects -maxdepth 1 -type d | grep -v "^.next/standalone/projects$" | head -1)
+# 定位 server.js（standalone 入口）
+# Next.js 16+ Turbopack: .next/standalone/server.js
+# Next.js 15 及更早: .next/standalone/projects/<path>/server.js
+SERVER_JS=$(find .next/standalone -name "server.js" -not -path "*/node_modules/*" 2>/dev/null | head -1)
 
-if [ -z "$PROJECT_DIR" ]; then
-    echo "错误: 无法找到构建的项目目录"
+if [ -z "$SERVER_JS" ]; then
+    echo "错误: 无法在 .next/standalone 中找到 server.js"
     exit 1
 fi
 
-# 获取项目文件夹的实际名称（用于调试）
-PROJECT_NAME=$(basename "$PROJECT_DIR")
-echo "   检测到项目目录: $PROJECT_NAME"
+# STANDALONE_DIR = server.js 所在目录
+STANDALONE_DIR=$(dirname "$SERVER_JS")
+echo "   找到 server.js: $SERVER_JS"
+echo "   standalone 目录: $STANDALONE_DIR"
 
 # 清理旧的部署文件
 echo "1. 清理旧文件..."
@@ -40,8 +42,11 @@ mkdir -p deploy/dist
 
 # 复制 standalone 代码（这是 Node.js 服务器的核心代码）
 echo "3. 复制 standalone 服务器代码..."
-cp -r "$PROJECT_DIR/frontend"/* deploy/dist/
-cp -r "$PROJECT_DIR/frontend/.next" deploy/dist/
+cp -r "$STANDALONE_DIR"/* deploy/dist/
+# 复制 .next 目录（如果存在）
+if [ -d "$STANDALONE_DIR/.next" ]; then
+    cp -r "$STANDALONE_DIR/.next" deploy/dist/
+fi
 
 # 关键步骤：复制静态资源到 standalone 的 .next 目录
 echo "4. 复制静态资源（关键步骤）..."

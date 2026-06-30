@@ -19,7 +19,6 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { DatePicker } from '@/components/ui/date-picker';
 import { DateTimePicker } from '@/components/ui/date-time-picker';
 import { Separator } from '@/components/ui/separator';
 import {
@@ -50,16 +49,22 @@ export function DynamicForm({
   // 只显示在表单中的字段
   const formFields = fields.filter((f) => f.showInForm);
 
+  // 检测字段值是否看起来像日期字符串
+  const isDateTimeString = (value) => {
+    if (!value || typeof value !== 'string') return false;
+    return (
+      value.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/) ||
+      value.match(/^\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}/)
+    );
+  };
+
   // 生成验证规则
   const generateValidationSchema = () => {
     const schema = {};
 
     formFields.forEach((field) => {
-      // 支持 rules 和 formRules 两种命名
       const rules = field.rules || field.formRules || {};
       let fieldSchema;
-
-      // 根据字段类型创建基础schema
       const fieldLabel = field.formLabel || field.label;
 
       switch (field.type) {
@@ -76,79 +81,81 @@ export function DynamicForm({
               fieldSchema = fieldSchema.max(rules.max, `${fieldLabel}不能大于${rules.max}`);
             }
           } else {
-            // 可选数字字段：接受 number | undefined | null
-            fieldSchema = z.preprocess(
-              (val) => (val === '' || val === null || val === undefined || isNaN(val) ? undefined : Number(val)),
-              z.number({
-                invalid_type_error: `${fieldLabel}必须是数字`,
-              }).optional()
-            );
+            let numInner = z.number({
+              invalid_type_error: `${fieldLabel}必须是数字`,
+            }).optional();
             if (rules.min !== undefined) {
-              fieldSchema = z.preprocess(
-                (val) => (val === '' || val === null || val === undefined || isNaN(val) ? undefined : Number(val)),
-                z.number().min(rules.min, `${fieldLabel}不能小于${rules.min}`).optional()
-              );
+              numInner = numInner.min(rules.min, `${fieldLabel}不能小于${rules.min}`);
             }
             if (rules.max !== undefined) {
-              fieldSchema = z.preprocess(
-                (val) => (val === '' || val === null || val === undefined || isNaN(val) ? undefined : Number(val)),
-                z.number().max(rules.max, `${fieldLabel}不能大于${rules.max}`).optional()
-              );
+              numInner = numInner.max(rules.max, `${fieldLabel}不能大于${rules.max}`);
             }
+            fieldSchema = z.preprocess(
+              (val) => (val === '' || val === null || val === undefined || isNaN(val) ? undefined : Number(val)),
+              numInner
+            );
           }
           break;
 
         case 'boolean':
-          fieldSchema = z.boolean();
+          fieldSchema = z.preprocess(
+            (val) => {
+              if (val === 'TRUE' || val === 'true' || val === true) return true;
+              if (val === 'FALSE' || val === 'false' || val === false) return false;
+              return val;
+            },
+            z.boolean({ invalid_type_error: `${fieldLabel}格式不正确` })
+          );
           break;
 
-        case 'date':
+        case 'date': {
+          let dateInner = z.string({ invalid_type_error: `${fieldLabel}格式不正确` });
           if (rules.required) {
-            fieldSchema = z.string().min(1, `${fieldLabel}不能为空`);
+            dateInner = dateInner.min(1, `${fieldLabel}不能为空`);
           } else {
-            fieldSchema = z.string().optional().or(z.literal(''));
+            dateInner = dateInner.optional().or(z.literal(''));
           }
+          fieldSchema = z.preprocess(
+            (val) => (val === undefined || val === null ? '' : String(val)),
+            dateInner
+          );
           break;
+        }
 
-        default:
-          fieldSchema = z.string();
+        default: {
+          let strInner = z.string({ invalid_type_error: `${fieldLabel}不能为空` });
 
-          // 处理必填
           if (rules.required) {
-            fieldSchema = fieldSchema.min(1, `${fieldLabel}不能为空`);
+            strInner = strInner.min(1, `${fieldLabel}不能为空`);
           }
-
-          // 最小长度
           if (rules.minLength !== undefined) {
-            fieldSchema = fieldSchema.min(rules.minLength, `${fieldLabel}至少${rules.minLength}个字符`);
+            strInner = strInner.min(rules.minLength, `${fieldLabel}至少${rules.minLength}个字符`);
           }
-          // 最大长度
           if (rules.maxLength !== undefined) {
-            fieldSchema = fieldSchema.max(rules.maxLength, `${fieldLabel}最多${rules.maxLength}个字符`);
+            strInner = strInner.max(rules.maxLength, `${fieldLabel}最多${rules.maxLength}个字符`);
           }
-          // 精确长度
           if (rules.exactLength !== undefined) {
-            fieldSchema = fieldSchema.length(rules.exactLength, `${fieldLabel}必须是${rules.exactLength}个字符`);
+            strInner = strInner.length(rules.exactLength, `${fieldLabel}必须是${rules.exactLength}个字符`);
           }
-          // 正则表达式
           if (rules.pattern) {
-            fieldSchema = fieldSchema.regex(
+            strInner = strInner.regex(
               new RegExp(rules.pattern),
               `${fieldLabel}格式不正确`
             );
           }
-          // 邮箱格式
           if (rules.email) {
-            fieldSchema = z.string().email(`${fieldLabel}格式不正确`);
+            strInner = strInner.email(`${fieldLabel}格式不正确`);
           }
-
-          // 处理字符串的可选
           if (!rules.required) {
-            fieldSchema = fieldSchema.optional().or(z.literal(''));
+            strInner = strInner.optional().or(z.literal(''));
           }
-      }
 
-      // 注意：数字类型的 required 已在上面处理，这里不再处理
+          fieldSchema = z.preprocess(
+            (val) => (val === undefined || val === null ? '' : String(val)),
+            strInner
+          );
+        }
+      }
 
       schema[field.name] = fieldSchema;
     });
@@ -163,17 +170,9 @@ export function DynamicForm({
     const defaults = {};
     formFields.forEach((field) => {
       if ((isEdit || isView) && data && data[field.name] !== undefined) {
-        // 对于日期字段，转换为 datetime-local 格式
-        if (field.type === 'date' && data[field.name]) {
+        if ((field.type === 'date' || field.type === 'datetime') && data[field.name]) {
           defaults[field.name] = toDateTimeLocalString(data[field.name]);
-        } else if (
-          // 自动检测 ISO 日期字符串，即使字段类型不是 'date'
-          data[field.name] &&
-          typeof data[field.name] === 'string' &&
-          (data[field.name].match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/) ||
-            data[field.name].match(/^\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}/))
-        ) {
-          // 这看起来像一个日期字符串，转换为 datetime-local 格式
+        } else if (isDateTimeString(data[field.name])) {
           defaults[field.name] = toDateTimeLocalString(data[field.name]);
         } else {
           defaults[field.name] = data[field.name];
@@ -214,14 +213,16 @@ export function DynamicForm({
     }
   }, [open, data]);
 
-  // 检测字段值是否看起来像日期字符串
-  const isDateTimeString = (value) => {
-    if (!value || typeof value !== 'string') return false;
-    return (
-      value.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/) ||  // ISO 格式
-      value.match(/^\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}/)     // PostgreSQL 时间戳格式
-    );
-  };
+  // 为非标准控件（Select/Switch/DateTimePicker）注册字段，确保 RHF 追踪其值
+  useEffect(() => {
+    const defaults = generateDefaultValues();
+    formFields.forEach((field) => {
+      const comp = field.formComponent;
+      if (comp === 'select' || comp === 'switch' || comp === 'date' || comp === 'datetime') {
+        register(field.name, { defaultValue: defaults[field.name] });
+      }
+    });
+  }, [formFields, register, data, isEdit]);
 
   // 格式化显示值（用于查看模式）
   const formatDisplayValue = (field, value) => {
@@ -247,8 +248,8 @@ export function DynamicForm({
       return option?.label || value;
     }
 
-    // 日期时间字段
-    if (field.type === 'date' || isDateTimeString(value)) {
+    // 日期时间字段（date 和 datetime 类型都需要格式化）
+    if (field.type === 'date' || field.type === 'datetime' || isDateTimeString(value)) {
       return formatDateTime(value);
     }
 
@@ -384,13 +385,6 @@ export function DynamicForm({
             <DateTimePicker
               value={fieldValue}
               onChange={(e) => {
-                const event = {
-                  target: {
-                    name: field.name,
-                    value: e.target.value,
-                  },
-                };
-                // 手动触发 react-hook-form 的更新
                 setValue(field.name, e.target.value);
                 trigger(field.name);
               }}
@@ -437,7 +431,7 @@ export function DynamicForm({
         }
 
         // 处理日期字段：将 datetime-local 格式转换为 Date 对象或 ISO 字符串
-        if (value && (field.type === 'date' || isDateTimeString(value))) {
+        if (value && (field.type === 'date' || field.type === 'datetime' || isDateTimeString(value))) {
           // 从 datetime-local 格式转换为 Date 对象，然后转换为 ISO 字符串
           const dateObj = fromDateTimeLocalString(value);
           if (dateObj) {
@@ -458,7 +452,7 @@ export function DynamicForm({
       <DialogContent className={formFields.length > 10 ? "max-w-4xl max-h-[90vh] flex flex-col p-0" : "max-w-3xl max-h-[90vh] flex flex-col p-0"}>
         <DialogHeader className="flex-shrink-0 px-6 pt-6 pb-4">
           <DialogTitle>{title || (isView ? '查看' : isEdit ? '编辑' : '新增')}</DialogTitle>
-          {description && <DialogDescription>{description}</DialogDescription>}
+          <DialogDescription>{description || ' '}</DialogDescription>
         </DialogHeader>
 
         <Separator />

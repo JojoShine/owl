@@ -720,7 +720,7 @@ class CodeGeneratorService {
     if (tableSchema && tableSchema.length > 0) {
       // 使用实际的数据库表结构
       allFields = tableSchema
-        .filter(col => !['created_at', 'updated_at', 'deleted_at'].includes(col.column_name)) // 排除时间戳字段
+        .filter(col => !['id', 'created_at', 'updated_at', 'deleted_at', 'created_by', 'updated_by', 'deleted_by'].includes(col.column_name)) // 排除主键和审计字段
         .map(col => ({
           name: col.column_name,
           type: this._mapPostgresToSequelize(col),

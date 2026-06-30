@@ -47,12 +47,16 @@ function LoginForm() {
   const {
     register,
     handleSubmit,
-    formState: { errors, isValid },
+    formState: { errors },
     setValue,
+    watch,
   } = useForm({
     resolver: zodResolver(loginSchema),
-    mode: 'onChange', // 实时验证，让按钮状态及时更新
+    mode: 'onChange',
   });
+
+  const watchedUsername = watch('username');
+  const watchedPassword = watch('password');
 
   // 获取系统状态和配置
   useEffect(() => {
@@ -145,7 +149,7 @@ function LoginForm() {
   const isSplitLayout = loginLayout === 'left-image' || loginLayout === 'right-image';
 
   const loginCard = (
-    <Card className={`w-full max-w-md ${loginBgUrl && loginLayout === 'center' ? 'bg-opacity-90' : ''} ${isSplitLayout ? 'border-0 shadow-none' : ''}`}>
+    <Card className={`w-full max-w-md bg-[#fafafa] dark:bg-[#1a1a1a] border-0 shadow-none ${loginBgUrl && loginLayout === 'center' ? 'bg-opacity-90' : ''} ${isSplitLayout ? 'border-0 shadow-none' : ''}`}>
       <CardHeader className="space-y-4">
         <div className="flex justify-center">
           <img
@@ -246,9 +250,9 @@ function LoginForm() {
                 <Button
                   type="submit"
                   className="w-full"
-                  disabled={isLoading || !captchaId || !isValid}
+                  disabled={isLoading || !watchedUsername || !watchedPassword}
                 >
-                  {isLoading ? '登录中...' : !captchaId ? '加载中...' : '登录'}
+                  {isLoading ? '登录中...' : '登录'}
                 </Button>
               </form>
               {registrationEnabled && (

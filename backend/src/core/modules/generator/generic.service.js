@@ -413,6 +413,11 @@ class GenericService {
     return items;
   }
 
+  // 审计字段列表（下载模板和导入时需排除）
+  static get AUDIT_FIELDS() {
+    return ['id', 'created_at', 'updated_at', 'deleted_at', 'created_by', 'updated_by', 'deleted_by'];
+  }
+
   /**
    * 下载导入模板
    * @param {Object} moduleConfig - 模块配置
@@ -423,11 +428,13 @@ class GenericService {
       throw ApiError.forbidden('此模块不允许导入操作');
     }
 
-    // 返回字段信息用于前端生成模板
+    const auditFields = GenericService.AUDIT_FIELDS;
+
+    // 返回字段信息用于前端生成模板（排除主键和审计字段）
     return {
       tableName: moduleConfig.table_name,
       fields: moduleConfig.fields
-        .filter(f => f.show_in_form && f.field_name !== 'id')
+        .filter(f => f.show_in_form && !auditFields.includes(f.field_name))
         .map(f => ({
           name: f.field_name,
           comment: f.field_comment,
@@ -456,9 +463,10 @@ class GenericService {
     rows.forEach((row, index) => {
       const rowNum = index + 3; // Excel行号（第一行是字段名，第二行是注释，从第三行开始是实际数据）
 
-      // 检查必填字段
+      // 检查必填字段（排除审计字段）
+      const auditFields = GenericService.AUDIT_FIELDS;
       moduleConfig.fields
-        .filter(f => f.is_required && f.show_in_form)
+        .filter(f => f.is_required && f.show_in_form && !auditFields.includes(f.field_name))
         .forEach((field, fieldIndex) => {
           if (!row[field.field_name]) {
             errors.push({
@@ -471,9 +479,9 @@ class GenericService {
           }
         });
 
-      // 检查字段值规则（长度、格式、范围等）- 逐字段校验
+      // 检查字段值规则（长度、格式、范围等）- 逐字段校验（排除审计字段）
       moduleConfig.fields
-        .filter(f => f.show_in_form)
+        .filter(f => f.show_in_form && !auditFields.includes(f.field_name))
         .forEach((field, fieldIndex) => {
           const fieldName = field.field_name;
           const value = row[fieldName];
@@ -581,8 +589,9 @@ class GenericService {
     // 批量插入成功的数据
     let successCount = 0;
     if (successRows.length > 0) {
-      // 保留完整的字段配置，便于错误时获取字段注释
-      const fieldConfigs = moduleConfig.fields.filter(f => f.show_in_form && f.field_name !== 'id');
+      // 保留完整的字段配置，便于错误时获取字段注释（排除主键和审计字段）
+      const auditFields = GenericService.AUDIT_FIELDS;
+      const fieldConfigs = moduleConfig.fields.filter(f => f.show_in_form && !auditFields.includes(f.field_name));
       const fields = fieldConfigs.map(f => f.field_name);
 
       const safeTableNameImport = this._escapeIdentifier(tableName);
@@ -852,7 +861,8 @@ class GenericService {
    * @param {Object} data - 数据
    */
   _validateRequiredFields(moduleConfig, data) {
-    const requiredFields = moduleConfig.fields.filter(f => f.is_required && f.show_in_form);
+    const auditFields = GenericService.AUDIT_FIELDS;
+    const requiredFields = moduleConfig.fields.filter(f => f.is_required && f.show_in_form && !auditFields.includes(f.field_name));
 
     requiredFields.forEach(field => {
       const fieldName = field.field_name;
@@ -871,7 +881,8 @@ class GenericService {
    * @param {Boolean} isUpdate - 是否是更新操作（更新时只校验提供的字段）
    */
   _validateFieldValues(moduleConfig, data, isUpdate = false) {
-    const fields = moduleConfig.fields.filter(f => f.show_in_form);
+    const auditFields = GenericService.AUDIT_FIELDS;
+    const fields = moduleConfig.fields.filter(f => f.show_in_form && !auditFields.includes(f.field_name));
 
     fields.forEach(field => {
       const fieldName = field.field_name;
