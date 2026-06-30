@@ -65,7 +65,7 @@ export function DataTable({
   return (
     <div className="space-y-4">
       {/* 表格 */}
-      <div className="border rounded-lg overflow-hidden">
+      <div className="rounded-lg overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>
@@ -96,8 +96,8 @@ export function DataTable({
                 </TableCell>
               </TableRow>
             ) : (
-              data.map((row) => (
-                <TableRow key={row[rowKey]}>
+              data.map((row, index) => (
+                <TableRow key={row[rowKey] || index}>
                   {columns.map((column) => (
                     <TableCell
                       key={column.key}

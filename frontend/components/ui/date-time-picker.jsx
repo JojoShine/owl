@@ -267,7 +267,7 @@ export function DateTimePicker({
           <span>{displayValue}</span>
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align="center">
+      <PopoverContent className="w-auto p-0 bg-white dark:bg-popover" align="center">
         <div className="p-3">
           <Calendar
             mode="single"

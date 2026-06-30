@@ -65,7 +65,7 @@ export function DatePicker({ value, onChange, placeholder = '选择日期', clas
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-3" align="start">
+      <PopoverContent className="w-auto p-3 bg-white dark:bg-popover" align="start">
         <Calendar
           mode="single"
           selected={dateValue}

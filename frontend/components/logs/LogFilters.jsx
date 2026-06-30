@@ -1,15 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
-import { DatePicker } from '@/components/ui/date-picker';
-import { SearchIcon, XIcon } from 'lucide-react';
+import { SearchFilter } from '@/components/common/SearchFilter';
 
 export default function LogFilters({ type, filters, onChange }) {
   const [localFilters, setLocalFilters] = useState(filters);
@@ -18,13 +8,6 @@ export default function LogFilters({ type, filters, onChange }) {
   useEffect(() => {
     setLocalFilters(filters);
   }, [filters]);
-
-  /**
-   * 处理输入变化
-   */
-  const handleChange = (key, value) => {
-    setLocalFilters({ ...localFilters, [key]: value });
-  };
 
   /**
    * 应用筛选
@@ -58,11 +41,13 @@ export default function LogFilters({ type, filters, onChange }) {
     const common = [
       {
         key: 'startDate',
+        name: 'startDate',
         label: '开始日期',
         type: 'date',
       },
       {
         key: 'endDate',
+        name: 'endDate',
         label: '结束日期',
         type: 'date',
       },
@@ -72,12 +57,14 @@ export default function LogFilters({ type, filters, onChange }) {
       operation: [
         {
           key: 'userId',
+          name: 'userId',
           label: '用户ID',
           type: 'text',
           placeholder: '输入用户ID',
         },
         {
           key: 'method',
+          name: 'method',
           label: 'HTTP方法',
           type: 'select',
           options: [
@@ -90,6 +77,7 @@ export default function LogFilters({ type, filters, onChange }) {
         },
         {
           key: 'url',
+          name: 'url',
           label: 'URL',
           type: 'text',
           placeholder: '输入URL关键词',
@@ -98,12 +86,14 @@ export default function LogFilters({ type, filters, onChange }) {
       login: [
         {
           key: 'username',
+          name: 'username',
           label: '用户名',
           type: 'text',
           placeholder: '输入用户名',
         },
         {
           key: 'action',
+          name: 'action',
           label: '操作',
           type: 'select',
           options: [
@@ -114,6 +104,7 @@ export default function LogFilters({ type, filters, onChange }) {
         },
         {
           key: 'status',
+          name: 'status',
           label: '状态',
           type: 'select',
           options: [
@@ -127,6 +118,7 @@ export default function LogFilters({ type, filters, onChange }) {
       access: [
         {
           key: 'method',
+          name: 'method',
           label: 'HTTP方法',
           type: 'select',
           options: [
@@ -139,6 +131,7 @@ export default function LogFilters({ type, filters, onChange }) {
         },
         {
           key: 'url',
+          name: 'url',
           label: 'URL',
           type: 'text',
           placeholder: '输入URL关键词',
@@ -148,6 +141,7 @@ export default function LogFilters({ type, filters, onChange }) {
       database: [
         {
           key: 'dbType',
+          name: 'dbType',
           label: '数据库类型',
           type: 'select',
           options: [
@@ -158,6 +152,7 @@ export default function LogFilters({ type, filters, onChange }) {
         },
         {
           key: 'action',
+          name: 'action',
           label: '操作类型',
           type: 'select',
           options: [
@@ -177,58 +172,12 @@ export default function LogFilters({ type, filters, onChange }) {
   const fields = getFilterFields();
 
   return (
-    <div className="bg-card border rounded-lg p-4">
-      <div className="flex flex-wrap items-end gap-4">
-        {fields.map((field) => (
-          <div key={field.key} className={field.type === 'select' ? 'flex-shrink-0' : 'flex-1 min-w-[180px]'}>
-            <label className="text-sm font-medium text-foreground mb-1.5 block">
-              {field.label}
-            </label>
-            {field.type === 'text' ? (
-              <Input
-                type="text"
-                placeholder={field.placeholder || ''}
-                value={localFilters[field.key] || ''}
-                onChange={(e) => handleChange(field.key, e.target.value)}
-              />
-            ) : field.type === 'date' ? (
-              <DatePicker
-                placeholder={field.placeholder || field.label}
-                value={localFilters[field.key] || ''}
-                onChange={(e) => handleChange(field.key, e.target.value)}
-              />
-            ) : field.type === 'select' ? (
-              <Select
-                value={localFilters[field.key] || 'all'}
-                onValueChange={(value) => handleChange(field.key, value === 'all' ? '' : value)}
-              >
-                <SelectTrigger className="w-auto min-w-[140px]">
-                  <SelectValue placeholder={`选择${field.label}`} />
-                </SelectTrigger>
-                <SelectContent>
-                  {field.options.map((option) => (
-                    <SelectItem key={option.value || 'all'} value={option.value || 'all'}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            ) : null}
-          </div>
-        ))}
-
-        {/* 操作按钮 */}
-        <div className="flex-shrink-0 flex gap-2">
-          <Button onClick={handleApply} size="lg">
-            <SearchIcon className="w-4 h-4 mr-2" />
-            查询
-          </Button>
-          <Button onClick={handleReset} variant="outline" size="lg">
-            <XIcon className="w-4 h-4 mr-2" />
-            重置
-          </Button>
-        </div>
-      </div>
-    </div>
+    <SearchFilter
+      fields={fields}
+      values={localFilters}
+      onChange={setLocalFilters}
+      onSearch={handleApply}
+      onReset={handleReset}
+    />
   );
 }

@@ -163,7 +163,7 @@ export function DynamicTable({
 
   if (loading) {
     return (
-      <div className="border rounded-lg overflow-hidden">
+      <div className="rounded-lg overflow-hidden">
         <Table>
           <TableBody>
             <TableLoading colSpan={listFields.length + (features.batchDelete ? 1 : 0) + 1} />
@@ -175,14 +175,14 @@ export function DynamicTable({
 
   if (data.length === 0) {
     return (
-      <div className="border rounded-lg p-8">
+      <div className="rounded-lg p-8">
         <div className="text-center text-muted-foreground">暂无数据</div>
       </div>
     );
   }
 
   return (
-    <div className="border rounded-lg">
+    <div className="rounded-lg">
       <Table>
         <TableHeader>
           <TableRow>

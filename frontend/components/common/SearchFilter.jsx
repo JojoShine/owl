@@ -51,15 +51,18 @@ function SearchField({ field, value, onChange }) {
       return (
         <div className="flex-shrink-0">
           {renderLabel()}
-          <Select value={value || ''} onValueChange={handleChange}>
+          <Select
+            value={value || 'all'}
+            onValueChange={(val) => handleChange(val === 'all' ? '' : val)}
+          >
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder={placeholder || '请选择'} />
             </SelectTrigger>
             <SelectContent>
               {options.map((option) => (
                 <SelectItem
-                  key={option.value}
-                  value={String(option.value)}
+                  key={option.value || 'all'}
+                  value={option.value || 'all'}
                 >
                   {option.label}
                 </SelectItem>
@@ -89,8 +92,8 @@ function SearchField({ field, value, onChange }) {
         <div className="flex-shrink-0">
           {renderLabel()}
           <DatePicker
-            date={value}
-            onDateChange={handleChange}
+            value={value}
+            onChange={(e) => handleChange(e.target.value)}
             placeholder={placeholder || '选择日期'}
           />
         </div>
@@ -102,14 +105,14 @@ function SearchField({ field, value, onChange }) {
           {renderLabel()}
           <div className="flex gap-2 items-center">
             <DatePicker
-              date={value?.start}
-              onDateChange={(date) => handleChange({ ...value, start: date })}
+              value={value?.start}
+              onChange={(e) => handleChange({ ...value, start: e.target.value })}
               placeholder="开始日期"
             />
             <span className="text-muted-foreground">-</span>
             <DatePicker
-              date={value?.end}
-              onDateChange={(date) => handleChange({ ...value, end: date })}
+              value={value?.end}
+              onChange={(e) => handleChange({ ...value, end: e.target.value })}
               placeholder="结束日期"
             />
           </div>
@@ -172,7 +175,7 @@ export function SearchFilter({
   };
 
   return (
-    <div className="bg-card border rounded-lg p-4" onKeyDown={handleKeyDown}>
+    <div className="bg-card rounded-lg" onKeyDown={handleKeyDown}>
       <div className="flex flex-wrap items-end gap-2">
         {/* 渲染所有搜索字段 */}
         {fields.map((field) => (

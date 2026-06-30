@@ -27,10 +27,6 @@ app.use(cors({
   credentials: true,
 }));
 
-// 静态文件服务
-const path = require('path');
-app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

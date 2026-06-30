@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { toast } from 'sonner';
 import { getStorageKey } from './storage-key';
+import { getPath } from './api-url';
 
 // GET 请求缓存（30秒）
 const requestCache = new Map();
@@ -15,7 +16,7 @@ const isCacheValid = (timestamp) => {
 };
 
 const axiosInstance = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/system',
+  baseURL: `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api'}/system`,
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -62,9 +63,9 @@ axiosInstance.interceptors.response.use(
             localStorage.removeItem(getStorageKey('user'));
             // 显示提示信息
             toast.error(data?.message || '登录已过期，请重新登录');
-            // 直接跳转到登录页
+            // 直接跳转到登录页（使用环境变量拼接 basePath）
             setTimeout(() => {
-              window.location.href = '/login';
+              window.location.href = `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/login`;
             }, 500);
           }
           break;

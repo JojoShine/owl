@@ -129,9 +129,13 @@ export default function NotificationIcon() {
       }
     }
 
-    // 如果有链接，跳转
+    // 如果有链接，跳转（内部路径自动拼接 basePath）
     if (notification.link) {
-      window.location.href = notification.link;
+      const link = notification.link;
+      const isInternal = link.startsWith('/') && !link.startsWith('//');
+      window.location.href = isInternal
+        ? `${process.env.NEXT_PUBLIC_BASE_PATH || ''}${link}`
+        : link;
     }
 
     setIsOpen(false);

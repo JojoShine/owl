@@ -312,7 +312,7 @@ export default function FilesPage() {
       {/* 页面标题 */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">文件管理</h1>
+          <h1 className="text-2xl font-bold">文件管理</h1>
           <p className="text-muted-foreground mt-2">
             管理您的文件和文件夹
           </p>

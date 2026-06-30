@@ -389,7 +389,7 @@ class GenericService {
 
     // 验证数据
     rows.forEach((row, index) => {
-      const rowNum = index + 4; // Excel行号（第一行是字段名，第二行是注释，第三行是示例，从第四行开始是实际数据）
+      const rowNum = index + 3; // Excel行号（第一行是字段名，第二行是注释，从第三行开始是实际数据）
 
       // 检查必填字段
       moduleConfig.fields
@@ -403,6 +403,106 @@ class GenericService {
               columnNum: fieldIndex + 1,
               message: `${field.field_comment || field.field_name}不能为空`,
             });
+          }
+        });
+
+      // 检查字段值规则（长度、格式、范围等）- 逐字段校验
+      moduleConfig.fields
+        .filter(f => f.show_in_form)
+        .forEach((field, fieldIndex) => {
+          const fieldName = field.field_name;
+          const value = row[fieldName];
+          const rules = field.form_rules;
+
+          // 如果没有规则或值为空，跳过
+          if (!rules || Object.keys(rules).length === 0) return;
+          if (value === null || value === '' || value === undefined) return;
+
+          const fieldLabel = field.field_comment || fieldName;
+
+          // 长度校验
+          if (rules.length && String(value).length !== rules.length) {
+            errors.push({
+              row: rowNum,
+              field: fieldName,
+              fieldLabel,
+              columnNum: fieldIndex + 1,
+              message: `${fieldLabel}长度必须为${rules.length}位`,
+            });
+            return;
+          }
+          if (rules.minLength && String(value).length < rules.minLength) {
+            errors.push({
+              row: rowNum,
+              field: fieldName,
+              fieldLabel,
+              columnNum: fieldIndex + 1,
+              message: `${fieldLabel}长度不能少于${rules.minLength}位`,
+            });
+            return;
+          }
+          if (rules.maxLength && String(value).length > rules.maxLength) {
+            errors.push({
+              row: rowNum,
+              field: fieldName,
+              fieldLabel,
+              columnNum: fieldIndex + 1,
+              message: `${fieldLabel}长度不能超过${rules.maxLength}位`,
+            });
+            return;
+          }
+
+          // 正则格式校验
+          if (rules.pattern) {
+            const regex = new RegExp(rules.pattern);
+            if (!regex.test(value)) {
+              errors.push({
+                row: rowNum,
+                field: fieldName,
+                fieldLabel,
+                columnNum: fieldIndex + 1,
+                message: `${fieldLabel}格式不正确`,
+              });
+              return;
+            }
+          }
+
+          // 数值范围校验
+          if (typeof value === 'number') {
+            if (rules.min !== undefined && value < rules.min) {
+              errors.push({
+                row: rowNum,
+                field: fieldName,
+                fieldLabel,
+                columnNum: fieldIndex + 1,
+                message: `${fieldLabel}不能小于${rules.min}`,
+              });
+              return;
+            }
+            if (rules.max !== undefined && value > rules.max) {
+              errors.push({
+                row: rowNum,
+                field: fieldName,
+                fieldLabel,
+                columnNum: fieldIndex + 1,
+                message: `${fieldLabel}不能大于${rules.max}`,
+              });
+              return;
+            }
+          }
+
+          // 枚举校验
+          if (rules.enum && Array.isArray(rules.enum)) {
+            if (!rules.enum.includes(value)) {
+              errors.push({
+                row: rowNum,
+                field: fieldName,
+                fieldLabel,
+                columnNum: fieldIndex + 1,
+                message: `${fieldLabel}值不在允许范围内`,
+              });
+              return;
+            }
           }
         });
 
@@ -756,13 +856,16 @@ class GenericService {
 
     // 尝试解析多种格式
     let date = null;
+    let hasTime = false; // 是否包含时间部分
 
     // 格式1: 中划线格式 2024-06-29 或 2024-06-29 10:30:00
     if (/^\d{4}-\d{2}-\d{2}/.test(str)) {
+      hasTime = /\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}/.test(str);
       date = new Date(str);
     }
     // 格式2: 斜杠格式 2024/06/29 或 2024/06/29 10:30:00
     else if (/^\d{4}\/\d{2}\/\d{2}/.test(str)) {
+      hasTime = /\d{4}\/\d{2}\/\d{2}\s+\d{2}:\d{2}/.test(str);
       date = new Date(str.replace(/\//g, '-'));
     }
     // 格式3: 纯数字格式 20240629 (YYYYMMDD)
@@ -771,10 +874,19 @@ class GenericService {
       const month = str.substring(4, 6);
       const day = str.substring(6, 8);
       date = new Date(`${year}-${month}-${day}`);
+      hasTime = false;
     }
 
     // 验证日期是否有效
     if (date && !isNaN(date.getTime())) {
+      // 如果只有日期没有时间，返回 YYYY-MM-DD 格式（避免时区问题）
+      if (!hasTime) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      }
+      // 如果有时间部分，返回完整的 ISO 时间戳
       return date.toISOString();
     }
 

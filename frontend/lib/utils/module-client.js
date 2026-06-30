@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { toast } from 'sonner';
 import { getStorageKey } from './storage-key';
+import { getPath } from './api-url';
 
 const axiosInstance = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL ?
@@ -52,7 +53,7 @@ axiosInstance.interceptors.response.use(
             localStorage.removeItem(getStorageKey('user'));
             toast.error(data?.message || '登录已过期，请重新登录');
             setTimeout(() => {
-              window.location.href = '/login';
+              window.location.href = `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/login`;
             }, 500);
           }
           break;

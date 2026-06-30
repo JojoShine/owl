@@ -5,6 +5,9 @@
 // 辅助函数
 export * from './helpers';
 
+// 认证相关
+export * from './auth.schema';
+
 // 用户相关
 export * from './user.schema';
 

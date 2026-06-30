@@ -4,31 +4,16 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiBuilderApi } from '@/lib/api';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Search, Edit, Trash2, X, Key, FileText, Play } from 'lucide-react';
+import { Plus, Edit, Trash2, Key, Play } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Pagination } from '@/components/ui/pagination';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import ApiKeysDialog from '@/components/api-builder/api-keys-dialog';
 import TestInterfaceDialog from '@/components/api-builder/test-interface-dialog';
 import { getFullApiUrl } from '@/lib/utils/api-url';
+import { SearchFilter } from '@/components/common/SearchFilter';
+import { DataTable } from '@/components/common/DataTable';
 
 // 格式化日期的辅助函数
 const formatDate = (dateString) => {
@@ -44,8 +29,7 @@ export default function ApiBuilderPage() {
   const router = useRouter();
   const [interfaces, setInterfaces] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [status, setStatus] = useState('');
+  const [searchValues, setSearchValues] = useState({});
   const [pagination, setPagination] = useState({ page: 1, pageSize: 10, total: 0 });
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [interfaceToDelete, setInterfaceToDelete] = useState(null);
@@ -60,8 +44,8 @@ export default function ApiBuilderPage() {
       const response = await apiBuilderApi.getInterfaces({
         page: pagination.page,
         limit: pagination.pageSize,
-        search: searchTerm,
-        status: status || undefined,
+        search: searchValues.keyword || '',
+        status: searchValues.status || undefined,
       });
 
       setInterfaces(response.data?.items || []);
@@ -83,13 +67,13 @@ export default function ApiBuilderPage() {
 
   const handleSearch = () => {
     setPagination((prev) => ({ ...prev, page: 1 }));
-    fetchInterfaces();
+    setTimeout(() => fetchInterfaces(), 0);
   };
 
   const handleReset = () => {
-    setSearchTerm('');
-    setStatus('');
+    setSearchValues({});
     setPagination((prev) => ({ ...prev, page: 1 }));
+    setTimeout(() => fetchInterfaces(), 0);
   };
 
   const handleCreate = () => {
@@ -162,6 +146,68 @@ export default function ApiBuilderPage() {
     );
   };
 
+  // 搜索字段配置
+  const searchFields = [
+    {
+      type: 'text',
+      name: 'keyword',
+      placeholder: '搜索接口名称、端点...'
+    },
+    {
+      type: 'select',
+      name: 'status',
+      placeholder: '选择状态',
+      options: [
+        { value: '', label: '全部状态' },
+        { value: 'active', label: '启用' },
+        { value: 'inactive', label: '禁用' }
+      ]
+    }
+  ];
+
+  // 表格列配置
+  const columns = [
+    {
+      key: 'name',
+      label: '接口名称',
+      cellClassName: 'font-medium'
+    },
+    {
+      key: 'endpoint',
+      label: '端点',
+      cellClassName: 'font-mono text-sm',
+      render: (value) => getFullApiUrl(value)
+    },
+    {
+      key: 'version',
+      label: '版本',
+      render: (value) => `V${value}`
+    },
+    {
+      key: 'method',
+      label: '请求方式',
+      render: (value) => getMethodBadge(value)
+    },
+    {
+      key: 'status',
+      label: '状态',
+      render: (value, record) => (
+        <button
+          onClick={() => handleStatusChange(record.id, value === 'active' ? 'inactive' : 'active')}
+          className="cursor-pointer"
+        >
+          {getStatusBadge(value)}
+        </button>
+      )
+    },
+    {
+      key: 'createdAt',
+      label: '创建时间',
+      cellClassName: 'text-sm text-muted-foreground dark:text-white',
+      render: (value, record) => formatDate(value || record.created_at)
+    }
+  ];
+
   return (
     <div className="space-y-6">
       <Card>
@@ -183,142 +229,58 @@ export default function ApiBuilderPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           {/* 搜索栏 */}
-          <div className="bg-card border rounded-lg p-4">
-            <div className="flex flex-wrap items-end gap-4">
-              <div className="flex-1 min-w-[180px]">
-                <Input
-                  placeholder="搜索接口名称、端点..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                />
-              </div>
-              <div className="min-w-[150px]">
-                <Select value={status || 'all'} onValueChange={(value) => setStatus(value === 'all' ? '' : value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="选择状态" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">全部状态</SelectItem>
-                    <SelectItem value="active">启用</SelectItem>
-                    <SelectItem value="inactive">禁用</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex-shrink-0 flex gap-2">
-                <Button onClick={handleSearch} size="lg">
-                  <Search className="h-4 w-4 mr-2" />
-                  查询
-                </Button>
-                <Button onClick={handleReset} variant="outline" size="lg">
-                  <X className="h-4 w-4 mr-2" />
-                  重置
-                </Button>
-              </div>
-            </div>
-          </div>
+          <SearchFilter
+            fields={searchFields}
+            values={searchValues}
+            onChange={setSearchValues}
+            onSearch={handleSearch}
+            onReset={handleReset}
+          />
 
           {/* 接口列表 */}
-          <div className="border rounded-lg overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>接口名称</TableHead>
-                  <TableHead>端点</TableHead>
-                  <TableHead>版本</TableHead>
-                  <TableHead>请求方式</TableHead>
-                  <TableHead>状态</TableHead>
-                  <TableHead>创建时间</TableHead>
-                  <TableHead className="text-right">操作</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoading ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                      加载中...
-                    </TableCell>
-                  </TableRow>
-                ) : interfaces.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                      暂无接口
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  interfaces.map((interface_) => (
-                    <TableRow key={interface_.id}>
-                      <TableCell className="font-medium">{interface_.name}</TableCell>
-                      <TableCell className="font-mono text-sm">{getFullApiUrl(interface_.endpoint)}</TableCell>
-                      <TableCell>V{interface_.version}</TableCell>
-                      <TableCell>{getMethodBadge(interface_.method)}</TableCell>
-                      <TableCell>
-                        <button
-                          onClick={() =>
-                            handleStatusChange(
-                              interface_.id,
-                              interface_.status === 'active' ? 'inactive' : 'active'
-                            )
-                          }
-                          className="cursor-pointer"
-                        >
-                          {getStatusBadge(interface_.status)}
-                        </button>
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground dark:text-white">
-                        {formatDate(interface_.createdAt || interface_.created_at)}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="lg"
-                            onClick={() => handleTest(interface_)}
-                            title="测试接口"
-                          >
-                            <Play className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="lg"
-                            onClick={() => handleManageKeys(interface_)}
-                            title="管理密钥"
-                          >
-                            <Key className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="lg"
-                            onClick={() => handleEdit(interface_.id)}
-                            title="编辑接口"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="lg"
-                            onClick={() => handleDelete(interface_)}
-                            title="删除接口"
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-
-          <Pagination
-            page={pagination.page}
-            total={pagination.total}
-            pageSize={pagination.pageSize}
+          <DataTable
+            columns={columns}
+            data={interfaces}
+            loading={isLoading}
+            pagination={pagination}
             onPageChange={(page) => setPagination((prev) => ({ ...prev, page }))}
-            onPageSizeChange={(pageSize) =>
-              setPagination((prev) => ({ ...prev, pageSize, page: 1 }))
-            }
+            onPageSizeChange={(pageSize) => setPagination((prev) => ({ ...prev, pageSize, page: 1 }))}
+            actions={(interface_) => (
+              <>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleTest(interface_)}
+                  title="测试接口"
+                >
+                  <Play className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleManageKeys(interface_)}
+                  title="管理密钥"
+                >
+                  <Key className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleEdit(interface_.id)}
+                  title="编辑接口"
+                >
+                  <Edit className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleDelete(interface_)}
+                  title="删除接口"
+                >
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
+              </>
+            )}
           />
         </CardContent>
       </Card>

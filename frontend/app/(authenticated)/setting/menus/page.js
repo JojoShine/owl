@@ -221,21 +221,23 @@ export default function MenusPage() {
       </Card>
 
       {/* 搜索过滤区域 */}
-      <SearchFilter
-        fields={searchFields}
-        values={searchValues}
-        onChange={setSearchValues}
-        onSearch={() => {}}
-        onReset={() => setSearchValues({ keyword: '', type: 'all', status: 'all' })}
-        extra={
-          canCreate('menu') && (
-            <Button onClick={() => handleAdd()}>
-              <Plus className="h-4 w-4 mr-2" />
-              新增菜单
-            </Button>
-          )
-        }
-      />
+      <div className="bg-card rounded-lg p-6 border">
+        <SearchFilter
+          fields={searchFields}
+          values={searchValues}
+          onChange={setSearchValues}
+          onSearch={() => {}}
+          onReset={() => setSearchValues({ keyword: '', type: 'all', status: 'all' })}
+          extra={
+            canCreate('menu') && (
+              <Button onClick={() => handleAdd()} size="lg">
+                <Plus className="h-4 w-4 mr-2" />
+                新增菜单
+              </Button>
+            )
+          }
+        />
+      </div>
 
       {/* 操作按钮 */}
       <div className="flex flex-wrap items-center justify-end gap-2">

@@ -6,7 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
+import { loginSchema } from '@/lib/schemas';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { PasswordInput } from '@/components/ui/password-input';
@@ -21,13 +21,7 @@ import SmsLoginForm from '@/components/auth/sms-login-form';
 import { authApi, monitorApi, systemConfigApi } from '@/lib/api';
 import { useAuth } from '@/lib/utils/auth';
 import { getFileUrl } from '@/lib/utils/image';
-
-// 表单验证规则 - 只做最基本的非空检查
-const loginSchema = z.object({
-  username: z.string(),
-  password: z.string(),
-  captchaCode: z.string(),
-});
+import { getPath } from '@/lib/utils/api-url';
 
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
 
@@ -57,7 +51,7 @@ function LoginForm() {
     setValue,
   } = useForm({
     resolver: zodResolver(loginSchema),
-    mode: 'onBlur', // 失焦时验证，避免输入过程中频繁提示
+    mode: 'onChange', // 实时验证，让按钮状态及时更新
   });
 
   // 获取系统状态和配置
@@ -203,7 +197,7 @@ function LoginForm() {
               <SmsLoginForm onSuccess={() => {
                 const redirectPath = searchParams.get('redirect') || '/dashboard';
                 // 使用 window.location 强制刷新页面，让 AuthProvider 重新初始化
-                window.location.href = redirectPath;
+                window.location.href = `${basePath}${redirectPath}`;
               }} />
             </TabsContent>
           )}

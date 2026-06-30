@@ -288,7 +288,7 @@ export function DynamicCrudPage({ config }) {
           setImportProgress(20); // 文件读取完成
 
           const data = e.target?.result;
-          const workbook = XLSX.read(data, { type: 'array' });
+          const workbook = XLSX.read(data, { type: 'array', cellDates: true });
           const worksheet = workbook.Sheets['数据'] || workbook.Sheets[workbook.SheetNames[0]];
           const rows = XLSX.utils.sheet_to_json(worksheet);
 
@@ -301,13 +301,12 @@ export function DynamicCrudPage({ config }) {
 
           setImportProgress(40); // 数据解析完成
 
-          // 跳过前两行（注释行和示例数据行），只保留实际数据
-          // sheet_to_json 会自动使用第一行作为列名，所以返回的数据从第二行开始
-          // 我们需要跳过第一条记录（注释行）和第二条记录（示例数据行）
-          const actualData = rows.slice(2);
+          // 跳过第一行（中文注释行），实际数据从第三行（Excel）开始
+          // sheet_to_json 自动使用第一行（英文字段名）作为列名
+          const actualData = rows.slice(1);
 
           if (actualData.length === 0) {
-            toast.error('Excel 文件中没有实际数据，请从第四行开始填入数据');
+            toast.error('Excel 文件中没有实际数据，请从第三行开始填入数据');
             setImportLoading(false);
             setImportProgress(0);
             return;
@@ -334,12 +333,31 @@ export function DynamicCrudPage({ config }) {
               setImportProgress(0);
             }, 1200);
           } else {
+            // 即使有错误，如果有部分数据成功导入，也要刷新列表
+            if (result.data.successCount > 0) {
+              fetchData();
+            }
             setImportDialogOpen(true);
             setImportLoading(false);
           }
         } catch (error) {
           console.error('导入失败:', error);
-          toast.error(error.response?.data?.message || '导入失败');
+          // 构造错误结果，通过弹窗展示
+          const errorMessage = error.response?.data?.message || '导入失败，请检查网络连接或联系管理员';
+          setImportResult({
+            success: false,
+            message: '导入失败',
+            successCount: 0,
+            errorCount: 1,
+            errors: [{
+              row: null,
+              field: '',
+              fieldLabel: '',
+              columnNum: null,
+              message: errorMessage
+            }]
+          });
+          setImportDialogOpen(true);
           setImportLoading(false);
           setImportProgress(0);
         } finally {
@@ -467,9 +485,11 @@ export function DynamicCrudPage({ config }) {
                               </div>
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-baseline gap-2 mb-1 flex-wrap">
-                                  <span className="font-semibold text-sm">
-                                    第 {error.row} 行
-                                  </span>
+                                  {error.row && (
+                                    <span className="font-semibold text-sm">
+                                      第 {error.row} 行
+                                    </span>
+                                  )}
                                   {error.columnNum && (
                                     <span className="text-xs text-muted-foreground">
                                       第 {error.columnNum} 列

@@ -236,7 +236,7 @@ export default function LogsPage() {
         }}
         className="flex-1 flex flex-col"
       >
-        <TabsList className="mb-4 flex flex-wrap gap-2">
+        <TabsList className="mb-6 flex flex-wrap gap-2">
           {TAB_CONFIGS.map((tab) => {
             const Icon = tab.icon;
             return (
@@ -251,7 +251,7 @@ export default function LogsPage() {
         {TAB_CONFIGS.map((tab) => {
           const Icon = tab.icon;
           return (
-            <TabsContent key={tab.value} value={tab.value} className="mt-4 flex-1">
+            <TabsContent key={tab.value} value={tab.value} className="flex-1">
               <Card>
                 <CardHeader>
                   <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
