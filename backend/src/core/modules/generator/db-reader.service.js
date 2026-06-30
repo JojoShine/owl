@@ -67,7 +67,15 @@ class DbReaderService {
               )
               OR t.table_name LIKE 'owl_%'
             )
-          ) AS is_generated
+          ) AS is_generated,
+          (
+            -- 检查是否已包含全部 6 个审计字段
+            SELECT COUNT(*) >= 6
+            FROM information_schema.columns c
+            WHERE c.table_name = t.table_name
+              AND c.table_schema = 'public'
+              AND c.column_name IN ('created_at', 'updated_at', 'deleted_at', 'created_by', 'updated_by', 'deleted_by')
+          ) AS audit_fields_complete
         FROM information_schema.tables t
         ${whereClause}
         ORDER BY t.table_name
@@ -81,6 +89,7 @@ class DbReaderService {
         comment: row.table_comment || '',
         columnCount: parseInt(row.column_count),
         isGenerated: row.is_generated,
+        auditFieldsComplete: row.audit_fields_complete,
       }));
 
       return {

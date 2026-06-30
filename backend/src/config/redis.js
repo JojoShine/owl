@@ -146,7 +146,6 @@ const connectRedis = async () => {
 
     await redisClient.connect();
     isAvailable = true;
-    logger.info('Redis 连接成功');
 
     // 启动健康检查
     startHealthCheck();

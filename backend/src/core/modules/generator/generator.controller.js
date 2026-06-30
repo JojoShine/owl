@@ -350,6 +350,34 @@ class GeneratorController {
       next(error);
     }
   }
+
+  /**
+   * 检查表审计字段缺失情况
+   * GET /api/generator/tables/:tableName/audit-check
+   */
+  async checkAuditFields(req, res, next) {
+    try {
+      const { tableName } = req.params;
+      const result = await codeGeneratorService.checkAuditFields(tableName);
+      success(res, result, '审计字段检查完成');
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * 一键补全表审计字段
+   * POST /api/generator/tables/:tableName/add-audit-fields
+   */
+  async addAuditFields(req, res, next) {
+    try {
+      const { tableName } = req.params;
+      const result = await codeGeneratorService.addAuditFields(tableName);
+      success(res, result, result.message);
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 module.exports = new GeneratorController();

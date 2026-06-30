@@ -259,6 +259,20 @@ const generatorValidation = {
       }),
     }),
   },
+
+  // 检查表审计字段缺失
+  checkAuditFields: {
+    params: Joi.object({
+      tableName: Joi.string().required(),
+    }),
+  },
+
+  // 一键补全表审计字段
+  addAuditFields: {
+    params: Joi.object({
+      tableName: Joi.string().required(),
+    }),
+  },
 };
 
 module.exports = generatorValidation;

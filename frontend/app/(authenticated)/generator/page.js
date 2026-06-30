@@ -12,6 +12,8 @@ import {
   RefreshCwIcon,
   CheckCircleIcon,
   XCircleIcon,
+  AlertTriangleIcon,
+  PlusCircleIcon,
 } from 'lucide-react';
 import { generatorApi } from '@/lib/api';
 import { toast } from 'sonner';
@@ -93,6 +95,17 @@ export default function GeneratorPage() {
   const [deleteCodeDialog, setDeleteCodeDialog] = useState({
     open: false,
     configId: null,
+  });
+
+  // 审计字段检查对话框状态
+  const [auditDialog, setAuditDialog] = useState({
+    open: false,
+    tableName: null,
+    missingFields: [],
+    existingFields: [],
+    checking: false,
+    adding: false,
+    afterAddInit: false, // 补全后是否自动初始化
   });
 
   /**
@@ -296,9 +309,39 @@ export default function GeneratorPage() {
   }, [activeTab, historyPagination.page, historyPagination.pageSize]);
 
   /**
-   * 初始化模块配置
+   * 初始化模块配置（先检查审计字段）
    */
   const handleInitializeConfig = async (tableName) => {
+    try {
+      // 先检查审计字段
+      const checkRes = await generatorApi.checkAuditFields(tableName);
+      const missingFields = checkRes.missingFields || [];
+
+      if (missingFields.length > 0) {
+        // 有缺失字段，弹出提示
+        setAuditDialog({
+          open: true,
+          tableName,
+          missingFields,
+          checking: false,
+          adding: false,
+          afterAddInit: true, // 初始化流程中，补全后自动初始化
+        });
+        return;
+      }
+
+      // 审计字段完整，直接初始化
+      await doInitializeConfig(tableName);
+    } catch (error) {
+      console.error('Failed to check audit fields:', error);
+      toast.error(error.response?.data?.message || '检查审计字段失败');
+    }
+  };
+
+  /**
+   * 执行初始化模块配置
+   */
+  const doInitializeConfig = async (tableName) => {
     try {
       const response = await generatorApi.initializeModuleConfig(tableName);
       toast.success(`模块配置初始化成功: ${response.data.module_name}`);
@@ -307,6 +350,60 @@ export default function GeneratorPage() {
     } catch (error) {
       console.error('Failed to initialize config:', error);
       toast.error(error.response?.data?.message || '初始化模块配置失败');
+    }
+  };
+
+  /**
+   * 一键补全审计字段（仅补全，不初始化）
+   */
+  const handleCheckAndAddAuditFields = async (tableName) => {
+    try {
+      setAuditDialog(prev => ({ ...prev, checking: true, tableName }));
+      const checkRes = await generatorApi.checkAuditFields(tableName);
+      const missingFields = checkRes.missingFields || [];
+
+      if (missingFields.length === 0) {
+        toast.success('审计字段完整，无需补全');
+        setAuditDialog(prev => ({ ...prev, checking: false, tableName: null }));
+        return;
+      }
+
+      setAuditDialog({
+        open: true,
+        tableName,
+        missingFields,
+        checking: false,
+        adding: false,
+        afterAddInit: false, // 独立按钮触发，补全后不自动初始化
+      });
+    } catch (error) {
+      console.error('Failed to check audit fields:', error);
+      toast.error('检查审计字段失败');
+      setAuditDialog(prev => ({ ...prev, checking: false, tableName: null }));
+    }
+  };
+
+  /**
+   * 一键补全审计字段并初始化
+   */
+  const handleAddAuditFields = async () => {
+    const { tableName, afterAddInit } = auditDialog;
+    if (!tableName) return;
+
+    setAuditDialog(prev => ({ ...prev, adding: true }));
+    try {
+      await generatorApi.addAuditFields(tableName);
+      toast.success('审计字段补全成功');
+      setAuditDialog({ open: false, tableName: null, missingFields: [], checking: false, adding: false, afterAddInit: false });
+      loadTables(); // 刷新表列表
+      // 补全后是否自动初始化
+      if (afterAddInit) {
+        await doInitializeConfig(tableName);
+      }
+    } catch (error) {
+      console.error('Failed to add audit fields:', error);
+      toast.error(error.response?.data?.message || '补全审计字段失败');
+      setAuditDialog(prev => ({ ...prev, adding: false }));
     }
   };
 
@@ -523,6 +620,7 @@ export default function GeneratorPage() {
             onSearchChange={setSearchTerm}
             onRefresh={loadTables}
             onInitialize={handleInitializeConfig}
+            onCheckAudit={handleCheckAndAddAuditFields}
             pagination={tablePagination}
             onPageChange={handleTablePageChange}
           />
@@ -579,6 +677,61 @@ export default function GeneratorPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* 审计字段检查对话框 */}
+      <Dialog open={auditDialog.open} onOpenChange={(open) => { if (!open) setAuditDialog(prev => ({ ...prev, open: false })); }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base">
+              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-900/40">
+                <AlertTriangleIcon className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+              </div>
+              审计字段检查
+            </DialogTitle>
+            <DialogDescription className="text-sm">
+              表 <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs font-semibold text-foreground">{auditDialog.tableName}</code> 缺少 {auditDialog.missingFields.length} 个审计字段，补全后可正常使用代码生成功能。
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-2">
+            <div className="rounded-lg border overflow-hidden">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-muted/50 border-b">
+                    <th className="text-left px-3 py-2 font-medium text-muted-foreground">字段名</th>
+                    <th className="text-left px-3 py-2 font-medium text-muted-foreground">类型</th>
+                    <th className="text-left px-3 py-2 font-medium text-muted-foreground">说明</th>
+                    <th className="text-center px-3 py-2 font-medium text-muted-foreground w-16">状态</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {auditDialog.missingFields.map((f) => (
+                    <tr key={f.name} className="border-b last:border-b-0 bg-amber-50/50 dark:bg-amber-950/20">
+                      <td className="px-3 py-2 font-mono text-xs font-medium">{f.name}</td>
+                      <td className="px-3 py-2 text-xs text-muted-foreground">{f.type}</td>
+                      <td className="px-3 py-2 text-xs text-muted-foreground">{f.comment}</td>
+                      <td className="px-3 py-2 text-center">
+                        <Badge variant="destructive" className="text-[10px] px-1.5 py-0">缺失</Badge>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" size="sm" onClick={() => setAuditDialog(prev => ({ ...prev, open: false }))}>
+              取消
+            </Button>
+            <Button size="sm" onClick={handleAddAuditFields} disabled={auditDialog.adding}>
+              {auditDialog.adding ? (
+                <><RefreshCwIcon className="w-4 h-4 mr-2 animate-spin" />补全中...</>
+              ) : (
+                <><PlusCircleIcon className="w-4 h-4 mr-2" />一键补全</>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <ConfigDialog
         open={configDialogOpen}

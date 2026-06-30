@@ -943,6 +943,109 @@ class CodeGeneratorService {
       }
     }
   }
+
+  /**
+   * 检查表的审计字段缺失情况
+   * 
+   * 使用模块：代码生成器（Generator）
+   * 使用场景：初始化模块配置前，检查表是否缺少必要的时间戳和审计字段
+   * 
+   * @param {string} tableName - 表名
+   * @returns {Object} { missingFields, existingFields }
+   */
+  async checkAuditFields(tableName) {
+    const db = require('../../../models');
+
+    // 需要检查的 6 个审计字段
+    const auditFieldDefs = [
+      { name: 'created_at', type: 'timestamp with time zone', comment: '创建时间' },
+      { name: 'updated_at', type: 'timestamp with time zone', comment: '更新时间' },
+      { name: 'deleted_at', type: 'timestamp with time zone', comment: '软删除时间' },
+      { name: 'created_by', type: 'uuid', comment: '创建者ID' },
+      { name: 'updated_by', type: 'uuid', comment: '更新者ID' },
+      { name: 'deleted_by', type: 'uuid', comment: '删除者ID' },
+    ];
+
+    // 查询表现有字段
+    const [columns] = await db.sequelize.query(
+      `SELECT column_name FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = :tableName`,
+      { replacements: { tableName } }
+    );
+
+    const existingNames = columns.map(c => c.column_name);
+    const missingFields = auditFieldDefs.filter(f => !existingNames.includes(f.name));
+    const existingFields = auditFieldDefs.filter(f => existingNames.includes(f.name));
+
+    return { missingFields, existingFields, allFields: auditFieldDefs };
+  }
+
+  /**
+   * 一键补全表的审计字段
+   * 
+   * 使用模块：代码生成器（Generator）
+   * 使用场景：表缺少 created_at/updated_at/deleted_at/created_by/updated_by/deleted_by 时，
+   *          前端点击一键添加，自动 ALTER TABLE 补全缺失字段
+   * 
+   * @param {string} tableName - 表名
+   * @returns {Object} { addedFields, message }
+   */
+  async addAuditFields(tableName) {
+    const db = require('../../../models');
+    const ApiError = require('../../../utils/ApiError');
+
+    // 验证表是否存在
+    const [tableCheck] = await db.sequelize.query(
+      `SELECT EXISTS (
+        SELECT 1 FROM information_schema.tables 
+        WHERE table_schema = 'public' AND table_name = :tableName
+      ) AS exists`,
+      { replacements: { tableName } }
+    );
+
+    if (!tableCheck[0].exists) {
+      throw ApiError.notFound(`表 "${tableName}" 不存在`);
+    }
+
+    // 检查缺失字段
+    const { missingFields } = await this.checkAuditFields(tableName);
+
+    if (missingFields.length === 0) {
+      return { addedFields: [], message: '所有审计字段已存在，无需添加' };
+    }
+
+    const escapeId = (name) => `"${name.replace(/"/g, '""')}"`;
+    const safeTableName = escapeId(tableName);
+    const addedFields = [];
+
+    for (const field of missingFields) {
+      const safeFieldName = escapeId(field.name);
+      const colType = field.type === 'uuid' ? 'uuid' : 'timestamp with time zone';
+      const nullable = field.name === 'deleted_at' || field.name.endsWith('_by');
+      const defaultVal = (field.name === 'created_at' || field.name === 'updated_at') ? 'DEFAULT CURRENT_TIMESTAMP' : '';
+
+      let alterSql = `ALTER TABLE ${safeTableName} ADD COLUMN ${safeFieldName} ${colType}`;
+      if (!nullable) alterSql += ' NOT NULL';
+      if (defaultVal) alterSql += ` ${defaultVal}`;
+
+      await db.sequelize.query(alterSql);
+
+      // 添加字段注释（使用参数化查询防止 SQL 注入）
+      await db.sequelize.query(
+        `COMMENT ON COLUMN ${safeTableName}.${safeFieldName} IS :comment`,
+        { replacements: { comment: field.comment } }
+      );
+
+      addedFields.push(field.name);
+    }
+
+    logger.info(`表 ${tableName} 补全审计字段: ${addedFields.join(', ')}`);
+
+    return {
+      addedFields,
+      message: `成功添加 ${addedFields.length} 个审计字段: ${addedFields.join(', ')}`,
+    };
+  }
 }
 
 module.exports = new CodeGeneratorService();

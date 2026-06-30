@@ -1,5 +1,7 @@
-const envFile = process.env.NODE_ENV === 'production' ? '.env.production' : '.env.local';
-require('dotenv').config({ path: envFile });
+require('dotenv').config(); // 默认加载 .env
+if (process.env.NODE_ENV === 'production') {
+  require('dotenv').config({ path: '.env.production', override: true }); // 生产环境覆盖
+}
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');

@@ -8,13 +8,15 @@ module.exports = {
     // 环境变量
     env: {
       NODE_ENV: 'production',
-      PORT: 3001
+      PORT: 3001,
+      TZ: 'UTC'  // 统一使用 UTC，时区转换由 Sequelize timezone: '+08:00' 处理
     },
 
     // 开发环境
     env_development: {
       NODE_ENV: 'development',
-      PORT: 3001
+      PORT: 3001,
+      TZ: 'UTC'  // 统一使用 UTC，与生产环境保持一致
     },
 
     // 日志配置

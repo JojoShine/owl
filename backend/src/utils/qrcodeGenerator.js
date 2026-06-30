@@ -1,5 +1,4 @@
 const QRCode = require('qrcode');
-const path = require('path');
 const { logger } = require('../config/logger');
 
 /**
@@ -65,14 +64,6 @@ class QRCodeGenerator {
     }
   }
 
-  /**
-   * 获取默认logo路径
-   * @returns {String}
-   */
-  getDefaultLogoPath() {
-    // 默认logo路径（需要在项目中放置logo图片）
-    return path.join(__dirname, '../../public/images/ykt-logo.png');
-  }
 }
 
 // 导出单例

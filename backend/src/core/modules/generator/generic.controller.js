@@ -61,7 +61,7 @@ class GenericController {
         throw ApiError.internal('模块配置未加载');
       }
 
-      const item = await genericService.create(moduleConfig, req.body);
+      const item = await genericService.create(moduleConfig, req.body, req.user?.id);
 
       success(res, item, `创建${moduleConfig.description}成功`, 201);
     } catch (error) {
@@ -81,7 +81,7 @@ class GenericController {
         throw ApiError.internal('模块配置未加载');
       }
 
-      const item = await genericService.update(moduleConfig, req.params.id, req.body);
+      const item = await genericService.update(moduleConfig, req.params.id, req.body, req.user?.id);
 
       success(res, item, `更新${moduleConfig.description}成功`);
     } catch (error) {
@@ -101,7 +101,7 @@ class GenericController {
         throw ApiError.internal('模块配置未加载');
       }
 
-      const result = await genericService.delete(moduleConfig, req.params.id);
+      const result = await genericService.delete(moduleConfig, req.params.id, req.user?.id);
 
       success(res, result, `删除${moduleConfig.description}成功`);
     } catch (error) {
@@ -122,7 +122,7 @@ class GenericController {
       }
 
       const { ids } = req.body;
-      const result = await genericService.batchDelete(moduleConfig, ids);
+      const result = await genericService.batchDelete(moduleConfig, ids, req.user?.id);
 
       success(res, result, `批量删除${moduleConfig.description}成功`);
     } catch (error) {

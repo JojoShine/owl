@@ -257,4 +257,28 @@ router.post(
   generatorController.generateFieldsFromSql
 );
 
+/**
+ * @route   GET /api/generator/tables/:tableName/audit-check
+ * @desc    检查表审计字段缺失情况
+ * @access  Private
+ */
+router.get(
+  '/tables/:tableName/audit-check',
+  checkPermission('generator', 'read'),
+  validate(generatorValidation.checkAuditFields),
+  generatorController.checkAuditFields
+);
+
+/**
+ * @route   POST /api/generator/tables/:tableName/add-audit-fields
+ * @desc    一键补全表审计字段
+ * @access  Private
+ */
+router.post(
+  '/tables/:tableName/add-audit-fields',
+  checkPermission('generator', 'create'),
+  validate(generatorValidation.addAuditFields),
+  generatorController.addAuditFields
+);
+
 module.exports = router;

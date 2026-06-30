@@ -69,7 +69,7 @@ npm install
 ### 3. 配置环境变量
 
 本项目使用分离的环境配置文件：
-- `backend/.env.local` 和 `frontend/.env.local` — 本地开发环境
+- `backend/.env` 和 `frontend/.env` — 本地开发环境（默认）
 - `backend/.env.production` 和 `frontend/.env.production` — 生产环境
 
 #### 本地开发环境配置
@@ -78,10 +78,10 @@ npm install
 
 ```bash
 cd backend
-cp .env.example .env.local
+cp .env.example .env
 ```
 
-编辑 `backend/.env.local`：
+编辑 `backend/.env`：
 
 ```bash
 # 数据库
@@ -129,10 +129,10 @@ APP_DEBUG=true
 
 ```bash
 cd frontend
-cp .env.example .env.local
+cp .env.example .env
 ```
 
-编辑 `frontend/.env.local`：
+编辑 `frontend/.env`：
 
 ```bash
 # API URL - 指向本地后端
@@ -471,7 +471,7 @@ HTTPS 方案额外提供：
 
 **数据库连接失败**
 
-检查 `.env.local` 中 DB 配置是否正确，并确认 PostgreSQL 服务已启动：
+检查 `.env` 中 DB 配置是否正确，并确认 PostgreSQL 服务已启动：
 ```bash
 sudo systemctl status postgresql
 ```

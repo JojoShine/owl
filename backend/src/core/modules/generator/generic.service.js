@@ -9,6 +9,44 @@ const { logger } = require('../../../config/logger');
  * 无需生成代码文件，实现零重启
  */
 class GenericService {
+
+  // 表字段缓存（用于检查审计字段是否存在），5分钟过期
+  _tableColumnsCache = {};
+  _tableColumnsCacheTime = {};
+  _TABLE_COLUMNS_CACHE_TTL = 5 * 60 * 1000;
+
+  /**
+   * 获取表的字段名列表（带缓存）
+   * 使用模块：代码生成器（Generic CRUD）
+   * 使用场景：动态判断表是否包含审计字段，避免硬编码
+   *
+   * @param {string} tableName - 表名
+   * @returns {Promise<Set<string>>} 字段名集合
+   */
+  async _getTableColumns(tableName) {
+    const now = Date.now();
+    if (this._tableColumnsCache[tableName] && 
+        (now - (this._tableColumnsCacheTime[tableName] || 0)) < this._TABLE_COLUMNS_CACHE_TTL) {
+      return this._tableColumnsCache[tableName];
+    }
+    const columns = await sequelize.query(
+      `SELECT column_name FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = :tableName`,
+      { replacements: { tableName }, type: QueryTypes.SELECT }
+    );
+    const columnSet = new Set(columns.map(c => c.column_name));
+    this._tableColumnsCache[tableName] = columnSet;
+    this._tableColumnsCacheTime[tableName] = now;
+    return columnSet;
+  }
+
+  /**
+   * 检查表是否有某个字段
+   */
+  async _hasColumn(tableName, columnName) {
+    const columns = await this._getTableColumns(tableName);
+    return columns.has(columnName);
+  }
   /**
    * 获取列表（分页 + 搜索）
    * @param {Object} moduleConfig - 模块配置
@@ -36,30 +74,7 @@ class GenericService {
     const validOrder = this._validateOrder(order);
 
     // 构建搜索条件
-    const { whereClause, replacements } = this._buildWhereClause(moduleConfig, searchParams);
-
-    // 获取字段配置，找出 timestamp 类型字段
-    const timestampFields = moduleConfig.fields.filter(f => {
-      const fieldType = f.field_type?.toLowerCase();
-      return fieldType === 'timestamp' ||
-             fieldType === 'timestamp without time zone' ||
-             fieldType === 'timestamp with time zone';
-    }).map(f => f.field_name);
-
-    // 构建 SELECT 子句，将 timestamp 字段转换为本地时区
-    let selectClause = '*';
-    if (timestampFields.length > 0) {
-      const allFields = moduleConfig.fields.map(f => {
-        // 验证字段名防止 SQL 注入
-        const safeFieldName = this._escapeIdentifier(f.field_name);
-        if (timestampFields.includes(f.field_name)) {
-          // 将 UTC 时间转换为 Asia/Shanghai 时区
-          return `${safeFieldName} AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Shanghai' AS ${safeFieldName}`;
-        }
-        return safeFieldName;
-      });
-      selectClause = allFields.join(', ');
-    }
+    const { whereClause, replacements } = await this._buildWhereClauseWithSoftDelete(moduleConfig, tableName, searchParams);
 
     // 添加分页参数
     replacements.limit = parseInt(limit);
@@ -68,9 +83,9 @@ class GenericService {
     // 使用安全的表名
     const safeTableName = this._escapeIdentifier(tableName);
 
-    // 查询数据
+    // 查询数据（Sequelize timezone: '+08:00' 已自动处理时区转换，无需手动 AT TIME ZONE）
     const dataQuery = `
-      SELECT ${selectClause} FROM ${safeTableName}
+      SELECT * FROM ${safeTableName}
       ${whereClause}
       ORDER BY ${this._escapeIdentifier(validSort)} ${validOrder}
       LIMIT :limit OFFSET :offset
@@ -118,31 +133,11 @@ class GenericService {
 
     const tableName = moduleConfig.table_name;
 
-    // 获取字段配置，找出 timestamp 类型字段
-    const timestampFields = moduleConfig.fields.filter(f => {
-      const fieldType = f.field_type?.toLowerCase();
-      return fieldType === 'timestamp' ||
-             fieldType === 'timestamp without time zone' ||
-             fieldType === 'timestamp with time zone';
-    }).map(f => f.field_name);
-
-    // 构建 SELECT 子句，将 timestamp 字段转换为本地时区
-    let selectClause = '*';
-    if (timestampFields.length > 0) {
-      const allFields = moduleConfig.fields.map(f => {
-        // 验证字段名防止 SQL 注入
-        const safeFieldName = this._escapeIdentifier(f.field_name);
-        if (timestampFields.includes(f.field_name)) {
-          // 将 UTC 时间转换为 Asia/Shanghai 时区
-          return `${safeFieldName} AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Shanghai' AS ${safeFieldName}`;
-        }
-        return safeFieldName;
-      });
-      selectClause = allFields.join(', ');
-    }
-
     const safeTableName = this._escapeIdentifier(tableName);
-    const query = `SELECT ${selectClause} FROM ${safeTableName} WHERE id = :id LIMIT 1`;
+    // 如果表有 deleted_at 字段，过滤已软删除的记录
+    const softDeleteFilter = await this._hasColumn(tableName, 'deleted_at')
+      ? ' AND "deleted_at" IS NULL' : '';
+    const query = `SELECT * FROM ${safeTableName} WHERE id = :id${softDeleteFilter} LIMIT 1`;
 
     const [item] = await sequelize.query(query, {
       replacements: { id },
@@ -160,10 +155,15 @@ class GenericService {
 
   /**
    * 创建记录
+   *
+   * 使用模块：代码生成器（Generic CRUD）
+   * 使用场景：前端创建数据时自动填充 created_at/updated_at/created_by/updated_by
+   *
    * @param {Object} moduleConfig - 模块配置
    * @param {Object} data - 创建数据
+   * @param {string} [userId] - 当前用户ID
    */
-  async create(moduleConfig, data) {
+  async create(moduleConfig, data, userId = null) {
     if (!moduleConfig.enable_create) {
       throw ApiError.forbidden('此模块不允许创建操作');
     }
@@ -184,15 +184,27 @@ class GenericService {
     const fieldNames = fields.map(f => this._escapeIdentifier(f)).join(', ');
     const fieldPlaceholders = fields.map(f => `:${f}`).join(', ');
 
+    // 动态拼接审计字段
+    const auditColumns = ['created_at', 'updated_at'];
+    const auditValues = ['NOW()', 'NOW()'];
+    const auditReplacements = {};
+
+    if (userId && await this._hasColumn(tableName, 'created_by')) {
+      auditColumns.push('created_by', 'updated_by');
+      auditValues.push(':created_by', ':updated_by');
+      auditReplacements.created_by = userId;
+      auditReplacements.updated_by = userId;
+    }
+
     const safeTableName = this._escapeIdentifier(tableName);
     const query = `
-      INSERT INTO ${safeTableName} (${fieldNames}, created_at, updated_at)
-      VALUES (${fieldPlaceholders}, NOW(), NOW())
+      INSERT INTO ${safeTableName} (${fieldNames}, ${auditColumns.join(', ')})
+      VALUES (${fieldPlaceholders}, ${auditValues.join(', ')})
       RETURNING *
     `;
 
     const [result] = await sequelize.query(query, {
-      replacements: validData,
+      replacements: { ...validData, ...auditReplacements },
       type: QueryTypes.INSERT,
     });
 
@@ -205,11 +217,16 @@ class GenericService {
 
   /**
    * 更新记录
+   *
+   * 使用模块：代码生成器（Generic CRUD）
+   * 使用场景：前端更新数据时自动填充 updated_at/updated_by
+   *
    * @param {Object} moduleConfig - 模块配置
    * @param {Number|String} id - 记录ID
    * @param {Object} data - 更新数据
+   * @param {string} [userId] - 当前用户ID
    */
-  async update(moduleConfig, id, data) {
+  async update(moduleConfig, id, data, userId = null) {
     if (!moduleConfig.enable_update) {
       throw ApiError.forbidden('此模块不允许更新操作');
     }
@@ -233,16 +250,24 @@ class GenericService {
 
     const setClause = fields.map(f => `${this._escapeIdentifier(f)} = :${f}`).join(', ');
 
+    // 动态拼接审计字段
+    let auditSet = 'updated_at = NOW()';
+    const auditReplacements = {};
+    if (userId && await this._hasColumn(tableName, 'updated_by')) {
+      auditSet += ', updated_by = :updated_by';
+      auditReplacements.updated_by = userId;
+    }
+
     const safeTableName = this._escapeIdentifier(tableName);
     const query = `
       UPDATE ${safeTableName}
-      SET ${setClause}, updated_at = NOW()
+      SET ${setClause}, ${auditSet}
       WHERE id = :id
       RETURNING *
     `;
 
     const [result] = await sequelize.query(query, {
-      replacements: { ...validData, id },
+      replacements: { ...validData, ...auditReplacements, id },
       type: QueryTypes.UPDATE,
     });
 
@@ -254,11 +279,16 @@ class GenericService {
   }
 
   /**
-   * 删除记录
+   * 删除记录（软删除）
+   *
+   * 使用模块：代码生成器（Generic CRUD）
+   * 使用场景：前端删除数据时自动填充 deleted_at/deleted_by
+   *
    * @param {Object} moduleConfig - 模块配置
    * @param {Number|String} id - 记录ID
+   * @param {string} [userId] - 当前用户ID
    */
-  async delete(moduleConfig, id) {
+  async delete(moduleConfig, id, userId = null) {
     if (!moduleConfig.enable_delete) {
       throw ApiError.forbidden('此模块不允许删除操作');
     }
@@ -269,12 +299,27 @@ class GenericService {
     await this.getById(moduleConfig, id);
 
     const safeTableName = this._escapeIdentifier(tableName);
-    const query = `DELETE FROM ${safeTableName} WHERE id = :id`;
 
-    await sequelize.query(query, {
-      replacements: { id },
-      type: QueryTypes.DELETE,
-    });
+    // 如果表有 deleted_at 字段，执行软删除；否则物理删除
+    if (await this._hasColumn(tableName, 'deleted_at')) {
+      let setClause = 'deleted_at = NOW()';
+      const auditReplacements = {};
+      if (userId && await this._hasColumn(tableName, 'deleted_by')) {
+        setClause += ', deleted_by = :deleted_by';
+        auditReplacements.deleted_by = userId;
+      }
+      const query = `UPDATE ${safeTableName} SET ${setClause} WHERE id = :id`;
+      await sequelize.query(query, {
+        replacements: { ...auditReplacements, id },
+        type: QueryTypes.UPDATE,
+      });
+    } else {
+      const query = `DELETE FROM ${safeTableName} WHERE id = :id`;
+      await sequelize.query(query, {
+        replacements: { id },
+        type: QueryTypes.DELETE,
+      });
+    }
 
     logger.info(`Generic delete executed for table: ${tableName}, id: ${id}`);
 
@@ -282,11 +327,16 @@ class GenericService {
   }
 
   /**
-   * 批量删除
+   * 批量删除记录（软删除）
+   *
+   * 使用模块：代码生成器（Generic CRUD）
+   * 使用场景：前端批量删除数据时自动填充 deleted_at/deleted_by
+   *
    * @param {Object} moduleConfig - 模块配置
    * @param {Array} ids - 记录ID列表
+   * @param {string} [userId] - 当前用户ID
    */
-  async batchDelete(moduleConfig, ids) {
+  async batchDelete(moduleConfig, ids, userId = null) {
     if (!moduleConfig.enable_batch_delete) {
       throw ApiError.forbidden('此模块不允许批量删除操作');
     }
@@ -305,16 +355,30 @@ class GenericService {
     });
 
     const safeTableName = this._escapeIdentifier(tableName);
-    const query = `DELETE FROM ${safeTableName} WHERE id IN (${placeholders})`;
 
-    const [, count] = await sequelize.query(query, {
-      replacements,
-      type: QueryTypes.DELETE,
-    });
-
-    logger.info(`Generic batchDelete executed for table: ${tableName}, count: ${count}`);
-
-    return { message: `成功删除 ${count} 条记录`, count };
+    // 如果表有 deleted_at 字段，执行软删除；否则物理删除
+    if (await this._hasColumn(tableName, 'deleted_at')) {
+      let setClause = 'deleted_at = NOW()';
+      if (userId && await this._hasColumn(tableName, 'deleted_by')) {
+        setClause += ', deleted_by = :deleted_by';
+        replacements.deleted_by = userId;
+      }
+      const query = `UPDATE ${safeTableName} SET ${setClause} WHERE id IN (${placeholders})`;
+      const [, count] = await sequelize.query(query, {
+        replacements,
+        type: QueryTypes.UPDATE,
+      });
+      logger.info(`Generic batchDelete (soft) executed for table: ${tableName}, count: ${count}`);
+      return { message: `成功删除 ${count} 条记录`, count };
+    } else {
+      const query = `DELETE FROM ${safeTableName} WHERE id IN (${placeholders})`;
+      const [, count] = await sequelize.query(query, {
+        replacements,
+        type: QueryTypes.DELETE,
+      });
+      logger.info(`Generic batchDelete executed for table: ${tableName}, count: ${count}`);
+      return { message: `成功删除 ${count} 条记录`, count };
+    }
   }
 
   /**
@@ -329,11 +393,12 @@ class GenericService {
 
     const tableName = moduleConfig.table_name;
 
-    // 构建搜索条件（不分页）
-    const { whereClause, replacements } = this._buildWhereClause(moduleConfig, query);
+    // 构建搜索条件（不分页，带软删除过滤）
+    const { whereClause, replacements } = await this._buildWhereClauseWithSoftDelete(moduleConfig, tableName, query);
 
+    const safeTableNameExport = this._escapeIdentifier(tableName);
     const exportQuery = `
-      SELECT * FROM ${tableName}
+      SELECT * FROM ${safeTableNameExport}
       ${whereClause}
       ORDER BY created_at DESC
     `;
@@ -420,14 +485,15 @@ class GenericService {
 
           const fieldLabel = field.field_comment || fieldName;
 
-          // 长度校验
-          if (rules.length && String(value).length !== rules.length) {
+          // 精确长度校验（兼容 exactLength 和 length 两种属性名）
+          const exactLen = rules.exactLength || rules.length;
+          if (exactLen && String(value).length !== exactLen) {
             errors.push({
               row: rowNum,
               field: fieldName,
               fieldLabel,
               columnNum: fieldIndex + 1,
-              message: `${fieldLabel}长度必须为${rules.length}位`,
+              message: `${fieldLabel}长度必须为${exactLen}位`,
             });
             return;
           }
@@ -519,6 +585,9 @@ class GenericService {
       const fieldConfigs = moduleConfig.fields.filter(f => f.show_in_form && f.field_name !== 'id');
       const fields = fieldConfigs.map(f => f.field_name);
 
+      const safeTableNameImport = this._escapeIdentifier(tableName);
+      const safeFieldNames = fields.map(f => this._escapeIdentifier(f));
+
       // 批量插入配置：每次插入1000条
       const BATCH_SIZE = 1000;
       const batches = [];
@@ -563,7 +632,7 @@ class GenericService {
 
           const flatValues = values.flat();
           const insertQuery = `
-            INSERT INTO ${tableName} (${fields.join(',')})
+            INSERT INTO ${safeTableNameImport} (${safeFieldNames.join(',')})
             VALUES ${placeholders}
           `;
 
@@ -603,7 +672,7 @@ class GenericService {
 
               const placeholders = fields.map(() => '?').join(',');
               const insertQuery = `
-                INSERT INTO ${tableName} (${fields.join(',')})
+                INSERT INTO ${safeTableNameImport} (${safeFieldNames.join(',')})
                 VALUES (${placeholders})
               `;
 
@@ -754,6 +823,30 @@ class GenericService {
   }
 
   /**
+   * 构建 WHERE 条件（带软删除过滤）
+   * 如果表有 deleted_at 字段，自动添加 deleted_at IS NULL 过滤
+   *
+   * @param {Object} moduleConfig - 模块配置
+   * @param {string} tableName - 表名
+   * @param {Object} searchParams - 搜索参数
+   * @returns {Object} { whereClause, replacements }
+   */
+  async _buildWhereClauseWithSoftDelete(moduleConfig, tableName, searchParams) {
+    const result = this._buildWhereClause(moduleConfig, searchParams);
+
+    // 如果表有 deleted_at 字段，自动追加软删除过滤
+    if (await this._hasColumn(tableName, 'deleted_at')) {
+      if (result.whereClause) {
+        result.whereClause += ' AND "deleted_at" IS NULL';
+      } else {
+        result.whereClause = 'WHERE "deleted_at" IS NULL';
+      }
+    }
+
+    return result;
+  }
+
+  /**
    * 验证必填字段
    * @param {Object} moduleConfig - 模块配置
    * @param {Object} data - 数据
@@ -802,9 +895,10 @@ class GenericService {
 
       const fieldLabel = field.field_comment || fieldName;
 
-      // 长度校验
-      if (rules.length && String(value).length !== rules.length) {
-        throw ApiError.badRequest(`${fieldLabel}长度必须为${rules.length}位`);
+      // 精确长度校验（兼容 exactLength 和 length 两种属性名）
+      const exactLen = rules.exactLength || rules.length;
+      if (exactLen && String(value).length !== exactLen) {
+        throw ApiError.badRequest(`${fieldLabel}长度必须为${exactLen}位`);
       }
       if (rules.minLength && String(value).length < rules.minLength) {
         throw ApiError.badRequest(`${fieldLabel}长度不能少于${rules.minLength}位`);
@@ -844,6 +938,8 @@ class GenericService {
 
   /**
    * 解析多种日期格式
+   * 注意：所有带时间的日期输入均视为 UTC+8（中国标准时间），
+   *       与服务器本地时区无关，确保在任何部署环境下行为一致。
    * @param {string|Date} value - 日期值
    * @returns {string|null} ISO 8601 格式的日期字符串
    */
@@ -854,43 +950,60 @@ class GenericService {
     const str = String(value).trim();
     if (!str) return null;
 
-    // 尝试解析多种格式
-    let date = null;
-    let hasTime = false; // 是否包含时间部分
+    let hasTime = false;
+    let normalized = null; // 标准化后的日期字符串（带 +08:00 时区）
 
     // 格式1: 中划线格式 2024-06-29 或 2024-06-29 10:30:00
-    if (/^\d{4}-\d{2}-\d{2}/.test(str)) {
-      hasTime = /\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}/.test(str);
-      date = new Date(str);
+    const dashMatch = str.match(/^(\d{4}-\d{2}-\d{2})(?:\s+(\d{2}:\d{2}(?::\d{2})?))?/);
+    if (dashMatch) {
+      const datePart = dashMatch[1];
+      const timePart = dashMatch[2];
+      hasTime = !!timePart;
+      if (hasTime) {
+        // 显式指定 +08:00，避免依赖服务器本地时区
+        normalized = `${datePart}T${timePart}+08:00`;
+      } else {
+        // 仅日期：直接解析为 UTC（避免 getDate 受服务器时区影响）
+        normalized = `${datePart}T00:00:00Z`;
+      }
     }
     // 格式2: 斜杠格式 2024/06/29 或 2024/06/29 10:30:00
     else if (/^\d{4}\/\d{2}\/\d{2}/.test(str)) {
-      hasTime = /\d{4}\/\d{2}\/\d{2}\s+\d{2}:\d{2}/.test(str);
-      date = new Date(str.replace(/\//g, '-'));
+      const slashMatch = str.match(/^(\d{4})\/(\d{2})\/(\d{2})(?:\s+(\d{2}:\d{2}(?::\d{2})?))?/);
+      if (slashMatch) {
+        const datePart = `${slashMatch[1]}-${slashMatch[2]}-${slashMatch[3]}`;
+        const timePart = slashMatch[4];
+        hasTime = !!timePart;
+        if (hasTime) {
+          normalized = `${datePart}T${timePart}+08:00`;
+        } else {
+          normalized = `${datePart}T00:00:00Z`;
+        }
+      }
     }
     // 格式3: 纯数字格式 20240629 (YYYYMMDD)
     else if (/^\d{8}$/.test(str)) {
-      const year = str.substring(0, 4);
-      const month = str.substring(4, 6);
-      const day = str.substring(6, 8);
-      date = new Date(`${year}-${month}-${day}`);
+      const datePart = `${str.substring(0, 4)}-${str.substring(4, 6)}-${str.substring(6, 8)}`;
       hasTime = false;
+      normalized = `${datePart}T00:00:00Z`;
     }
 
-    // 验证日期是否有效
-    if (date && !isNaN(date.getTime())) {
-      // 如果只有日期没有时间，返回 YYYY-MM-DD 格式（避免时区问题）
-      if (!hasTime) {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
-      }
-      // 如果有时间部分，返回完整的 ISO 时间戳
-      return date.toISOString();
+    if (!normalized) return null;
+
+    const date = new Date(normalized);
+    if (isNaN(date.getTime())) return null;
+
+    // 如果只有日期没有时间，返回 YYYY-MM-DD 格式
+    if (!hasTime) {
+      // 使用 UTC 方法提取日期，避免服务器时区影响
+      const year = date.getUTCFullYear();
+      const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+      const day = String(date.getUTCDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
     }
 
-    return null;
+    // 返回完整 ISO 时间戳（UTC）
+    return date.toISOString();
   }
 
   /**

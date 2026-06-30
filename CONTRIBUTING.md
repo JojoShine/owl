@@ -73,7 +73,7 @@ cd owl
 # 后端开发
 cd backend
 npm install
-cp .env.example .env.local
+cp .env.example .env
 npm run db:init
 npm run dev
 

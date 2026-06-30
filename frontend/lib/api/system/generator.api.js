@@ -57,4 +57,10 @@ export const generatorApi = {
 
   // 根据模块路径获取页面配置
   getPageConfigByPath: (modulePath) => axios.get(`/generator/page-config/${modulePath}`).then(res => res.data),
+
+  // 检查表审计字段缺失情况
+  checkAuditFields: (tableName) => axios.get(`/generator/tables/${tableName}/audit-check`).then(res => res.data),
+
+  // 一键补全表审计字段
+  addAuditFields: (tableName) => axios.post(`/generator/tables/${tableName}/add-audit-fields`).then(res => res.data),
 };

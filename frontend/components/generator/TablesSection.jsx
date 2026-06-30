@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Pagination } from '@/components/ui/pagination';
-import { RefreshCwIcon } from 'lucide-react';
+import { RefreshCwIcon, PlusCircleIcon } from 'lucide-react';
 
 export default function TablesSection({
   tables,
@@ -22,6 +22,7 @@ export default function TablesSection({
   onSearchChange,
   onRefresh,
   onInitialize,
+  onCheckAudit,
   pagination,
   onPageChange,
 }) {
@@ -91,13 +92,27 @@ export default function TablesSection({
                       )}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button
-                        size="sm"
-                        onClick={() => onInitialize(table.tableName)}
-                        disabled={table.isGenerated || loading}
-                      >
-                        初始化配置
-                      </Button>
+                      <div className="flex justify-end gap-2">
+                        {/* owl_ 开头的系统表或审计字段已完整时不显示补全按钮 */}
+                        {!table.tableName.startsWith('owl_') && !table.auditFieldsComplete && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => onCheckAudit(table.tableName)}
+                            disabled={loading}
+                          >
+                            <PlusCircleIcon className="w-4 h-4 mr-1" />
+                            补全审计字段
+                          </Button>
+                        )}
+                        <Button
+                          size="sm"
+                          onClick={() => onInitialize(table.tableName)}
+                          disabled={table.isGenerated || loading}
+                        >
+                          初始化配置
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))

@@ -6,79 +6,9 @@
     "auditLog": "/Users/jojoshine/projects/owl_platform/backend/logs/login/.6197af5f8a517c67214169c715f41f0816bab32f-audit.json",
     "files": [
         {
-            "date": 1779864062692,
-            "name": "/Users/jojoshine/projects/owl_platform/backend/logs/login/login-2026-05-27.log",
-            "hash": "76549fd4249439fc956266912c6de4abf22b12e9522a4ddda4a3dbbe616c141b"
-        },
-        {
-            "date": 1780362834738,
-            "name": "/Users/jojoshine/projects/owl_platform/backend/logs/login/login-2026-06-02.log",
-            "hash": "b9d09666e5999cac72dcc46fbd46e9e4c9c8f29211cb6198273d76cf1c55411b"
-        },
-        {
-            "date": 1780454007350,
-            "name": "/Users/jojoshine/projects/owl_platform/backend/logs/login/login-2026-06-03.log",
-            "hash": "9aae8bfdb81c00610d578680fff88c8ef6afbe7983d47116a75bd0fdc99affe9"
-        },
-        {
-            "date": 1780534369155,
-            "name": "/Users/jojoshine/projects/owl_platform/backend/logs/login/login-2026-06-04.log",
-            "hash": "e27feec4c4e9610bccd5d0bddaa98cbefb532fdf6e24897690ce08e396e7d704"
-        },
-        {
-            "date": 1780716052255,
-            "name": "/Users/jojoshine/projects/owl_platform/backend/logs/login/login-2026-06-06.log",
-            "hash": "acd5f42720cd57ab47aebd8b670379a2fb34195383b28d87ece5c010ac7851d2"
-        },
-        {
-            "date": 1780883841196,
-            "name": "/Users/jojoshine/projects/owl_platform/backend/logs/login/login-2026-06-08.log",
-            "hash": "2d3eb36a0efc2e491219acca1b57baa14dc251d565e28bd5d776915c739717ea"
-        },
-        {
-            "date": 1780984099517,
-            "name": "/Users/jojoshine/projects/owl_platform/backend/logs/login/login-2026-06-09.log",
-            "hash": "f6e8eb0a5a44094492710f85b084014a9c8012600e3b7ecba75aa7fb5449006d"
-        },
-        {
-            "date": 1781052425463,
-            "name": "/Users/jojoshine/projects/owl_platform/backend/logs/login/login-2026-06-10.log",
-            "hash": "c923f13f0378b38063ed7ed1cb173dffb08716d22b4f34009f6823cfaa6edff9"
-        },
-        {
-            "date": 1781138725719,
-            "name": "/Users/jojoshine/projects/owl_platform/backend/logs/login/login-2026-06-11.log",
-            "hash": "6a46778377df8a0a9e34a2a4a545ff74ab1e5d24b6248256966e75a2d23202b5"
-        },
-        {
-            "date": 1781832555302,
-            "name": "/Users/jojoshine/projects/owl_platform/backend/logs/login/login-2026-06-19.log",
-            "hash": "bbc10428c1d0fa7339bb52547add3ce5db424d6f4eeec490e35d927c0592c2bd"
-        },
-        {
-            "date": 1781916287419,
-            "name": "/Users/jojoshine/projects/owl_platform/backend/logs/login/login-2026-06-20.log",
-            "hash": "4d231d8968e8af7d4ada0c80b224d7170c1a05d68b5889fb905264c7a5266196"
-        },
-        {
-            "date": 1782002316058,
-            "name": "/Users/jojoshine/projects/owl_platform/backend/logs/login/login-2026-06-21.log",
-            "hash": "ede1d5cf35894ee9d72fac1f6ac8956179461781731a3aa9ccf89ce1cb232648"
-        },
-        {
-            "date": 1782279362154,
-            "name": "/Users/jojoshine/projects/owl_platform/backend/logs/login/login-2026-06-24.log",
-            "hash": "789186357540b63fea6b663f790ad9dd1c5b4c1a114ff54a21b4c1d8e39234bb"
-        },
-        {
-            "date": 1782348397661,
-            "name": "/Users/jojoshine/projects/owl_platform/backend/logs/login/login-2026-06-25.log",
-            "hash": "e546a1caac991117e6bc1440ea47ceb3423cad32e553b22f73b3de7edf4bd182"
-        },
-        {
-            "date": 1782435506500,
-            "name": "/Users/jojoshine/projects/owl_platform/backend/logs/login/login-2026-06-26.log",
-            "hash": "0ba02e42fe6a43265b16d6030fee8636f4a5784edee05339d573ddce1e68cb5f"
+            "date": 1782791252209,
+            "name": "/Users/jojoshine/projects/owl_platform/backend/logs/login/login-2026-06-30.log",
+            "hash": "62e9c59790cf3e7741e022753118431c08c8561799288a7f7d14812ba5bb4f25"
         }
     ],
     "hashType": "sha256"

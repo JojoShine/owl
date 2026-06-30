@@ -6,79 +6,9 @@
     "auditLog": "/Users/jojoshine/projects/owl_platform/backend/logs/operation/.f205111fad4eb1bf244e8b21304c94d28dddfa98-audit.json",
     "files": [
         {
-            "date": 1779864062655,
-            "name": "/Users/jojoshine/projects/owl_platform/backend/logs/operation/operation-2026-05-27.log",
-            "hash": "1873fe711c8f2b17ac491f5693b908ce935a060e4aa0429d3a7b915f13c75f85"
-        },
-        {
-            "date": 1780362834726,
-            "name": "/Users/jojoshine/projects/owl_platform/backend/logs/operation/operation-2026-06-02.log",
-            "hash": "d9714694e13ce27f7f1b23f647cf4362199447948ed4802ea07357fa95f9a4ed"
-        },
-        {
-            "date": 1780454007342,
-            "name": "/Users/jojoshine/projects/owl_platform/backend/logs/operation/operation-2026-06-03.log",
-            "hash": "de74ace24df6e24ad5997b443465133cba9483f31ecce8fc906d8fdc8d14db7c"
-        },
-        {
-            "date": 1780534369145,
-            "name": "/Users/jojoshine/projects/owl_platform/backend/logs/operation/operation-2026-06-04.log",
-            "hash": "bda035ba140de493b7e1f3c14a4d17b869ad1d46d9a47ad6a2b4fde165eef04c"
-        },
-        {
-            "date": 1780716052248,
-            "name": "/Users/jojoshine/projects/owl_platform/backend/logs/operation/operation-2026-06-06.log",
-            "hash": "dc8a43bf7e63c67b76b91e3a869df9ab1a1f65830ab78c9e710a06b20da7000d"
-        },
-        {
-            "date": 1780883841189,
-            "name": "/Users/jojoshine/projects/owl_platform/backend/logs/operation/operation-2026-06-08.log",
-            "hash": "21baa11a67286a1edc6a1d86278af3add9410c6897e0511513476ff75b6d3599"
-        },
-        {
-            "date": 1780984099496,
-            "name": "/Users/jojoshine/projects/owl_platform/backend/logs/operation/operation-2026-06-09.log",
-            "hash": "926952617f8dffcdd190c751268c3d0f6b05245bbd6e917157e455be2e9fbf61"
-        },
-        {
-            "date": 1781052425446,
-            "name": "/Users/jojoshine/projects/owl_platform/backend/logs/operation/operation-2026-06-10.log",
-            "hash": "14230c26b0133b1a649a771395eaad03ce7baa8442c60ac57c935e8cdcfb7e69"
-        },
-        {
-            "date": 1781138725708,
-            "name": "/Users/jojoshine/projects/owl_platform/backend/logs/operation/operation-2026-06-11.log",
-            "hash": "302832c686fe8e24f78a4f7b06ba86002b5bfee7a7183dd8cd0f69ca6f1a0c4d"
-        },
-        {
-            "date": 1781832555283,
-            "name": "/Users/jojoshine/projects/owl_platform/backend/logs/operation/operation-2026-06-19.log",
-            "hash": "3bb376a666bf700ca299add68f60fde70864397c6558cee4b34e2081f4974293"
-        },
-        {
-            "date": 1781915521251,
-            "name": "/Users/jojoshine/projects/owl_platform/backend/logs/operation/operation-2026-06-20.log",
-            "hash": "7d40ad6264e5eff14ac41d4430e3d9b7b3e8fae2b14712028269bb43dadc35be"
-        },
-        {
-            "date": 1782002316051,
-            "name": "/Users/jojoshine/projects/owl_platform/backend/logs/operation/operation-2026-06-21.log",
-            "hash": "87660cc9f52e8c75ad815d162f77269b7250231e6498bdaab5e2b965080736ac"
-        },
-        {
-            "date": 1782279362147,
-            "name": "/Users/jojoshine/projects/owl_platform/backend/logs/operation/operation-2026-06-24.log",
-            "hash": "7743fdb8df863b54a10f4cc82071a9eed9dfd649eeed64727481afed96e296f2"
-        },
-        {
-            "date": 1782347615473,
-            "name": "/Users/jojoshine/projects/owl_platform/backend/logs/operation/operation-2026-06-25.log",
-            "hash": "7eace11bd4d55f057cfd2724ad2d8b5a28bc379a9227ab2907501ac3a5e5073e"
-        },
-        {
-            "date": 1782435506494,
-            "name": "/Users/jojoshine/projects/owl_platform/backend/logs/operation/operation-2026-06-26.log",
-            "hash": "1e8a7760fc582a0dd6beb35d74b30538ccd43938edffe19c5650db822cdccedd"
+            "date": 1782791252192,
+            "name": "/Users/jojoshine/projects/owl_platform/backend/logs/operation/operation-2026-06-30.log",
+            "hash": "53d6929b460e2b35eeb7d8eb329117ac0fd573c59e7f28df56c23714e4cd25bd"
         }
     ],
     "hashType": "sha256"

@@ -14,32 +14,14 @@ const nextConfig = {
     unoptimized: true,
   },
 
-  // Turbopack优化配置（开发环境性能）
-  experimental: {
-    turbo: {
-      // 启用增量编译，加快后续编译速度
-      resolveAlias: {},
-      // 优化开发环境
-      looseEsm: true,
-    },
-  },
 
-  // 跳过类型检查和ESLint（开发环境加快编译）
+
+  // 跳过类型检查（开发环境加快编译）
   typescript: {
     ignoreBuildErrors: process.env.NODE_ENV === 'development',
   },
-  eslint: {
-    ignoreDuringBuilds: process.env.NODE_ENV === 'development',
-  },
 
-  // 性能优化：启用SWC压缩和代码分割
-  swcMinify: true,
 
-  // 启用增量静态再生成（ISR）
-  onDemandEntries: {
-    maxInactiveAge: 15 * 1000, // 15秒后移除不使用的页面
-    pagesBufferLength: 5, // 保持5个页面在缓冲区
-  },
 
   // 优化webpack配置（仅Turbopack不支持时使用）
   webpack: (config, { isServer, dev }) => {
