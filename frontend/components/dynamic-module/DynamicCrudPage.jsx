@@ -49,7 +49,31 @@ export function DynamicCrudPage({ config }) {
   const [importResult, setImportResult] = useState(null);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [importProgress, setImportProgress] = useState(0);
+  const [batchInfo, setBatchInfo] = useState({ current: 0, total: 0, successCount: 0, errorCount: 0, errors: [] });
   const fileInputRef = useRef(null);
+
+  // 每批导入行数 & 每批超时时间
+  const IMPORT_BATCH_SIZE = 500;
+  const IMPORT_BATCH_TIMEOUT = 5 * 60 * 1000; // 5分钟
+
+  // 从后端响应中提取导入结果（兼容不同响应格式）
+  // 后端返回 failureCount 而非 errorCount，需兼容两种字段名
+  const extractImportResult = (response) => {
+    // 兼容拦截器解包和未解包两种情况
+    // 解包: response = { success, successCount, failureCount, errors, message }
+    // 未解包: response = { success: true, data: { success, successCount, ... }, message }
+    const data = response?.data?.successCount !== undefined || response?.data?.failureCount !== undefined
+      ? response.data   // 拦截器未解包，从 data 层提取
+      : response;       // 拦截器已解包，直接使用
+
+    return {
+      success: data?.success ?? false,
+      message: data?.message ?? '',
+      successCount: data?.successCount ?? 0,
+      failureCount: data?.failureCount ?? data?.errorCount ?? 0,
+      errors: Array.isArray(data?.errors) ? data.errors : [],
+    };
+  };
 
   // 获取资源名称（modulePath 与数据库 permission_prefix 一致，格式如 test-products）
   const resource = config.modulePath;
@@ -240,17 +264,17 @@ export function DynamicCrudPage({ config }) {
       const workbook = new ExcelJS.Workbook();
       const worksheet = workbook.addWorksheet('数据');
 
-      // 添加第一行：字段名
-      const headerRow = worksheet.addRow(template.fields.map(f => f.name));
+      // 添加第一行：字段名（防止 undefined 导致 ExcelJS toString 报错）
+      const headerRow = worksheet.addRow(template.fields.map(f => f.name || ''));
       headerRow.font = { bold: true };
 
       // 添加第二行：中文注释
-      const commentRow = worksheet.addRow(template.fields.map(f => f.comment));
+      const commentRow = worksheet.addRow(template.fields.map(f => f.comment || ''));
 
       // 设置列宽
       template.fields.forEach((field, index) => {
         const column = worksheet.getColumn(index + 1);
-        column.width = Math.max(field.name.length, field.comment.length, 12);
+        column.width = Math.max((field.name || '').length, (field.comment || '').length, 12);
       });
 
       // 生成 Excel 文件
@@ -270,7 +294,7 @@ export function DynamicCrudPage({ config }) {
     }
   };
 
-  // 处理文件选择
+  // 处理文件选择（分批提交）
   const handleFileSelect = async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -279,13 +303,13 @@ export function DynamicCrudPage({ config }) {
       setImportLoading(true);
       setImportResult(null);
       setImportProgress(0);
+      setBatchInfo({ current: 0, total: 0, successCount: 0, errorCount: 0, errors: [] });
 
-      // 读取 Excel 文件
       const reader = new FileReader();
 
       reader.onload = async (e) => {
         try {
-          setImportProgress(20); // 文件读取完成
+          setImportProgress(10);
 
           const data = e.target?.result;
           const workbook = XLSX.read(data, { type: 'array', cellDates: true });
@@ -299,10 +323,7 @@ export function DynamicCrudPage({ config }) {
             return;
           }
 
-          setImportProgress(40); // 数据解析完成
-
-          // 跳过第一行（中文注释行），实际数据从第三行（Excel）开始
-          // sheet_to_json 自动使用第一行（英文字段名）作为列名
+          // 跳过注释行
           const actualData = rows.slice(1);
 
           if (actualData.length === 0) {
@@ -312,50 +333,124 @@ export function DynamicCrudPage({ config }) {
             return;
           }
 
-          setImportProgress(60); // 数据准备完成
+          setImportProgress(20);
 
-          // 调用导入接口
-          const result = await axios.post(config.api.import, { rows: actualData });
+          // 分批提交
+          const batches = [];
+          for (let i = 0; i < actualData.length; i += IMPORT_BATCH_SIZE) {
+            batches.push(actualData.slice(i, i + IMPORT_BATCH_SIZE));
+          }
 
-          setImportProgress(90); // 导入完成
-          setImportResult(result.data);
+          setBatchInfo({ current: 0, total: batches.length, successCount: 0, errorCount: 0, errors: [] });
 
-          setTimeout(() => {
-            setImportProgress(100); // 处理完成
-          }, 300);
+          let totalSuccess = 0;
+          let totalErrors = [];
+          let hasFailure = false;
 
-          if (result.data.success) {
-            toast.success(result.data.message);
-            // 延迟1秒后刷新数据和关闭进度，让用户看到导入完成的提示
+          for (let i = 0; i < batches.length; i++) {
+            const batchProgress = 20 + Math.floor(((i + 1) / batches.length) * 70);
+            setImportProgress(batchProgress);
+            setBatchInfo((prev) => ({ ...prev, current: i + 1 }));
+
+            try {
+              // 每批设置 5 分钟超时
+              const result = await axios.post(
+                config.api.import,
+                { rows: batches[i] },
+                { timeout: IMPORT_BATCH_TIMEOUT }
+              );
+
+              // 拦截器返回的是完整响应体 { success, data, message }，实际导入结果在 result.data 中
+              const batchResult = extractImportResult(result.data);
+              if (batchResult.successCount) totalSuccess += batchResult.successCount;
+              if (batchResult.errors.length) {
+                totalErrors = totalErrors.concat(batchResult.errors);
+              }
+              if (!batchResult.success) hasFailure = true;
+
+              // 实时更新批次进度
+              setBatchInfo((prev) => ({
+                ...prev,
+                successCount: totalSuccess,
+                errorCount: totalErrors.length,
+              }));
+            } catch (err) {
+              hasFailure = true;
+              if (err.code === 'ECONNABORTED') {
+                totalErrors.push({
+                  row: null, field: '', fieldLabel: '', columnNum: null,
+                  message: `第 ${i + 1} 批导入超时（超过5分钟）`,
+                });
+              } else {
+                // 尝试提取后端返回的行级错误（如数据库插入失败的详细错误）
+                // err.response.data 是完整响应体 { success, message, data: { success, failureCount, errors } }
+                // 实际导入结果在 err.response.data.data 中
+                const errResponse = err.response;
+                const errBody = errResponse?.data;
+                const errData = errBody ? extractImportResult(errBody.data || errBody) : null;
+                if (errData?.errors?.length) {
+                  // 后端返回了行级错误，加上批次前缀以便区分
+                  errData.errors.forEach((e) => {
+                    totalErrors.push({
+                      ...e,
+                      message: `[第 ${i + 1} 批] ${e.message}`,
+                    });
+                  });
+                  if (errData.successCount) totalSuccess += errData.successCount;
+                } else {
+                  const msg = errData?.message || `第 ${i + 1} 批导入失败`;
+                  totalErrors.push({
+                    row: null, field: '', fieldLabel: '', columnNum: null,
+                    message: msg,
+                  });
+                }
+              }
+
+              // 实时更新批次进度
+              setBatchInfo((prev) => ({
+                ...prev,
+                successCount: totalSuccess,
+                errorCount: totalErrors.length,
+              }));
+            }
+          }
+
+          setImportProgress(95);
+
+          const finalResult = {
+            success: !hasFailure,
+            message: hasFailure
+              ? `导入完成，成功 ${totalSuccess} 条，失败 ${totalErrors.length} 条`
+              : `导入成功，共 ${totalSuccess} 条`,
+            successCount: totalSuccess,
+            errorCount: totalErrors.length,
+            errors: totalErrors,
+          };
+
+          setImportResult(finalResult);
+          setImportProgress(100);
+
+          if (!hasFailure) {
+            toast.success(finalResult.message);
             setTimeout(() => {
               fetchData();
               setImportLoading(false);
               setImportProgress(0);
             }, 1200);
           } else {
-            // 即使有错误，如果有部分数据成功导入，也要刷新列表
-            if (result.data.successCount > 0) {
-              fetchData();
-            }
+            if (totalSuccess > 0) fetchData();
             setImportDialogOpen(true);
             setImportLoading(false);
           }
         } catch (error) {
           console.error('导入失败:', error);
-          // 构造错误结果，通过弹窗展示
           const errorMessage = error.response?.data?.message || '导入失败，请检查网络连接或联系管理员';
           setImportResult({
             success: false,
             message: '导入失败',
             successCount: 0,
             errorCount: 1,
-            errors: [{
-              row: null,
-              field: '',
-              fieldLabel: '',
-              columnNum: null,
-              message: errorMessage
-            }]
+            errors: [{ row: null, field: '', fieldLabel: '', columnNum: null, message: errorMessage }],
           });
           setImportDialogOpen(true);
           setImportLoading(false);
@@ -432,16 +527,32 @@ export function DynamicCrudPage({ config }) {
           {/* 导入进度遮罩层 */}
           {importLoading && (
             <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center">
-              <Card className="w-[400px] p-6 shadow-lg">
+              <Card className="w-[420px] p-6 shadow-lg">
                 <div className="space-y-4">
                   <div className="text-center">
                     <h3 className="text-lg font-semibold">数据导入中</h3>
-                    <p className="text-sm text-muted-foreground mt-2">正在处理您的文件，请稍候...</p>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      {batchInfo.total > 1
+                        ? `正在提交第 ${batchInfo.current} / ${batchInfo.total} 批`
+                        : '正在处理您的文件，请稍候...'}
+                    </p>
                   </div>
                   <Progress value={importProgress} className="h-2" />
-                  <p className="text-sm text-center text-muted-foreground">
-                    {importProgress === 0 ? '准备中...' : importProgress === 100 ? '处理完成' : `${importProgress}%`}
-                  </p>
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>
+                      {importProgress === 0 ? '准备中...' : importProgress === 100 ? '处理完成' : `${importProgress}%`}
+                    </span>
+                    {batchInfo.total > 1 && (
+                      <span>
+                        已成功 {batchInfo.successCount} 条
+                      </span>
+                    )}
+                  </div>
+                  {batchInfo.total > 1 && (
+                    <p className="text-xs text-center text-muted-foreground">
+                      每批最多 {IMPORT_BATCH_SIZE} 条，单批超时 5 分钟自动中止
+                    </p>
+                  )}
                 </div>
               </Card>
             </div>

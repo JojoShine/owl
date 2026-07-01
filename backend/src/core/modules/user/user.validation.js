@@ -33,12 +33,12 @@ const getUserById = {
 const createUser = {
   body: Joi.object({
     username: Joi.string()
-      .alphanum()
+      .pattern(/^[a-zA-Z0-9_-]+$/)
       .min(3)
       .max(50)
       .required()
       .messages({
-        'string.alphanum': '用户名只能包含字母和数字',
+        'string.pattern.base': '用户名只能包含字母、数字、下划线和连字符',
         'string.min': '用户名至少3个字符',
         'any.required': '用户名是必填项',
       }),
@@ -86,7 +86,7 @@ const updateUser = {
     id: Joi.string().uuid().required(),
   }),
   body: Joi.object({
-    username: Joi.string().alphanum().min(3).max(50),
+    username: Joi.string().pattern(/^[a-zA-Z0-9_-]+$/).min(3).max(50),
     email: Joi.string().email(),
     password: Joi.string()
       .min(6)

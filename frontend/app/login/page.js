@@ -74,10 +74,11 @@ function LoginForm() {
           setRegistrationEnabled(configResponse.data?.registration_enabled ?? true);
           setLoginMethod(configResponse.data?.login_method || 'both');
           setLoginLayout(configResponse.data?.login_layout || 'center');
-          // 处理 logo - 支持 Minio 路径和本地路径
-          if (configResponse.data?.logo_url) {
-            setLogoUrl(getFileUrl(configResponse.data.logo_url));
-          }
+          // 处理 logo - 支持 Minio 路径和本地路径，空值回退到默认 logo
+          setLogoUrl(
+            (configResponse.data?.logo_url && getFileUrl(configResponse.data.logo_url)) ||
+            `${basePath}/logo.png`
+          );
           // 处理登录背景 - 支持 Minio 路径和本地路径
           if (configResponse.data?.login_bg_url) {
             setLoginBgUrl(getFileUrl(configResponse.data.login_bg_url));
@@ -152,13 +153,15 @@ function LoginForm() {
     <Card className={`w-full max-w-md bg-[#fafafa] dark:bg-[#1a1a1a] border-0 shadow-none ${loginBgUrl && loginLayout === 'center' ? 'bg-opacity-90' : ''} ${isSplitLayout ? 'border-0 shadow-none' : ''}`}>
       <CardHeader className="space-y-4">
         <div className="flex justify-center">
-          <img
-            src={logoUrl}
-            alt="Logo"
-            width={64}
-            height={64}
-            className="rounded-lg dark:invert"
-          />
+          {logoUrl ? (
+            <img
+              src={logoUrl}
+              alt="Logo"
+              width={64}
+              height={64}
+              className="rounded-lg dark:invert"
+            />
+          ) : null}
         </div>
         <CardTitle className="text-2xl font-bold text-center">
           {systemName}

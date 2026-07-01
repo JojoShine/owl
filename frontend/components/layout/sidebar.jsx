@@ -129,7 +129,7 @@ export default function Sidebar() {
           const fullUrl = url.startsWith('http')
             ? url
             : `${getApiBaseUrl()}${url}`;
-          setLogoUrl(fullUrl);
+          if (fullUrl) setLogoUrl(fullUrl);
         }
       }
     } catch (error) {
@@ -201,11 +201,13 @@ export default function Sidebar() {
     <div className="flex flex-col h-full border-r bg-card">
       {/* Logo区域 */}
       <div className="h-16 flex items-center gap-3 px-6 border-b">
-        <img
-          src={logoUrl}
-          alt="Logo"
-          className="w-8 h-8 rounded dark:invert"
-        />
+        {logoUrl ? (
+          <img
+            src={logoUrl}
+            alt="Logo"
+            className="w-8 h-8 rounded dark:invert"
+          />
+        ) : null}
         <h1 className="text-lg font-semibold">{systemName}</h1>
       </div>
 

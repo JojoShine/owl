@@ -29,8 +29,8 @@ app.use(cors({
   credentials: true,
 }));
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // 日志中间件
 app.use(accessLogMiddleware);
@@ -53,6 +53,7 @@ const limiter = rateLimit({
     // - 认证接口（登录、注册等）
     // - 仪表板接口（需要频繁刷新）
     // - 文件接口（文件操作可能较多）
+    // - 动态模块导入接口（数据导入可能触发多次请求）
     const excludedPaths = [
       '/api/system/monitor',
       '/api/health',
@@ -63,6 +64,11 @@ const limiter = rateLimit({
       '/api/system/files',
       '/api/system/folders',
     ];
+
+    // 动态模块导入接口单独排除（仅排除 import 路径，不影响其他模块请求）
+    if (req.path.match(/^\/api\/modules\/[^/]+\/import$/)) {
+      return true;
+    }
 
     return excludedPaths.some(path => req.path.startsWith(path));
   },

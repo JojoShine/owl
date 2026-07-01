@@ -6,12 +6,12 @@ const Joi = require('joi');
 const register = {
   body: Joi.object({
     username: Joi.string()
-      .alphanum()
+      .pattern(/^[a-zA-Z0-9_-]+$/)
       .min(3)
       .max(50)
       .required()
       .messages({
-        'string.alphanum': '用户名只能包含字母和数字',
+        'string.pattern.base': '用户名只能包含字母、数字、下划线和连字符',
         'string.min': '用户名至少3个字符',
         'string.max': '用户名最多50个字符',
         'any.required': '用户名是必填项',

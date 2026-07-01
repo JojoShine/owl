@@ -436,9 +436,9 @@ class GenericService {
       fields: moduleConfig.fields
         .filter(f => f.show_in_form && !auditFields.includes(f.field_name))
         .map(f => ({
-          name: f.field_name,
-          comment: f.field_comment,
-          type: f.field_type,
+          name: f.field_name || '',
+          comment: f.field_comment || '',
+          type: f.field_type || '',
           required: f.is_required,
         })),
     };

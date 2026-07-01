@@ -56,10 +56,11 @@ export default function RegisterPage() {
         if (response?.success) {
           setShowTechStack(response.data?.show_tech_stack ?? true);
           setSystemName(response.data?.system_name || 'Owl管理平台');
-          // 处理 logo - 支持 Minio 路径和本地路径
-          if (response.data?.logo_url) {
-            setLogoUrl(getFileUrl(response.data.logo_url));
-          }
+          // 处理 logo - 支持 Minio 路径和本地路径，空值回退到默认 logo
+          setLogoUrl(
+            (response.data?.logo_url && getFileUrl(response.data.logo_url)) ||
+            `${basePath}/logo.png`
+          );
         }
       } catch (error) {
         console.error('Failed to fetch system config:', error);
@@ -104,13 +105,15 @@ export default function RegisterPage() {
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-4">
           <div className="flex justify-center">
-            <img
-              src={logoUrl}
-              alt="Logo"
-              width={64}
-              height={64}
-              className="rounded-lg dark:invert"
-            />
+            {logoUrl ? (
+              <img
+                src={logoUrl}
+                alt="Logo"
+                width={64}
+                height={64}
+                className="rounded-lg dark:invert"
+              />
+            ) : null}
           </div>
           <CardTitle className="text-2xl font-bold text-center">
             {systemName}

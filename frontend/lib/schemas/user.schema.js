@@ -9,7 +9,7 @@ export const userSchema = z.object({
     .min(1, '用户名是必填项')
     .min(3, '用户名至少3个字符')
     .max(50, '用户名最多50个字符')
-    .regex(/^[a-zA-Z0-9]+$/, '用户名只能包含字母和数字'),
+    .regex(/^[a-zA-Z0-9_-]+$/, '用户名只能包含字母、数字、下划线和连字符'),
 
   email: sensitiveEmail({ required: true }),
 

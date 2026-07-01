@@ -85,9 +85,16 @@ router.get(
 
 /**
  * 导入数据（需要放在 /:id 之前，避免 import 被当作 id）
+ * 设置 5 分钟超时，防止大数据量导入超时
  */
 router.post(
   '/:modulePath/import',
+  (req, res, next) => {
+    req.setTimeout(5 * 60 * 1000, () => {
+      res.status(408).json({ message: '导入请求超时，请减少单次导入数据量' });
+    });
+    next();
+  },
   (req, res, next) => checkPermission(`${req.permissionPrefix}:create`)(req, res, next),
   genericController.importFromExcel.bind(genericController)
 );
