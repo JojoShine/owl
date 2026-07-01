@@ -268,8 +268,28 @@ export function DynamicCrudPage({ config }) {
       const headerRow = worksheet.addRow(template.fields.map(f => f.name || ''));
       headerRow.font = { bold: true };
 
-      // 添加第二行：中文注释
-      const commentRow = worksheet.addRow(template.fields.map(f => f.comment || ''));
+      // 构建字段名到必填状态的映射（从 config.fields 的 formRules 中获取）
+      const fieldRequiredMap = {};
+      (config.fields || []).forEach(f => {
+        fieldRequiredMap[f.name] = f.formRules && f.formRules.required;
+      });
+
+      // 添加第二行：中文注释（必填字段标红）
+      const commentRow = worksheet.addRow(
+        template.fields.map(f => {
+          const isRequired = fieldRequiredMap[f.name];
+          return isRequired ? `${f.comment || ''} (必填)` : f.comment || '';
+        })
+      );
+
+      // 设置必填字段的红色文字样式
+      template.fields.forEach((field, index) => {
+        const isRequired = fieldRequiredMap[field.name];
+        if (isRequired) {
+          const cell = commentRow.getCell(index + 1);
+          cell.font = { color: { argb: 'FFFF0000' }, bold: true };
+        }
+      });
 
       // 设置列宽
       template.fields.forEach((field, index) => {

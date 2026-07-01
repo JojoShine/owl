@@ -36,7 +36,7 @@ export default function TablesSection({
       </CardHeader>
       <CardContent className="space-y-4">
         {/* 搜索栏 */}
-        <div className="bg-card border rounded-lg p-4">
+        <div className="bg-card rounded-lg px-0 py-4">
           <div className="flex flex-wrap items-end gap-4">
             <div className="flex-1 min-w-[180px]">
               <Input
@@ -54,7 +54,7 @@ export default function TablesSection({
           </div>
         </div>
 
-        <div className="border rounded-lg overflow-hidden">
+        <div className="rounded-lg overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow>
